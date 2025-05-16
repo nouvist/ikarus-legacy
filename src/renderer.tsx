@@ -34,5 +34,5 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <h1>💖 Hello World!</h1>
     <p>Welcome to your Electron application.</p>
-  </StrictMode>
+  </StrictMode>,
 );

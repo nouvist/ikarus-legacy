@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "rules": {
+    // perf
+    "eslint/no-useless-call": "error",
+    "eslint/no-accumulating-spread": "warn",
+    "react/no-array-index-key": "error",
+    // restrictions
+    "eslint/no-console": "warn",
+    "import/no-duplicates": "error",
+    "unicorn/no-array-for-each": "error",
+    "typescript/no-import-type-side-effects": "error",
+    // suspicious
+    "unicorn/consistent-function-scoping": "error",
+    "unicorn/prefer-add-event-listener": "error",
+    // pedantic
+    "eslint/no-else-return": "error",
+    "eslint/no-lonely-if": "error",
+    "unicorn/escape-case": "error"
+  }
+}
