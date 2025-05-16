@@ -26,8 +26,13 @@
  * ```
  */
 
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 import "./index.css";
 
-console.log(
-  '👋 This message is being logged by "renderer.ts", included via Vite',
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <h1>💖 Hello World!</h1>
+    <p>Welcome to your Electron application.</p>
+  </StrictMode>
 );
