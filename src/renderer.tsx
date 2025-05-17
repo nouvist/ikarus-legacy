@@ -28,12 +28,11 @@
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import 'normalize.css/normalize.css'
-import "./index.scss";
+import "normalize.css/normalize.css";
+import Shell from "~/components/shell";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <div>💖 Hello World!</div>
-    <div>Welcome to your Electron application.</div>
-  </StrictMode>,
+    <Shell />
+  </StrictMode>
 );
