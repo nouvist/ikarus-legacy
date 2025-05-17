@@ -1,10 +1,7 @@
-// See the Electron documentation for details on how to use preload scripts:
-// https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
+import { contextBridge } from "electron";
+import path from "node:path";
 
-Object.defineProperty(window, "API", {
-  value: {
-    hello: () => {
-      console.log("Hello from Node.js!");
-    },
-  },
+console.log("it should be loaded");
+contextBridge.exposeInMainWorld("API", {
+  hello: () => path.join(__dirname, "webview.js"),
 });

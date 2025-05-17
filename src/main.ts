@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, WebContentsView } from "electron";
 import started from "electron-squirrel-startup";
 import path from "node:path";
 
@@ -12,11 +12,24 @@ function createWindow() {
     roundedCorners: true,
     fullscreenable: false,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
       devTools: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
       webviewTag: true,
     },
   });
+
+    const next = new WebContentsView({
+      webPreferences: {
+        devTools: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: false,
+        webviewTag: true,
+      },
+    })
 
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
