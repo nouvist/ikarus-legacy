@@ -6,7 +6,7 @@ export interface ShellProps extends ComponentProps<"div"> {}
 
 export default function Shell({ children, ...props }: ShellProps) {
   return (
-    <Container>
+    <Container {...props}>
       <GlobalStyle />
       {children}
     </Container>
@@ -29,8 +29,8 @@ const GlobalStyle = createGlobalStyle`
   html {
     user-select: none;
     font-family: "SpaceGrotesk", sans-serif;
-    background: #181818;
-    color: #ffffff;
+    background: ${(p) => p.theme.background.e0};
+    color: ${(p) => p.theme.foreground.e0};
   }
 
   html, body, #root {
@@ -39,5 +39,21 @@ const GlobalStyle = createGlobalStyle`
     overflow: hidden;
     user-select: none;
     -webkit-user-drag: none;
+  }
+
+  button, input {
+    color: inherit;
+    font-size: inherit;
+    font-family: inherit;
+    background: inherit;
+    border: none;
+    outline: none;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    appearance: none;
+    &:focus {
+      outline: none;
+    }
   }
 `;

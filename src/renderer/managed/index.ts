@@ -1,6 +1,5 @@
 import createRendererBridge from "~/renderer/managed/bridge";
 import createPlatformManaged from "~/renderer/managed/platform";
-import createThemeManaged from "~/renderer/managed/theme";
 import createWindowManaged from "~/renderer/managed/window";
 
 export default function createManaged() {
@@ -8,7 +7,6 @@ export default function createManaged() {
   return {
     bridge,
     platform: createPlatformManaged(),
-    theme: createThemeManaged(bridge),
     window: createWindowManaged(bridge),
   };
 }
