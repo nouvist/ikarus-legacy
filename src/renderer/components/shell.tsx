@@ -1,5 +1,5 @@
 import { Fragment } from "react/jsx-runtime";
-import font from "~/assets/fonts/space_grotesk/SpaceGrotesk-VariableFont_wght.ttf";
+import font from "~/renderer/assets/fonts/space_grotesk/SpaceGrotesk-VariableFont_wght.ttf";
 import { createGlobalStyle } from "styled-components";
 
 const GlobalStyle = createGlobalStyle`
@@ -27,16 +27,7 @@ export default function Shell() {
   return (
     <Fragment>
       <GlobalStyle />
-      <webview
-        ref={(el) => {
-          console.log(el);
-        }}
-        src="https://github.com"
-        style={{
-          width: "100%",
-          height: "100%",
-        }}
-      />
+      {JSON.stringify(Managed)}
     </Fragment>
   );
 }

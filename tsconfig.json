@@ -5,12 +5,12 @@
     "noImplicitAny": true,
     "sourceMap": true,
     "resolveJsonModule": true,
-    // "target": "ESNext",
-    "target": "ES2020",
+    "target": "ESNext", // default Vite + React
+    // "target": "ES2020", // default Electron Forge
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    // "module": "commonjs",
-    "module": "ESNext",
+    "module": "CommonJS", // default Electron Forge
+    // "module": "ESNext", // default Vite + React
     "skipLibCheck": true,
 
     /* Directories */
