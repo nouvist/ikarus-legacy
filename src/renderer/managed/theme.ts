@@ -1,16 +1,16 @@
-import { ThemeEvent } from "~/main/bridge/types";
-import bridge from "~/renderer/preload/bridge";
 import { EventEmitter } from "events";
+import { ThemeEvent } from "~/main/bridge/types";
+import { RendererBridge } from "~/renderer/managed/bridge";
 
-export default function createTheme() {
+export default function createThemeManaged(bridge: RendererBridge) {
   const ref: { value: ThemeEvent | undefined } = { value: undefined };
   const event = new EventEmitter();
 
   const promise = bridge
-    .invoke("istn::theme-changed", undefined)
+    .invoke("Theme::changed", undefined)
     .then((value) => (ref.value = value));
 
-  bridge.addEventListener("istn::theme-changed", (_, args) => {
+  bridge.addEventListener("Theme::changed", (_, args) => {
     ref.value = args;
     event.emit("refresh");
   });

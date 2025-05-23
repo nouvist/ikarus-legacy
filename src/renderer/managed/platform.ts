@@ -1,4 +1,4 @@
-export default function createPlatform() {
+export default function createPlatformManaged() {
   return {
     name: process.platform,
     isWindows: process.platform === "win32",

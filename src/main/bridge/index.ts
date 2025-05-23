@@ -7,7 +7,7 @@ import {
 import { EventKey, EventMap } from "~/main/bridge/types";
 export * from "~/main/bridge/types";
 
-export function createMainBridge(window: BrowserWindow) {
+export default function createMainBridge(window: BrowserWindow) {
   return {
     addEventListener<Key extends EventKey, Type extends EventMap[Key]>(
       key: Key,

@@ -3,11 +3,7 @@ export interface EventItem<Renderer, Main> {
   fromMain: Main;
 }
 
-export interface MainVoidEventItem<Main> extends EventItem<undefined, Main> {
-  fromRenderer: undefined;
-}
+export type VoidEventItem = EventItem<void, void>;
+export type MainVoidEventItem<Main> = EventItem<void, Main>;
+export type RendererVoidEventItem<Renderer> = EventItem<Renderer, void>;
 
-export interface RendererVoidEventItem<Renderer>
-  extends EventItem<Renderer, undefined> {
-  fromMain: undefined;
-}

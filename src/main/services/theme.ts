@@ -8,10 +8,10 @@ export default function createThemeService(ipc: MainBridge) {
   };
 
   function emit() {
-    ipc.emit("istn::theme-changed", last);
+    ipc.emit("Theme::changed", last);
   }
 
-  ipc.handle("istn::theme-changed", async () => last);
+  ipc.handle("Theme::changed", async () => last);
 
   systemPreferences.addListener("accent-color-changed", (_, color) => {
     if (color === last.accentColor) return;

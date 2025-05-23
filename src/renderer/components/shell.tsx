@@ -1,6 +1,24 @@
-import { Fragment } from "react/jsx-runtime";
+import { ComponentProps } from "react";
+import styled, { createGlobalStyle } from "styled-components";
 import font from "~/renderer/assets/fonts/space_grotesk/SpaceGrotesk-VariableFont_wght.ttf";
-import { createGlobalStyle } from "styled-components";
+
+export interface ShellProps extends ComponentProps<"div"> {}
+
+export default function Shell({ children, ...props }: ShellProps) {
+  return (
+    <Container>
+      <GlobalStyle />
+      {children}
+    </Container>
+  );
+}
+
+const Container = styled.div`
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+`;
 
 const GlobalStyle = createGlobalStyle`
   @font-face {
@@ -11,23 +29,15 @@ const GlobalStyle = createGlobalStyle`
   html {
     user-select: none;
     font-family: "SpaceGrotesk", sans-serif;
+    background: #181818;
+    color: #ffffff;
   }
 
-  html,
-  body {
-    height: 100%;
-  }
-
-  #root {
-    height: 100%;
+  html, body, #root {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-drag: none;
   }
 `;
-
-export default function Shell() {
-  return (
-    <Fragment>
-      <GlobalStyle />
-      {JSON.stringify(Managed)}
-    </Fragment>
-  );
-}

@@ -1,18 +1,29 @@
 import { app, BrowserWindow } from "electron";
 import started from "electron-squirrel-startup";
 import path from "node:path";
-import { createMainBridge } from "~/main/bridge";
+import createMainBridge from "~/main/bridge";
 import createThemeService from "~/main/services/theme";
+import createWindowService from "~/main/services/window";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) app.quit();
 
 function createWindow() {
-  const win = new BrowserWindow({
-    frame: false,
+  const window = new BrowserWindow({
+    // frame: false,
+    show: false,
     roundedCorners: true,
     fullscreenable: false,
-    backgroundMaterial: "mica",
+    // backgroundMaterial: "mica",
+    backgroundColor: "#00000000",
+    frame: false, // Remove the entire native frame (titlebar + controls)
+    titleBarOverlay: {
+      color: "#00000000",
+      symbolColor: "#ffffff",
+      height: 48,
+    },
+    titleBarStyle: "hidden", // macOS-specific - hides the native titlebar but keeps traffic lights
+
     webPreferences: {
       devTools: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
       preload: path.join(__dirname, "preload.js"),
@@ -23,15 +34,18 @@ function createWindow() {
     },
   });
 
+  window.removeMenu();
+
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    win.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    window.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    window.webContents.openDevTools();
   } else {
-    win.loadFile(
+    window.loadFile(
       path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
     );
   }
 
-  win.webContents.on("before-input-event", (event, input) => {
+  window.webContents.on("before-input-event", (event, input) => {
     const disabledKeys = [
       input.control && input.code === "KeyR",
       input.code === "F5",
@@ -40,8 +54,9 @@ function createWindow() {
     if (disabledKeys.some(Boolean)) event.preventDefault();
   });
 
-  const ipc = createMainBridge(win);
-  createThemeService(ipc);
+  const bridge = createMainBridge(window);
+  createWindowService(window, bridge);
+  createThemeService(bridge);
 }
 
 app.on("ready", createWindow);

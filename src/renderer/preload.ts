@@ -1,15 +1,5 @@
 import { contextBridge } from "electron";
-import bridge from "~/renderer/preload/bridge";
-import createPlatform from "~/renderer/preload/platform";
-import createTheme from "~/renderer/preload/theme";
-
-function createManaged() {
-  return {
-    bridge,
-    platform: createPlatform(),
-    theme: createTheme(),
-  };
-}
+import createManaged from "~/renderer/managed";
 
 contextBridge.exposeInMainWorld("Managed", createManaged());
 

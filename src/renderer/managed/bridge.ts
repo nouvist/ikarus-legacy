@@ -1,7 +1,7 @@
 import { ipcRenderer, IpcRendererEvent } from "electron";
 import { EventKey, EventMap } from "~/main/bridge/types";
 
-function createRendererBridge() {
+export default function createRendererBridge() {
   return {
     addEventListener<Key extends EventKey, Type extends EventMap[Key]>(
       key: Key,
@@ -27,5 +27,4 @@ function createRendererBridge() {
   };
 }
 
-const bridge = createRendererBridge();
-export default bridge;
+export type RendererBridge = ReturnType<typeof createRendererBridge>;
