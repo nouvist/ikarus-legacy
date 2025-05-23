@@ -1,21 +1,30 @@
 import { app, BrowserWindow, dialog } from "electron";
-import started from "electron-squirrel-startup";
+import squirrel from "electron-squirrel-startup";
 import path from "node:path";
 import createMainBridge from "~/main/bridge";
 import createRefreshService from "~/main/services/refresh";
 import createWindowService from "~/main/services/window";
 
-if (started) app.quit();
+if (squirrel) app.quit();
+if (!app.requestSingleInstanceLock()) app.quit();
 
 app.on("ready", createWindow);
 
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
+  app.quit();
 });
 
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+app.on("second-instance", () => {
+  BrowserWindow.getAllWindows()[0].focus();
 });
+
+// perilaku macos seharusnya
+// app.on("window-all-closed", () => {
+//   if (process.platform !== "darwin") app.quit();
+// });
+// app.on("activate", () => {
+//   if (BrowserWindow.getAllWindows().length === 0) createWindow();
+// });
 
 function createWindow() {
   const window = new BrowserWindow({
@@ -23,8 +32,7 @@ function createWindow() {
     roundedCorners: true,
     fullscreenable: false,
     backgroundColor: "#00000000",
-    // mica ngebug banget jir jgn dipake
-    // backgroundMaterial: "mica",
+    // backgroundMaterial: "mica", // mica ngebug banget jir jgn dipake
     frame: false,
     titleBarOverlay: {
       color: "#00000000",
