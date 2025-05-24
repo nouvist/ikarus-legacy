@@ -1,6 +1,7 @@
 import { ComponentProps } from "react";
 import styled, { createGlobalStyle } from "styled-components";
 import font from "~/renderer/assets/fonts/space_grotesk/SpaceGrotesk-VariableFont_wght.ttf";
+import "normalize.css/normalize.css";
 
 export interface ShellProps extends ComponentProps<"div"> {}
 
@@ -55,5 +56,9 @@ const GlobalStyle = createGlobalStyle`
     &:focus {
       outline: none;
     }
+  }
+
+  * {
+    box-sizing: border-box;
   }
 `;

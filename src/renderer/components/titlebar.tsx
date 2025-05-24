@@ -10,6 +10,7 @@ function Titlebar({ children, ...props }: TitlebarProps) {
 export interface TitlebarTabProps extends ComponentProps<"button"> {
   selected?: boolean;
 }
+
 function TitlebarTab({ selected, children, ...props }: TitlebarTabProps) {
   const Element = selected ? TabActive : TabInactive;
   return <Element {...props}>{children}</Element>;
@@ -41,7 +42,6 @@ const TabInactive = styled.button`
   padding: 0px 20px;
   border: 1px solid ${(p) => p.theme.elevation.t2};
   border-radius: 8px;
-  transition: all 200ms;
   &:hover {
     background: ${(p) => p.theme.elevation.t1};
   }

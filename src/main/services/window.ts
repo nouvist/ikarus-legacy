@@ -1,12 +1,12 @@
 import { BrowserWindow } from "electron";
 import { MainBridge } from "~/main/bridge";
-import ref from "~/shared/ref";
+import createRef from "~/shared/ref";
 
 export default function createWindowService(
   window: BrowserWindow,
   bridge: MainBridge
 ) {
-  const isShown = ref(false);
+  const isShown = createRef(false);
 
   bridge.handle("Window::close", async () => {
     window.close();

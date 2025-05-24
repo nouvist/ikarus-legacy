@@ -33,6 +33,8 @@ function createWindow() {
     fullscreenable: false,
     backgroundColor: "#00000000",
     // backgroundMaterial: "mica", // mica ngebug banget jir jgn dipake
+    minWidth: 500,
+    minHeight: 400,
     frame: false,
     titleBarOverlay: {
       color: "#00000000",

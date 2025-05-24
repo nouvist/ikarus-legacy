@@ -1,4 +1,4 @@
-export default function ref<T>(value: T) {
+export default function createRef<T>(value: T) {
   return {
     value,
   };
