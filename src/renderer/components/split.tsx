@@ -1,11 +1,10 @@
 import {
   motion,
-  useDragControls,
   useMotionValue,
-  useTransform,
+  useTransform
 } from "motion/react";
 import { ComponentProps, useRef, useState } from "react";
-import { css, styled } from "styled-components";
+import { styled } from "styled-components";
 import Flex from "~/renderer/components/flex";
 import Stack from "~/renderer/components/stack";
 import { getTwo } from "~/shared/react";

@@ -6,7 +6,7 @@ export default function Chatbot() {
   const wv = useRef<WebviewTag>(null);
   return (
     <Split>
-      <div>chatbot</div>
+      <div>Chatbot</div>
       <webview ref={wv} src="https://github.com" style={{ height: "100%" }} />
     </Split>
   );

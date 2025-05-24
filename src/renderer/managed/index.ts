@@ -1,13 +1,14 @@
 import createRendererBridge from "~/renderer/managed/bridge";
 import createPlatformManaged from "~/renderer/managed/platform";
+import createWebviewManaged from "~/renderer/managed/webview";
 import createWindowManaged from "~/renderer/managed/window";
 
 export default function createManaged() {
   const bridge = createRendererBridge();
   return {
     bridge,
-    platform: createPlatformManaged(),
     window: createWindowManaged(bridge),
-    http: require('http'),
+    platform: createPlatformManaged(),
+    webview: createWebviewManaged(),
   };
 }
