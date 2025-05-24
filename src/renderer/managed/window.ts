@@ -21,5 +21,9 @@ export default function createWindowManaged(bridge: RendererBridge) {
     async hide() {
       await bridge.invoke("Window::hide", undefined);
     },
+
+    async debug() {
+      await bridge.invoke("Window::debug", undefined);
+    },
   };
 }

@@ -22,8 +22,7 @@ export default Object.assign(Titlebar, {
 
 const Container = styled.div`
   width: 100%;
-  height: 48px;
-  padding-right: 137px;
+  height: 49px;
   background: ${(p) => p.theme.background.e0};
   border-bottom: 1px solid ${(p) => p.theme.elevation.solid};
   display: flex;

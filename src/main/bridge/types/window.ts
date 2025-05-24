@@ -6,5 +6,6 @@ export interface WindowEventMap {
   "Window::close": VoidEventItem;
   "Window::show": VoidEventItem;
   "Window::hide": VoidEventItem;
+  "Window::debug": VoidEventItem;
 }
 

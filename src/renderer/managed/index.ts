@@ -8,5 +8,6 @@ export default function createManaged() {
     bridge,
     platform: createPlatformManaged(),
     window: createWindowManaged(bridge),
+    http: require('http'),
   };
 }

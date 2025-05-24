@@ -1,12 +1,12 @@
 import { BrowserWindow } from "electron";
 import { MainBridge } from "~/main/bridge";
-import createRef from "~/shared/ref";
+import { createRefCell } from "~/shared/core";
 
 export default function createWindowService(
   window: BrowserWindow,
   bridge: MainBridge
 ) {
-  const isShown = createRef(false);
+  const isShown = createRefCell(false);
 
   bridge.handle("Window::close", async () => {
     window.close();
@@ -32,6 +32,10 @@ export default function createWindowService(
   bridge.handle("Window::hide", async () => {
     window.hide();
     isShown.value = false;
+  });
+
+  bridge.handle("Window::debug", async () => {
+    window.webContents.openDevTools();
   });
 
   return {

@@ -1,11 +1,11 @@
+import { Fragment, useState } from "react";
 import Shell from "~/renderer/components/shell";
-import Titlebar from "~/renderer/components/titlebar";
+import KeyedStack from "~/renderer/components/keyed_stack";
 import Theme from "~/renderer/components/theme";
-import Stack from "~/renderer/components/stack";
-import { Fragment, useRef, useState } from "react";
+import Titlebar from "~/renderer/components/titlebar";
+import Chatbot from "~/renderer/pages/chatbot";
 
 export default function App() {
-  const webview = useRef<HTMLWebViewElement>(null);
   const [tab, setTab] = useState("chatbot");
 
   return (
@@ -31,19 +31,11 @@ export default function App() {
             Settings
           </Titlebar.Tab>
         </Titlebar>
-        <Stack activeKey={tab}>
-          <Fragment key="chatbot">
-            <webview
-              ref={webview}
-              src="https://github.com"
-              style={{
-                width: "100vw",
-                height: "600px",
-              }}
-            />
-          </Fragment>
-          <Fragment key="database">hello guys!</Fragment>
-        </Stack>
+        <KeyedStack activeKey={tab}>
+          <Chatbot key="chatbot" />
+          <Fragment key="database">Database</Fragment>
+          <Fragment key="settings">Settings</Fragment>
+        </KeyedStack>
       </Shell>
     </Theme>
   );

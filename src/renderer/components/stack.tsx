@@ -1,55 +1,66 @@
-import { motion } from "motion/react";
-import { Children, ComponentProps, Key, useRef } from "react";
-import { styled } from "styled-components";
-import getKey from "~/shared/key";
-import getRandom from "~/shared/random";
+import { motion, MotionValue } from "motion/react";
+import styled from "styled-components";
 
-export interface StackProps extends ComponentProps<"div"> {
-  activeKey?: Key;
+export interface StackProps extends React.ComponentProps<"div"> {}
+
+const Stack = styled.div<StackProps>`
+  position: relative;
+  width: 100%;
+  height: 100%;
+`;
+
+export interface StackFillProps extends React.ComponentProps<"div"> {
+  top?: number | string;
+  left?: number | string;
+  right?: number | string;
+  bottom?: number | string;
 }
 
-export default function Stack({ activeKey, children, ...props }: StackProps) {
-  const mainKey = useRef(getRandom());
+const Fill = styled.div<StackFillProps>`
+  position: absolute;
+  top: ${(p) => p.top ?? 0};
+  left: ${(p) => p.left ?? 0};
+  right: ${(p) => p.right ?? 0};
+  bottom: ${(p) => p.bottom ?? 0};
+`;
 
+const _MotionFill = motion(Fill);
+
+export interface StackMotionFillProps
+  extends Omit<
+    React.ComponentProps<typeof _MotionFill>,
+    "top" | "left" | "right" | "bottom"
+  > {
+  top?: MotionValue;
+  left?: MotionValue;
+  right?: MotionValue;
+  bottom?: MotionValue;
+}
+
+function MotionFill({
+  top,
+  left,
+  right,
+  bottom,
+  children,
+  ...props
+}: StackMotionFillProps) {
   return (
-    <Container {...props}>
-      {Children.map(children, (child) => {
-        const key = getKey(child);
-        const isActive = key === activeKey;
-
-        return (
-          <Item
-            key={`${mainKey}::${key}`}
-            zIndex={isActive ? 1 : 0}
-            visible={isActive}
-            animate={{
-              opacity: isActive ? 1 : 0,
-              translateY: isActive ? 0 : 64,
-            }}
-          >
-            {child}
-          </Item>
-        );
-      })}
-    </Container>
+    <_MotionFill
+      {...props}
+      style={{
+        top,
+        left,
+        right,
+        bottom,
+      }}
+    >
+      {children}
+    </_MotionFill>
   );
 }
 
-const Container = styled.div`
-  position: relative;
-`;
-
-interface ItemProps extends ComponentProps<"div"> {
-  zIndex?: number;
-  visible?: boolean;
-}
-
-const Item = motion(styled.div<ItemProps>`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: ${(p) => p.zIndex ?? 0};
-  pointer-events: ${(p) => (p.visible ? "unset" : "none")};
-`);
+export default Object.assign(Stack, {
+  Fill,
+  MotionFill,
+});

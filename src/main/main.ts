@@ -28,7 +28,7 @@ app.on("second-instance", () => {
 
 function createWindow() {
   const window = new BrowserWindow({
-    show: false,
+    show: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
     roundedCorners: true,
     fullscreenable: false,
     backgroundColor: "#00000000",
@@ -45,7 +45,7 @@ function createWindow() {
     webPreferences: {
       devTools: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
       preload: path.join(__dirname, "preload.js"),
-      contextIsolation: true,
+      contextIsolation: false,
       nodeIntegration: false,
       sandbox: false,
       webviewTag: true,
@@ -58,6 +58,7 @@ function createWindow() {
 
   setTimeout(async () => {
     if (winsvc.isShown) return;
+    if (MAIN_WINDOW_VITE_DEV_SERVER_URL) return;
     await dialog.showMessageBox(window, {
       title: "Not responding",
       message: "App is not responding, failsafe triggered.",
@@ -69,7 +70,11 @@ function createWindow() {
     window.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
     window.loadFile(
-      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
+      path.join(
+        __dirname,
+        "../renderer",
+        `${MAIN_WINDOW_VITE_NAME}/index.html`
+      )
     );
   }
 }
