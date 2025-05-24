@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import { Children, ComponentProps, Key, useRef } from "react";
 import { styled } from "styled-components";
 import getKey from "~/shared/key";
@@ -9,16 +10,22 @@ export interface StackProps extends ComponentProps<"div"> {
 
 export default function Stack({ activeKey, children, ...props }: StackProps) {
   const mainKey = useRef(getRandom());
+
   return (
     <Container {...props}>
       {Children.map(children, (child) => {
         const key = getKey(child);
         const isActive = key === activeKey;
+
         return (
           <Item
             key={`${mainKey}::${key}`}
             zIndex={isActive ? 1 : 0}
             visible={isActive}
+            animate={{
+              opacity: isActive ? 1 : 0,
+              translateY: isActive ? 0 : 64,
+            }}
           >
             {child}
           </Item>
@@ -37,13 +44,12 @@ interface ItemProps extends ComponentProps<"div"> {
   visible?: boolean;
 }
 
-const Item = styled.div<ItemProps>`
+const Item = motion(styled.div<ItemProps>`
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: ${(p) => p.zIndex ?? 0};
-  opacity: ${p => p.visible ? 1 : 0};
-  pointer-events: ${p => p.visible ? 'unset' : 'none'};
-`;
+  pointer-events: ${(p) => (p.visible ? "unset" : "none")};
+`);

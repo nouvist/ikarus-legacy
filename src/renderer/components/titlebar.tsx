@@ -30,6 +30,7 @@ const Container = styled.div`
   justify-content: center;
   align-items: center;
   gap: 4px;
+  z-index: 1000;
   -webkit-app-region: drag;
   > * {
     -webkit-app-region: no-drag;
