@@ -64,5 +64,4 @@ const GlobalStyle = createGlobalStyle`
       background: ${p => p.theme.accent.primary};
     }
   }
-
 `;

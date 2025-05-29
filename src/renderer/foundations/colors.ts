@@ -10,8 +10,12 @@ export enum BackgroundColor {
   e1 = "e1",
 }
 
-
 export enum ForegroundColor {
   e0 = "e0",
   e1 = "e1",
+}
+
+export enum ColorType {
+  primary = 'primary',
+  danger = 'danger',
 }

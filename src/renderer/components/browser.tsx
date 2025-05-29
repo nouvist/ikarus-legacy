@@ -3,7 +3,6 @@ import {
   ChevronRight24Regular,
   LockClosed24Regular,
   Warning24Regular,
-  WarningLockOpen24Regular,
 } from "@fluentui/react-icons";
 import { DidNavigateEvent, DidNavigateInPageEvent, WebviewTag } from "electron";
 import { ForwardedRef, forwardRef, useEffect, useRef, useState } from "react";
@@ -70,6 +69,7 @@ function Controls({ controller }: { controller: BrowserController }) {
     <Card padding={EdgeInsets.all(16)} border={EdgeFlags.bottom}>
       <Flex gap={8}>
         <Button
+          padding={EdgeInsets.zero}
           constraints={Constraints.all(40)}
           disabled={!canGoBack}
           onClick={controller.goBack}
@@ -77,6 +77,7 @@ function Controls({ controller }: { controller: BrowserController }) {
           <ChevronLeft24Regular />
         </Button>
         <Button
+          padding={EdgeInsets.zero}
           constraints={Constraints.all(40)}
           disabled={!canGoForward}
           onClick={controller.goForward}
