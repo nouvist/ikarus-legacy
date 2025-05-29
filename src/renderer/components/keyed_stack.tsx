@@ -24,7 +24,7 @@ export default function KeyedStack({
         return (
           <Item
             key={`${mainKey}::${key}`}
-            zIndex={isActive ? 1 : 0}
+            index={isActive ? 1 : 0}
             visible={isActive}
             animate={{
               opacity: isActive ? 1 : 0,
@@ -40,11 +40,11 @@ export default function KeyedStack({
 }
 
 interface ItemProps extends ComponentProps<"div"> {
-  zIndex?: number;
+  index?: number;
   visible?: boolean;
 }
 
 const Item = motion(styled(Stack.Fill)<ItemProps>`
-  z-index: ${(p) => p.zIndex ?? 0};
+  z-index: ${(p) => p.index ?? 0};
   pointer-events: ${(p) => (p.visible ? "unset" : "none")};
 `);

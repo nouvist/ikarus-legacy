@@ -1,13 +1,15 @@
-import { WebviewTag } from "electron";
-import { useRef } from "react";
+import Browser, { useBrowserController } from "~/renderer/components/browser";
+import Card from "~/renderer/components/card";
 import Split from "~/renderer/components/split";
 
 export default function Chatbot() {
-  const wv = useRef<WebviewTag>(null);
+  const wv = useBrowserController();
   return (
-    <Split>
-      <div>Chatbot</div>
-      <webview ref={wv} src="https://github.com" style={{ height: "100%" }} />
-    </Split>
+    <Card.Full>
+      <Split>
+        <div onClick={() => wv.load("https://github.com")}>Chatbot</div>
+        <Browser controller={wv} />
+      </Split>
+    </Card.Full>
   );
 }

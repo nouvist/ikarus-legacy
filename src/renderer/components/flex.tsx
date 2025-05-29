@@ -4,13 +4,16 @@ import styled from "styled-components";
 
 export interface FlexProps extends React.ComponentProps<"div"> {
   direction?: "row" | "column";
+  gap?: number;
 }
 
 const Flex = styled.div<FlexProps>`
   display: flex;
   width: 100%;
   height: 100%;
+  flex: 1;
   flex-direction: ${(p) => p.direction ?? "row"};
+  gap: ${(p) => p.gap ?? 0}px;
 `;
 
 export interface FlexFillProps extends React.ComponentProps<"div"> {

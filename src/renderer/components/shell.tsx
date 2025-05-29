@@ -30,7 +30,7 @@ const GlobalStyle = createGlobalStyle`
   html {
     user-select: none;
     font-family: "SpaceGrotesk", sans-serif;
-    background: ${(p) => p.theme.background.e0};
+    /* background: ${(p) => p.theme.background.e0}; */
     color: ${(p) => p.theme.foreground.e0};
   }
 
@@ -60,5 +60,9 @@ const GlobalStyle = createGlobalStyle`
 
   * {
     box-sizing: border-box;
+    &::selection {
+      background: ${p => p.theme.accent.primary};
+    }
   }
+
 `;

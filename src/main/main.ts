@@ -31,13 +31,12 @@ function createWindow() {
     show: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
     roundedCorners: true,
     fullscreenable: false,
-    backgroundColor: "#00000000",
-    // backgroundMaterial: "mica", // mica ngebug banget jir jgn dipake
+    backgroundColor: "#000000",
     minWidth: 500,
     minHeight: 400,
     frame: false,
     titleBarOverlay: {
-      color: "#00000000",
+      color: "#181818",
       symbolColor: "#ffffff",
       height: 48,
     },
@@ -70,11 +69,7 @@ function createWindow() {
     window.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
     window.loadFile(
-      path.join(
-        __dirname,
-        "../renderer",
-        `${MAIN_WINDOW_VITE_NAME}/index.html`
-      )
+      path.join(__dirname, "../renderer", `${MAIN_WINDOW_VITE_NAME}/index.html`)
     );
   }
 }
