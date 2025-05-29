@@ -1,24 +1,15 @@
 import { ComponentProps } from "react";
-import styled from "styled-components";
+import styled, { css, useTheme } from "styled-components";
+import Button from "~/renderer/components/button";
 
 export interface TitlebarProps extends ComponentProps<"div"> {}
 
 function Titlebar({ children, ...props }: TitlebarProps) {
+  const theme = useTheme();
+  Managed.window.setControlColors(theme.background.e0);
+
   return <Container {...props}>{children}</Container>;
 }
-
-export interface TitlebarTabProps extends ComponentProps<"button"> {
-  selected?: boolean;
-}
-
-function TitlebarTab({ selected, children, ...props }: TitlebarTabProps) {
-  const Element = selected ? TabActive : TabInactive;
-  return <Element {...props}>{children}</Element>;
-}
-
-export default Object.assign(Titlebar, {
-  Tab: TitlebarTab,
-});
 
 const Container = styled.div`
   width: 100%;
@@ -37,21 +28,24 @@ const Container = styled.div`
   }
 `;
 
-const TabInactive = styled.button`
+export interface TitlebarTabProps extends ComponentProps<"button"> {
+  selected?: boolean;
+}
+
+const TitlebarTab = styled(Button)<TitlebarTabProps>`
   height: 40px;
-  color: ${(p) => p.theme.foreground.e1};
   padding: 0px 20px;
-  border: 1px solid ${(p) => p.theme.elevation.t2};
   border-radius: 8px;
-  &:hover {
-    background: ${(p) => p.theme.elevation.t1};
-  }
+  ${(p) =>
+    !p.selected &&
+    css`
+      background: ${(p) => p.theme.elevation.t1};
+      &:hover {
+        background: ${(p) => p.theme.elevation.t2};
+      }
+    `}
 `;
 
-const TabActive = styled(TabInactive)`
-  background: ${(p) => p.theme.elevation.t1};
-  color: ${(p) => p.theme.foreground.e0};
-  &:hover {
-    background: ${(p) => p.theme.elevation.t2};
-  }
-`;
+export default Object.assign(Titlebar, {
+  Tab: TitlebarTab,
+});

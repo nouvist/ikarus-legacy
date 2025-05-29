@@ -28,7 +28,7 @@ app.on("second-instance", () => {
 
 function createWindow() {
   const window = new BrowserWindow({
-    show: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
+    show: false,
     roundedCorners: true,
     fullscreenable: false,
     backgroundColor: "#000000",
@@ -36,7 +36,7 @@ function createWindow() {
     minHeight: 400,
     frame: false,
     titleBarOverlay: {
-      color: "#181818",
+      color: "#000000",
       symbolColor: "#ffffff",
       height: 48,
     },

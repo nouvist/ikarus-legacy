@@ -29,7 +29,7 @@ export default function KeyedStack({
             animate={{
               opacity: isActive ? 1 : 0,
               translateY: isActive ? 0 : 64,
-              filter: `blur(${isActive ? 0 : 10}px)`,
+              scale: isActive ? 1 : 0.95,
             }}
           >
             {child}

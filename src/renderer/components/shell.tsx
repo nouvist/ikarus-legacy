@@ -1,11 +1,14 @@
-import { ComponentProps } from "react";
+import { ComponentProps, useEffect } from "react";
 import styled, { createGlobalStyle } from "styled-components";
 import font from "~/renderer/assets/fonts/space_grotesk/SpaceGrotesk-VariableFont_wght.ttf";
 import "normalize.css/normalize.css";
+import removeSplash from "~/renderer/foundations/remove_splash";
 
 export interface ShellProps extends ComponentProps<"div"> {}
 
 export default function Shell({ children, ...props }: ShellProps) {
+  useEffect(removeSplash, []);
+
   return (
     <Container {...props}>
       <GlobalStyle />
@@ -61,7 +64,7 @@ const GlobalStyle = createGlobalStyle`
   * {
     box-sizing: border-box;
     &::selection {
-      background: ${p => p.theme.accent.primary};
+      background: ${(p) => p.theme.accent.primary};
     }
   }
 `;

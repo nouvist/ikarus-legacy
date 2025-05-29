@@ -1,4 +1,4 @@
-import { VoidEventItem } from "~/main/bridge/types/primitive";
+import { RendererVoidEventItem, VoidEventItem } from "~/main/bridge/types/primitive";
 
 export interface WindowEventMap {
   "Window::minimize": VoidEventItem;
@@ -7,5 +7,6 @@ export interface WindowEventMap {
   "Window::show": VoidEventItem;
   "Window::hide": VoidEventItem;
   "Window::debug": VoidEventItem;
+  "Window::setTitleBarColor": RendererVoidEventItem<string>
 }
 

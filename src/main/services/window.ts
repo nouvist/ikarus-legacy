@@ -34,6 +34,12 @@ export default function createWindowService(
     isShown.value = false;
   });
 
+  bridge.handle("Window::setTitleBarColor", async (_, color) => {
+    window.setTitleBarOverlay({
+      color,
+    });
+  });
+
   bridge.handle("Window::debug", async () => {
     window.webContents.openDevTools();
   });

@@ -25,5 +25,9 @@ export default function createWindowManaged(bridge: RendererBridge) {
     async debug() {
       await bridge.invoke("Window::debug", undefined);
     },
+
+    async setControlColors(color: string) {
+      await bridge.invoke("Window::setTitleBarColor", color);
+    }
   };
 }
