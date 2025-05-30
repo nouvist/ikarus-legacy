@@ -34,6 +34,7 @@ function Browser({ controller }: BrowserProps, ref: ForwardedRef<WebviewTag>) {
       <webview
         ref={bindRefs(ref, controller?.bind, expose)}
         style={{ flex: 1 }}
+        preload={Managed.webview.preload}
       />
     </Flex>
   );
@@ -124,17 +125,20 @@ export function createBrowserController() {
       ref.value = wv;
       resolve();
     },
+    debug: () => {
+      ref.value?.openDevTools();
+    },
     load: async (src: string) => {
       await promise;
       ref.value!.src = src;
     },
     goBack: () => {
-      const wv = ref.value;
-      if (wv && wv.canGoBack()) wv.goBack();
+      if (!ref.value?.canGoBack()) return;
+      ref.value.goBack();
     },
     goForward: () => {
-      const wv = ref.value;
-      if (wv && wv.canGoForward()) wv.goForward();
+      if (!ref.value?.canGoForward()) return;
+      ref.value.goForward();
     },
   };
 }

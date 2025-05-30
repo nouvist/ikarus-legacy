@@ -1,5 +1,21 @@
 import { contextBridge } from "electron";
 
-contextBridge.exposeInMainWorld("API", {
-  hello: () => "hello from preload",
-});
+export default function createBridge() {
+  return {
+    hello: () => "hello from preload",
+  };
+}
+
+const bridge = createBridge();
+try {
+  contextBridge.exposeInMainWorld("Bridge", bridge);
+} catch {
+  Object.defineProperty(window, "Bridge", {
+    value: bridge,
+    writable: false,
+  });
+}
+
+declare global {
+  const Bridge: ReturnType<typeof createBridge>;
+}

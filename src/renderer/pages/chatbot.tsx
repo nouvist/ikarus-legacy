@@ -4,13 +4,14 @@ import Button from "~/renderer/components/button";
 import Card from "~/renderer/components/card";
 import Split from "~/renderer/components/split";
 import { ColorType } from "~/renderer/foundations/colors";
+import EdgeInsets from "~/renderer/foundations/edge_insets";
 
 export default function Chatbot() {
   const wv = useBrowserController();
   return (
     <Card.Full>
       <Split>
-        <Fragment>
+        <Card padding={EdgeInsets.all(20)}>
           <Button
             color={ColorType.primary}
             onClick={() => wv.load("https://istn.ac.id/")}
@@ -23,7 +24,8 @@ export default function Chatbot() {
           >
             Go to Github
           </Button>
-        </Fragment>
+          <Button onClick={wv.debug}>Debug</Button>
+        </Card>
         <Browser controller={wv} />
       </Split>
     </Card.Full>
