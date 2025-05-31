@@ -1,21 +1,25 @@
 import { contextBridge } from "electron";
+import createWebviewBridge from "~/webview/bridge";
+import createJsService from "~/webview/services/js";
 
-export default function createBridge() {
+export default function createWebviewManaged() {
+  const bridge = createWebviewBridge();
+  createJsService(bridge);
   return {
-    hello: () => "hello from preload",
+    bridge,
   };
 }
 
-const bridge = createBridge();
+const bridge = createWebviewManaged();
 try {
-  contextBridge.exposeInMainWorld("Bridge", bridge);
+  contextBridge.exposeInMainWorld("__Managed", bridge);
 } catch {
-  Object.defineProperty(window, "Bridge", {
+  Object.defineProperty(window, "__Managed", {
     value: bridge,
     writable: false,
   });
 }
 
 declare global {
-  const Bridge: ReturnType<typeof createBridge>;
+  const __Managed: ReturnType<typeof createWebviewManaged>;
 }

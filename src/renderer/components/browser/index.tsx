@@ -6,6 +6,7 @@ import {
 } from "@fluentui/react-icons";
 import { DidNavigateEvent, DidNavigateInPageEvent, WebviewTag } from "electron";
 import { ForwardedRef, forwardRef, useEffect, useRef, useState } from "react";
+import { BrowserController } from "~/renderer/components/browser/controller";
 import Button from "~/renderer/components/button";
 import Card from "~/renderer/components/card";
 import Flex from "~/renderer/components/flex";
@@ -13,8 +14,9 @@ import Input from "~/renderer/components/input";
 import Constraints from "~/renderer/foundations/constraints";
 import EdgeFlags from "~/renderer/foundations/edge_flags";
 import EdgeInsets from "~/renderer/foundations/edge_insets";
-import { createCompleter, createRefCell } from "~/shared/core";
 import { bindRefs } from "~/shared/react";
+
+export * from "~/renderer/components/browser/controller";
 
 export interface BrowserProps {
   controller: BrowserController;
@@ -53,9 +55,13 @@ function Controls({ controller }: { controller: BrowserController }) {
 
     (async () => {
       await controller.waitUntilReady();
+      controller.load("https://google.com");
       const wv = controller.getRaw()!;
       wv.addEventListener("did-navigate", handleNavigate);
       wv.addEventListener("did-navigate-in-page", handleNavigate);
+      Object.defineProperty(window, "Webview", {
+        value: controller,
+      });
     })();
 
     return () => {
@@ -107,38 +113,4 @@ function Controls({ controller }: { controller: BrowserController }) {
       </Flex>
     </Card>
   );
-}
-
-export type BrowserController = ReturnType<typeof createBrowserController>;
-
-export function useBrowserController() {
-  return useRef(createBrowserController()).current;
-}
-
-export function createBrowserController() {
-  const { promise, resolve } = createCompleter<void>();
-  const ref = createRefCell<WebviewTag | undefined>(undefined);
-  return {
-    waitUntilReady: () => promise,
-    getRaw: () => ref.value,
-    bind: (wv: WebviewTag) => {
-      ref.value = wv;
-      resolve();
-    },
-    debug: () => {
-      ref.value?.openDevTools();
-    },
-    load: async (src: string) => {
-      await promise;
-      ref.value!.src = src;
-    },
-    goBack: () => {
-      if (!ref.value?.canGoBack()) return;
-      ref.value.goBack();
-    },
-    goForward: () => {
-      if (!ref.value?.canGoForward()) return;
-      ref.value.goForward();
-    },
-  };
 }

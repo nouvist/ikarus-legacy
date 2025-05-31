@@ -1,4 +1,4 @@
-import { RendererVoidEventItem, VoidEventItem } from "~/main/bridge/types/primitive";
+import { RendererVoidEventItem, VoidEventItem } from "~/shared/event";
 
 export interface WindowEventMap {
   "Window::minimize": VoidEventItem;
