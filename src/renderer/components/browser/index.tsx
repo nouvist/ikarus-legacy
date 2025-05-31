@@ -59,7 +59,7 @@ function Controls({ controller }: { controller: BrowserController }) {
       const wv = controller.getRaw()!;
       wv.addEventListener("did-navigate", handleNavigate);
       wv.addEventListener("did-navigate-in-page", handleNavigate);
-      Object.defineProperty(window, "Webview", {
+      Object.defineProperty(window, "__currentWebview", {
         value: controller,
       });
     })();

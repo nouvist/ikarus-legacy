@@ -43,12 +43,17 @@ export default function createBrowserBridge(
       const random = getRandom();
       return new Promise((resolve, reject) => {
         function handle(event: IpcMessageEvent) {
-          if (event.channel !== "__Invoke::return") return;
+          const isResolved = event.channel === "__Invoke::resolve";
+          const isRejected = event.channel === "__Invoke::reject";
+          if (!isResolved && !isRejected) return;
+
           const [id, channel, result] = event.args;
           if (id !== random) return;
           if (channel !== key) return;
           ref.value?.removeEventListener("ipc-message", handle);
-          resolve(result);
+
+          if (isResolved) resolve(result);
+          else if (isRejected) reject(result);
         }
         ref.value?.addEventListener("ipc-message", handle);
         setTimeout(() => {

@@ -35,8 +35,12 @@ export default function createWebviewBridge() {
         if (args.length !== 3) return;
         const [id, channel, value] = args;
         if (channel !== key) return;
-        const result = await callback(event, value);
-        ipcRenderer.sendToHost("__Invoke::return", id, channel, result);
+        try {
+          const result = await callback(event, value);
+          ipcRenderer.sendToHost("__Invoke::resolve", id, channel, result);
+        } catch (error) {
+          ipcRenderer.sendToHost("__Invoke::reject", id, channel, error);
+        }
       });
     },
   };
