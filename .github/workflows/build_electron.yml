@@ -28,14 +28,10 @@ jobs:
         run: pnpm install
 
       - name: Build Electron App (Linux)
-        run: |
-          pnpm run make -p linux -a x64
-          pnpm run package -p linux -a x64
+        run: pnpm run package -p linux -a x64
 
       - name: Build Electron App (Windows)
-        run: |
-          pnpm run make -p win32 -a x64
-          pnpm run package -p win32 -a x64
+        run: pnpm run package -p win32 -a x64
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
