@@ -42,7 +42,7 @@ export default function App() {
             <Flex gap={8} direction="column">
               <Button onClick={Managed.window.debug}>[Debug] Renderer</Button>
               <Button
-                onClick={() => (window as any)["__currentWebview"]?.debug()}
+                onClick={() => (window as any)["wv"]?.managed.debug()}
               >
                 [Debug] Webview
               </Button>

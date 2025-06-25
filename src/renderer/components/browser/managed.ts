@@ -1,5 +1,6 @@
 import { BrowserBridge } from "~/renderer/components/browser/bridge";
 import { RefCell } from "~/shared/core";
+import { getSelector } from "~/shared/html";
 
 export default function createBrowserManaged(
   ref: RefCell<Electron.WebviewTag | undefined>,
@@ -25,10 +26,13 @@ export default function createBrowserManaged(
     ref.value.goForward();
   }
 
-  function js<T>(callback: () => T) {
+  function js<T, O extends { [k: string]: any } | undefined>(
+    callback: (obj: O) => T,
+    obj?: O
+  ) {
     return bridge.invoke(
       "Js::eval",
-      `(${callback.toString()})()`
+      `(${callback.toString()})(${JSON.stringify(obj)});`
     ) as Promise<T>;
   }
 
@@ -36,6 +40,32 @@ export default function createBrowserManaged(
     const html = await js(() => document.documentElement.outerHTML);
     const parser = new DOMParser();
     const document = parser.parseFromString(html, "text/html");
+
+    for (const eventType of ["click", "input", "change", "keydown", "keyup"]) {
+      document.addEventListener(eventType, async (event) => {
+        const el = event.target as HTMLElement;
+        const id = getSelector(el);
+        let value: any = undefined;
+        if (eventType === "input" || eventType === "change") {
+          value = (el as HTMLInputElement).value;
+        }
+        await js(
+          ({ id, eventType, value }) => {
+            const element = document.querySelector(id);
+            if (element) {
+              if (eventType === "click") (element as HTMLElement).click();
+              if (
+                (eventType === "input" || eventType === "change") &&
+                "value" in element
+              )
+                (element as HTMLInputElement).value = value;
+            }
+          },
+          { id, eventType, value }
+        );
+      });
+    }
+
     return document;
   }
 
