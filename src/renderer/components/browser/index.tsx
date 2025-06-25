@@ -55,17 +55,17 @@ function Controls({ controller }: { controller: BrowserController }) {
 
     (async () => {
       await controller.waitUntilReady();
-      controller.load("https://google.com");
-      const wv = controller.getRaw()!;
+      controller.managed.go("https://bing.com");
+      const wv = controller.raw()!;
       wv.addEventListener("did-navigate", handleNavigate);
       wv.addEventListener("did-navigate-in-page", handleNavigate);
-      Object.defineProperty(window, "__currentWebview", {
+      Object.defineProperty(window, "wv", {
         value: controller,
       });
     })();
 
     return () => {
-      const wv = controller.getRaw()!;
+      const wv = controller.raw()!;
       if (!wv) return;
       wv.removeEventListener("did-navigate", handleNavigate);
       wv.removeEventListener("did-navigate-in-page", handleNavigate);
@@ -79,7 +79,7 @@ function Controls({ controller }: { controller: BrowserController }) {
           padding={EdgeInsets.zero}
           constraints={Constraints.all(40)}
           disabled={!canGoBack}
-          onClick={controller.goBack}
+          onClick={controller.managed.goBack}
         >
           <ChevronLeft24Regular />
         </Button>
@@ -87,7 +87,7 @@ function Controls({ controller }: { controller: BrowserController }) {
           padding={EdgeInsets.zero}
           constraints={Constraints.all(40)}
           disabled={!canGoForward}
-          onClick={controller.goForward}
+          onClick={controller.managed.goForward}
         >
           <ChevronRight24Regular />
         </Button>
@@ -98,7 +98,7 @@ function Controls({ controller }: { controller: BrowserController }) {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") controller.load(url);
+              if (e.key === "Enter") controller.managed.go(url);
               if (e.key === "Escape") setUrl(currentUrl.current);
             }}
             icon={

@@ -2,6 +2,8 @@ import { IpcMessageEvent } from "electron";
 import { getRandom, RefCell } from "~/shared/core";
 import { WebviewEventKey, WebviewEventMap } from "~/webview/bridge/types";
 
+export type BrowserBridge = ReturnType<typeof createBrowserBridge>;
+
 export default function createBrowserBridge(
   ref: RefCell<Electron.WebviewTag | undefined>
 ) {
