@@ -35,8 +35,8 @@ export default function Theme({ children }: ThemeProps) {
       e1: "#818181",
     },
     accent: {
-      primary: "#482ab8",
-      danger: "#b82a2c",
+      primary: "#2a34bd",
+      danger: "#c22528",
     },
     elevation: {
       solid: "#2b2b2b",

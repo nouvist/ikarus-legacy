@@ -44,7 +44,7 @@ export function createChatController(browser: BrowserController) {
 
   async function init() {
     model.value = new ChatGoogleGenerativeAI({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.0-flash-lite",
       apiKey: await Managed.env("GEMINI_API_KEY"),
     });
   }
@@ -62,10 +62,26 @@ export function createChatController(browser: BrowserController) {
       },
     ]);
 
-    const m = model.value!;
+    const runner = model.value!;
     try {
       const stream = new BehaviorSubject<string>("");
-      const result = await m.stream(message);
+      const result = await runner.stream([
+        {
+          role: "system",
+          content: "bjir wkwkwk",
+        },
+        ...chats.getValue().map((chat) => ({
+          role: chat.type === ChatItemType.User ? "user" : "assistant",
+          content:
+            chat.type === ChatItemType.User
+              ? chat.content
+              : chat.content.getValue(),
+        })),
+        {
+          role: "user",
+          content: message,
+        },
+      ]);
 
       chats.next([
         ...chats.getValue(),

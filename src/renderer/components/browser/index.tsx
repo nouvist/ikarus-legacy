@@ -6,6 +6,7 @@ import {
 } from "@fluentui/react-icons";
 import { DidNavigateEvent, DidNavigateInPageEvent, WebviewTag } from "electron";
 import { ForwardedRef, forwardRef, useEffect, useRef, useState } from "react";
+import { useTheme } from "styled-components";
 import { BrowserController } from "~/renderer/components/browser/controller";
 import Button from "~/renderer/components/button";
 import Card from "~/renderer/components/card";
@@ -43,6 +44,7 @@ function Browser({ controller }: BrowserProps, ref: ForwardedRef<WebviewTag>) {
 }
 
 function Controls({ controller }: { controller: BrowserController }) {
+  const theme = useTheme();
   const currentUrl = useRef("");
   const [url, setUrl] = useState("");
   const [canGoBack, setCanGoBack] = useState(true);
@@ -51,6 +53,8 @@ function Controls({ controller }: { controller: BrowserController }) {
   useEffect(() => {
     function handleNavigate(event: DidNavigateEvent | DidNavigateInPageEvent) {
       setUrl((currentUrl.current = event.url));
+      setCanGoBack(controller.managed.canGoBack());
+      setCanGoForward(controller.managed.canGoForward());
     }
 
     (async () => {
@@ -105,7 +109,7 @@ function Controls({ controller }: { controller: BrowserController }) {
               currentUrl.current.startsWith("https") ? (
                 <LockClosed24Regular />
               ) : (
-                <Warning24Regular />
+                <Warning24Regular color={theme.accent.danger} />
               )
             }
           />

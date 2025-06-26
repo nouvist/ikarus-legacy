@@ -26,6 +26,14 @@ export default function createBrowserManaged(
     ref.value.goForward();
   }
 
+  function canGoBack() {
+    return ref.value?.canGoBack() ?? false;
+  }
+
+  function canGoForward() {
+    return ref.value?.canGoForward() ?? false;
+  }
+
   function js<T, O extends { [k: string]: any } | undefined>(
     callback: (obj: O) => T,
     obj?: O,
@@ -74,6 +82,8 @@ export default function createBrowserManaged(
     go,
     goBack,
     goForward,
+    canGoBack,
+    canGoForward,
     js,
     dom,
   };
