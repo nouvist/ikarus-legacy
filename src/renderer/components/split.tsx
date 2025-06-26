@@ -23,7 +23,7 @@ export default function Split({ children, ...props }: SplitProps) {
       <Stack.Fill>
         <Flex {...props}>
           <Flex.MotionFill flex={leftFlex}>{left}</Flex.MotionFill>
-          <Splitter
+          <_Splitter
             isDrag={isDrag}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
@@ -43,11 +43,11 @@ export default function Split({ children, ...props }: SplitProps) {
   );
 }
 
-interface SplitterProps extends ComponentProps<typeof motion.div> {
+interface _SplitterProps extends ComponentProps<typeof motion.div> {
   isDrag?: boolean;
 }
 
-const Splitter = styled(motion.div)<SplitterProps>`
+const _Splitter = styled(motion.div)<_SplitterProps>`
   flex: unset;
   width: 1px;
   height: 100%;
@@ -58,7 +58,7 @@ const Splitter = styled(motion.div)<SplitterProps>`
     content: "";
     position: absolute;
     top: 0;
-    width: ${(p) => (p.isDrag ? "1000px" : "15px")};
+    width: ${(p) => (p.isDrag ? "1000px" : "9px")};
     height: 100%;
     transform: translateX(-50%);
   }

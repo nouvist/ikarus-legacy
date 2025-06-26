@@ -9,7 +9,7 @@ import { ForwardedRef, forwardRef, useEffect, useRef, useState } from "react";
 import { BrowserController } from "~/renderer/components/browser/controller";
 import Button from "~/renderer/components/button";
 import Card from "~/renderer/components/card";
-import Flex from "~/renderer/components/flex";
+import Flex, { FlexDirection } from "~/renderer/components/flex";
 import Input from "~/renderer/components/input";
 import Constraints from "~/renderer/foundations/constraints";
 import EdgeFlags from "~/renderer/foundations/edge_flags";
@@ -31,7 +31,7 @@ function Browser({ controller }: BrowserProps, ref: ForwardedRef<WebviewTag>) {
   }
 
   return (
-    <Flex direction="column">
+    <Flex direction={FlexDirection.column}>
       <Controls controller={controller} />
       <webview
         ref={bindRefs(ref, controller?.bind, expose)}

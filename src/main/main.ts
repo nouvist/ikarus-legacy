@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog } from "electron";
 import squirrel from "electron-squirrel-startup";
 import path from "node:path";
 import createMainBridge from "~/main/bridge";
+import createEnvService from "~/main/services/env";
 import createRefreshService from "~/main/services/refresh";
 import createWindowService from "~/main/services/window";
 
@@ -54,6 +55,7 @@ function createWindow() {
   const bridge = createMainBridge(window);
   const winsvc = createWindowService(window, bridge);
   createRefreshService(window, !!MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  createEnvService(bridge);
 
   setTimeout(async () => {
     if (winsvc.isShown) return;

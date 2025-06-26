@@ -10,21 +10,21 @@ export default function Shell({ children, ...props }: ShellProps) {
   useEffect(removeSplash, []);
 
   return (
-    <Container {...props}>
-      <GlobalStyle />
+    <_Container {...props}>
+      <_GlobalStyle />
       {children}
-    </Container>
+    </_Container>
   );
 }
 
-const Container = styled.div`
+const _Container = styled.div`
   width: 100vw;
   height: 100vh;
   display: flex;
   flex-direction: column;
 `;
 
-const GlobalStyle = createGlobalStyle`
+const _GlobalStyle = createGlobalStyle`
   @font-face {
     font-family: "SpaceGrotesk";
     src: url(${font}) format("truetype");

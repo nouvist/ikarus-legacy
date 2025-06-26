@@ -22,30 +22,30 @@ export default function KeyedStack({
         const isActive = key === activeKey;
 
         return (
-          <Item
+          <_Item
             key={`${mainKey}::${key}`}
             index={isActive ? 1 : 0}
             visible={isActive}
             animate={{
               opacity: isActive ? 1 : 0,
-              translateY: isActive ? 0 : 64,
               scale: isActive ? 1 : 0.95,
+              y: isActive ? 0 : 64,
             }}
           >
             {child}
-          </Item>
+          </_Item>
         );
       })}
     </Stack>
   );
 }
 
-interface ItemProps extends ComponentProps<"div"> {
+interface _ItemProps extends ComponentProps<"div"> {
   index?: number;
   visible?: boolean;
 }
 
-const Item = motion(styled(Stack.Fill)<ItemProps>`
+const _Item = motion(styled(Stack.Fill)<_ItemProps>`
   z-index: ${(p) => p.index ?? 0};
   pointer-events: ${(p) => (p.visible ? "unset" : "none")};
 `);

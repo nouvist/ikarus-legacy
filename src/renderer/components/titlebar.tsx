@@ -8,10 +8,10 @@ function Titlebar({ children, ...props }: TitlebarProps) {
   const theme = useTheme();
   Managed.window.setControlColors(theme.background.e0);
 
-  return <Container {...props}>{children}</Container>;
+  return <_Container {...props}>{children}</_Container>;
 }
 
-const Container = styled.div`
+const _Container = styled.div`
   width: 100%;
   height: 49px;
   flex-shrink: 0;

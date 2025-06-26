@@ -2,8 +2,13 @@ import { motion, MotionValue } from "motion/react";
 import { ComponentProps } from "react";
 import styled from "styled-components";
 
+export enum FlexDirection {
+  row = "row",
+  column = "column",
+}
+
 export interface FlexProps extends React.ComponentProps<"div"> {
-  direction?: "row" | "column";
+  direction?: FlexDirection;
   gap?: number;
 }
 
@@ -12,7 +17,7 @@ const Flex = styled.div<FlexProps>`
   width: 100%;
   height: 100%;
   flex: 1;
-  flex-direction: ${(p) => p.direction ?? "row"};
+  flex-direction: ${(p) => p.direction ?? FlexDirection.row};
   gap: ${(p) => p.gap ?? 0}px;
 `;
 
