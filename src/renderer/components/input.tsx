@@ -38,28 +38,36 @@ const _Input = styled.input<InputProps>`
 `;
 
 const _Container = styled.label<InputProps>`
-  background: ${(p) => p.theme.elevation.t1};
-  color: ${(p) => p.theme.foreground.e0};
-  border: 1px solid ${(p) => p.theme.elevation.t2};
-  border-radius: ${(p) => p.radius ?? 4}px;
+  cursor: text;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 200ms ease-in-out;
-  display: flex;
   gap: 8px;
+  background: ${(p) => p.theme.elevation.t1};
+  color: ${(p) => p.theme.foreground.e0};
+  border-radius: ${(p) => p.radius ?? 4}px;
+  transition: box-shadow 200ms ease-in-out;
   margin: ${(p) => p.margin?.toCssVariable() ?? "0px"};
   padding: ${(p) => p.padding?.toCssVariable() ?? "0px"};
   ${(p) => p.constraints?.toCss()}
-  cursor: text;
 
-  &:hover, &:focus, &:focus-within {
-    border-color: ${(p) => p.theme.elevation.t3};
+  box-shadow:
+    inset 0 0 0 1px ${(p) => p.theme.elevation.t2},
+    inset 0 -2px 0 0 ${(p) => p.theme.elevation.t3};
+
+  &:hover,
+  &:focus,
+  &:focus-within {
+    box-shadow:
+      inset 0 0 0 1px ${(p) => p.theme.elevation.t3},
+      inset 0 -2px 0 0 ${(p) => p.theme.accent.primary};
   }
 
   &:disabled {
     background: ${(p) => p.theme.elevation.t1};
-    border-color: ${(p) => p.theme.elevation.t1};
+    box-shadow:
+      inset 0 0 0 1px ${(p) => p.theme.elevation.t1},
+      inset 0 -2px 0 0 ${(p) => p.theme.elevation.t3};
     color: ${(p) => p.theme.foreground.e1};
   }
 `;

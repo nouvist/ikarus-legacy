@@ -35,6 +35,7 @@
     "@libsql/client": "^0.15.9",
     "drizzle-orm": "^0.43.1",
     "electron-squirrel-startup": "^1.0.1",
+    "jotai": "^2.12.5",
     "langchain": "^0.3.29",
     "motion": "^12.18.1",
     "normalize.css": "^8.0.1",

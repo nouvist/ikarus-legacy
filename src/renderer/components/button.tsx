@@ -45,7 +45,7 @@ const _Button = styled.button<ButtonProps>`
   background: ${(p) =>
     p.color ? p.theme.accent[p.color] : p.theme.elevation.t2};
   color: ${(p) => p.theme.foreground.e0};
-  border: 1px solid
+  box-shadow: inset 0 0 0 1px
     ${(p) => (p.color ? p.theme.elevation.t2 : p.theme.elevation.t1)};
   border-radius: ${(p) => p.radius ?? 4}px;
   display: flex;
