@@ -3,8 +3,8 @@ import { ComponentProps } from "react";
 import styled from "styled-components";
 
 export enum FlexDirection {
-  row = "row",
-  column = "column",
+  Row = "row",
+  Column = "column",
 }
 
 export interface FlexProps extends React.ComponentProps<"div"> {
@@ -17,7 +17,7 @@ const Flex = styled.div<FlexProps>`
   width: 100%;
   height: 100%;
   flex: 1;
-  flex-direction: ${(p) => p.direction ?? FlexDirection.row};
+  flex-direction: ${(p) => p.direction ?? FlexDirection.Row};
   gap: ${(p) => p.gap ?? 0}px;
 `;
 

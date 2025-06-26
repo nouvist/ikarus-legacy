@@ -1,5 +1,5 @@
-import { Children, ForwardedRef, Key, ReactNode, useRef } from "react";
-import { createCompleter, getRandom } from "~/shared/core";
+import { Children, Key, ReactNode, Ref, useRef } from "react";
+import { Completer, createCompleter, getRandom } from "~/shared/core";
 
 export function getKey(child: ReactNode) {
   if (typeof child !== "object") return undefined;
@@ -19,21 +19,23 @@ export function getTwo(children: ReactNode) {
 }
 
 export function useRandom() {
-  return useRef(getRandom()).current;
+  const ref = useRef<string | undefined>(undefined);
+  return (ref.current ??= getRandom());
 }
 
 export function useCompleter<T>() {
-  return useRef(createCompleter<T>()).current;
+  const ref = useRef<Completer<T>>(null);
+  return (ref.current ??= createCompleter<T>());
+}
+
+export function registerRef<T>(ref: Ref<T> | undefined | null, value: T) {
+  if (typeof ref === "function") ref(value);
+  if (ref && "current" in ref) ref.current = value;
+  return value;
 }
 
 export function bindRefs<T>(
-  ...refs: (
-    | ForwardedRef<T>
-    | (() => void)
-    | ((value: T) => void)
-    | undefined
-    | null
-  )[]
+  ...refs: (Ref<T> | (() => void) | ((value: T) => void) | undefined | null)[]
 ) {
   return (value: T) => {
     for (const ref of refs) {

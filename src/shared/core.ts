@@ -12,32 +12,43 @@ export function createRefCell<T>(value: T) {
   } as RefCell<T>;
 }
 
+export type Completer<T> = ReturnType<typeof createCompleter<T>>;
+
 export function createCompleter<T>() {
-  let resolve: (value: T) => void;
-  let reject: (reason?: any) => void;
+  let resolveCallback: (value: T) => void;
+  let rejectCallback: (reason?: any) => void;
   let isResolved = false;
   let isRejected = false;
   const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
+    resolveCallback = res;
+    rejectCallback = rej;
   });
 
+  function resolve(value: T) {
+    if (isResolved || isRejected) return false;
+    isResolved = true;
+    resolveCallback(value);
+  }
+
+  function reject(reason?: any) {
+    if (isResolved || isRejected) return false;
+    isRejected = true;
+    rejectCallback(reason);
+    return true;
+  }
+
+  function encapsulate(value: T | Promise<T>): Promise<T> {
+    Promise.resolve(value).then(resolve, reject);
+    return promise;
+  }
+
   return {
-    promise,
+    resolve,
+    reject,
+    encapsulate,
+    wait: () => promise,
     isResolved: () => isResolved,
     isRejected: () => isRejected,
     isFinally: () => isResolved || isRejected,
-    resolve: (value: T) => {
-      if (isResolved || isRejected) return false;
-      isResolved = true;
-      resolve(value);
-      return true;
-    },
-    reject: (reason?: any) => {
-      if (isResolved || isRejected) return false;
-      isRejected = true;
-      reject(reason);
-      return true;
-    },
   };
 }

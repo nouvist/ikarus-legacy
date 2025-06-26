@@ -8,19 +8,19 @@ export default function createWebviewBridge() {
       Type extends WebviewEventMap[Key],
     >(
       key: Key,
-      callback: (event: IpcRendererEvent, args: Type["fromRenderer"]) => void
+      callback: (event: IpcRendererEvent, args: Type["fromRenderer"]) => void,
     ) {
       return ipcRenderer.addListener(key, callback);
     },
     removeEventListener<Key extends WebviewEventKey>(
       key: Key,
-      callback: () => void
+      callback: () => void,
     ) {
       return ipcRenderer.removeListener(key, callback);
     },
     emit<Key extends WebviewEventKey, Type extends WebviewEventMap[Key]>(
       key: Key,
-      value: Type["fromMain"]
+      value: Type["fromMain"],
     ) {
       return ipcRenderer.sendToHost(key, value);
     },
@@ -28,8 +28,8 @@ export default function createWebviewBridge() {
       key: Key,
       callback: (
         event: IpcRendererEvent,
-        args: Type["fromRenderer"]
-      ) => Promise<Type["fromMain"]>
+        args: Type["fromRenderer"],
+      ) => Promise<Type["fromMain"]>,
     ) {
       ipcRenderer.addListener("__Invoke::call", async (event, args) => {
         if (args.length !== 3) return;

@@ -5,14 +5,14 @@ import { getSelector } from "~/shared/html";
 export default function createBrowserManaged(
   ref: RefCell<Electron.WebviewTag | undefined>,
   bridge: BrowserBridge,
-  promise: Promise<void>
+  wait: () => Promise<void>,
 ) {
   function debug() {
     ref.value?.openDevTools();
   }
 
   async function go(src: string) {
-    await promise;
+    await wait();
     ref.value!.src = src;
   }
 
@@ -28,11 +28,11 @@ export default function createBrowserManaged(
 
   function js<T, O extends { [k: string]: any } | undefined>(
     callback: (obj: O) => T,
-    obj?: O
+    obj?: O,
   ) {
     return bridge.invoke(
       "Js::eval",
-      `(${callback.toString()})(${JSON.stringify(obj)});`
+      `(${callback.toString()})(${JSON.stringify(obj)});`,
     ) as Promise<T>;
   }
 
@@ -61,7 +61,7 @@ export default function createBrowserManaged(
                 (element as HTMLInputElement).value = value;
             }
           },
-          { id, eventType, value }
+          { id, eventType, value },
         );
       });
     }

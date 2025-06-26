@@ -28,8 +28,9 @@ app.on("second-instance", () => {
 // });
 
 function createWindow() {
+  const isDebugMode = !!MAIN_WINDOW_VITE_DEV_SERVER_URL;
   const window = new BrowserWindow({
-    show: false,
+    show: !isDebugMode,
     roundedCorners: true,
     fullscreenable: false,
     backgroundColor: "#000000",
@@ -43,7 +44,7 @@ function createWindow() {
     },
     titleBarStyle: "hidden",
     webPreferences: {
-      devTools: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
+      devTools: isDebugMode,
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: false,
       nodeIntegration: false,
@@ -54,12 +55,12 @@ function createWindow() {
 
   const bridge = createMainBridge(window);
   const winsvc = createWindowService(window, bridge);
-  createRefreshService(window, !!MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  createRefreshService(window, isDebugMode);
   createEnvService(bridge);
 
   setTimeout(async () => {
     if (winsvc.isShown) return;
-    if (MAIN_WINDOW_VITE_DEV_SERVER_URL) return;
+    if (isDebugMode) return;
     await dialog.showMessageBox(window, {
       title: "Not responding",
       message: "App is not responding, failsafe triggered.",
@@ -67,11 +68,15 @@ function createWindow() {
     window.close();
   }, 5e3);
 
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+  if (isDebugMode) {
     window.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
     window.loadFile(
-      path.join(__dirname, "../renderer", `${MAIN_WINDOW_VITE_NAME}/index.html`)
+      path.join(
+        __dirname,
+        "../renderer",
+        `${MAIN_WINDOW_VITE_NAME}/index.html`,
+      ),
     );
   }
 }

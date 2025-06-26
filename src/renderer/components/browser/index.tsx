@@ -31,7 +31,7 @@ function Browser({ controller }: BrowserProps, ref: ForwardedRef<WebviewTag>) {
   }
 
   return (
-    <Flex direction={FlexDirection.column}>
+    <Flex direction={FlexDirection.Column}>
       <Controls controller={controller} />
       <webview
         ref={bindRefs(ref, controller?.bind, expose)}

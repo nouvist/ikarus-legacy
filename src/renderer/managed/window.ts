@@ -28,6 +28,6 @@ export default function createWindowManaged(bridge: RendererBridge) {
 
     async setControlColors(color: string) {
       await bridge.invoke("Window::setTitleBarColor", color);
-    }
+    },
   };
 }

@@ -23,7 +23,7 @@ function Button(
     children,
     ...props
   }: ButtonProps,
-  ref: ForwardedRef<HTMLButtonElement>
+  ref: ForwardedRef<HTMLButtonElement>,
 ) {
   return (
     <_Button
@@ -80,7 +80,7 @@ const _Button = styled.button<ButtonProps>`
           background-color 200ms,
           border-color 200ms ease-in-out;
       }
-      &:hover::before {
+      &:not(:disabled):hover::before {
         background: ${(p) => p.theme.elevation.t2};
       }
     `}

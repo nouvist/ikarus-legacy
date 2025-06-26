@@ -5,7 +5,7 @@ import { WebviewEventKey, WebviewEventMap } from "~/webview/bridge/types";
 export type BrowserBridge = ReturnType<typeof createBrowserBridge>;
 
 export default function createBrowserBridge(
-  ref: RefCell<Electron.WebviewTag | undefined>
+  ref: RefCell<Electron.WebviewTag | undefined>,
 ) {
   const callbacks = createCallbackMap();
   return {
@@ -14,7 +14,7 @@ export default function createBrowserBridge(
       Type extends WebviewEventMap[Key],
     >(
       key: Key,
-      callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void
+      callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void,
     ) => {
       if (callbacks.has(key, callback)) return;
       ref?.value?.addEventListener(
@@ -23,7 +23,7 @@ export default function createBrowserBridge(
           if (event.channel !== key) return;
           const args = event.args as Type["fromMain"];
           callback(event, args);
-        })
+        }),
       );
     },
     removeEventListener: <
@@ -31,7 +31,7 @@ export default function createBrowserBridge(
       Type extends WebviewEventMap[Key],
     >(
       key: Key,
-      callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void
+      callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void,
     ) => {
       const binding = callbacks.remove(key, callback);
       if (!binding) return;
@@ -40,7 +40,7 @@ export default function createBrowserBridge(
     invoke: <Key extends WebviewEventKey, Type extends WebviewEventMap[Key]>(
       key: Key,
       value: Type["fromMain"],
-      timeout = 10e3
+      timeout = 10e3,
     ): Promise<Type["fromRenderer"]> => {
       const random = getRandom();
       return new Promise((resolve, reject) => {
@@ -80,14 +80,14 @@ function createCallbackMap() {
   return {
     has: <Key extends WebviewEventKey, Type extends WebviewEventMap[Key]>(
       key: Key,
-      callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void
+      callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void,
     ) => {
       return !!map[key]?.some((item) => item.callback === callback);
     },
     register: <Key extends WebviewEventKey, Type extends WebviewEventMap[Key]>(
       key: Key,
       callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void,
-      binding: (event: IpcMessageEvent) => void
+      binding: (event: IpcMessageEvent) => void,
     ) => {
       if (!map[key]) map[key] = [];
       map[key].push({ callback, binding });
@@ -95,7 +95,7 @@ function createCallbackMap() {
     },
     remove: <Key extends WebviewEventKey, Type extends WebviewEventMap[Key]>(
       key: Key,
-      callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void
+      callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void,
     ) => {
       if (!map[key]) return;
       const index = map[key].findIndex((item) => item.callback === callback);

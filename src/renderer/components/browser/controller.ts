@@ -7,19 +7,20 @@ import { createCompleter, createRefCell } from "~/shared/core";
 export type BrowserController = ReturnType<typeof createBrowserController>;
 
 export function useBrowserController() {
-  return useRef(createBrowserController()).current;
+  const ref = useRef<BrowserController>(null);
+  return (ref.current ??= createBrowserController());
 }
 
 export function createBrowserController() {
-  const { promise, resolve } = createCompleter<void>();
+  const { wait, resolve } = createCompleter<void>();
   const ref = createRefCell<WebviewTag | undefined>(undefined);
   const bridge = createBrowserBridge(ref);
-  const managed = createBrowserManaged(ref, bridge, promise);
+  const managed = createBrowserManaged(ref, bridge, wait);
 
   return {
     bridge,
     managed,
-    waitUntilReady: () => promise,
+    waitUntilReady: wait,
     raw: () => ref.value,
     bind: (wv: WebviewTag) => {
       ref.value = wv;

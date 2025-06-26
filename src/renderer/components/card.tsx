@@ -20,8 +20,8 @@ export interface CardProps extends ComponentProps<"div"> {
 }
 
 const Card = styled.div<CardProps>`
-  background: ${(p) => p.theme.background[p.background ?? BackgroundColor.e0]};
-  color: ${(p) => p.theme.foreground[p.foreground ?? ForegroundColor.e0]};
+  background: ${(p) => p.theme.background[p.background ?? BackgroundColor.E0]};
+  color: ${(p) => p.theme.foreground[p.foreground ?? ForegroundColor.E0]};
   border-radius: ${(p) => p.radius ?? 0}px;
   margin: ${(p) => p.margin?.toCssVariable() ?? "0px"};
   padding: ${(p) => p.padding?.toCssVariable() ?? "0px"};
@@ -30,25 +30,25 @@ const Card = styled.div<CardProps>`
     p.border?.isLeft &&
     css`
       border-left: 1px solid
-        ${p.theme.elevation[p.borderColor ?? ElevationColor.solid]};
+        ${p.theme.elevation[p.borderColor ?? ElevationColor.Solid]};
     `}
   ${(p) =>
     p.border?.isRight &&
     css`
       border-right: 1px solid
-        ${p.theme.elevation[p.borderColor ?? ElevationColor.solid]};
+        ${p.theme.elevation[p.borderColor ?? ElevationColor.Solid]};
     `}
   ${(p) =>
     p.border?.isTop &&
     css`
       border-top: 1px solid
-        ${p.theme.elevation[p.borderColor ?? ElevationColor.solid]};
+        ${p.theme.elevation[p.borderColor ?? ElevationColor.Solid]};
     `}
   ${(p) =>
     p.border?.isBottom &&
     css`
       border-bottom: 1px solid
-        ${p.theme.elevation[p.borderColor ?? ElevationColor.solid]};
+        ${p.theme.elevation[p.borderColor ?? ElevationColor.Solid]};
     `}
 `;
 

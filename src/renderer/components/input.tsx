@@ -14,7 +14,7 @@ export interface InputProps extends ComponentProps<"input"> {
 export default forwardRef(Input);
 function Input(
   { constraints, radius, margin, padding, icon, ...props }: InputProps,
-  ref: ForwardedRef<HTMLInputElement>
+  ref: ForwardedRef<HTMLInputElement>,
 ) {
   return (
     <_Container
@@ -55,19 +55,17 @@ const _Container = styled.label<InputProps>`
     inset 0 0 0 1px ${(p) => p.theme.elevation.t2},
     inset 0 -2px 0 0 ${(p) => p.theme.elevation.t3};
 
-  &:hover,
-  &:focus,
-  &:focus-within {
+  &:not(:has(input:disabled)):hover,
+  &:not(:has(input:disabled)):focus,
+  &:not(:has(input:disabled)):focus-within {
     box-shadow:
       inset 0 0 0 1px ${(p) => p.theme.elevation.t3},
       inset 0 -2px 0 0 ${(p) => p.theme.accent.primary};
   }
 
-  &:disabled {
-    background: ${(p) => p.theme.elevation.t1};
-    box-shadow:
-      inset 0 0 0 1px ${(p) => p.theme.elevation.t1},
-      inset 0 -2px 0 0 ${(p) => p.theme.elevation.t3};
+  &:has(input:disabled) {
+    background: unset;
+    box-shadow: inset 0 0 0 1px ${(p) => p.theme.elevation.t2};
     color: ${(p) => p.theme.foreground.e1};
   }
 `;

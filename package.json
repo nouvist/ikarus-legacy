@@ -11,7 +11,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "fix": "pnpm run lint:fix && pnpm run format:fix",
+    "fixall": "pnpm run lint:fix && pnpm run format:fix",
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
     "format": "prettier --check .",
@@ -41,6 +41,8 @@
     "normalize.css": "^8.0.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-rx": "^4.1.30",
+    "rxjs": "^7.8.2",
     "styled-components": "^6.1.19",
     "zod": "^3.25.67"
   },

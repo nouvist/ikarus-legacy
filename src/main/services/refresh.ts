@@ -2,7 +2,7 @@ import { BrowserWindow } from "electron";
 
 export default function createRefreshService(
   window: BrowserWindow,
-  disable: boolean
+  disable: boolean,
 ) {
   if (!disable) return;
   window.webContents.on("before-input-event", (event, input) => {

@@ -11,7 +11,7 @@ export default function createMainBridge(window: BrowserWindow) {
   return {
     addEventListener<Key extends EventKey, Type extends EventMap[Key]>(
       key: Key,
-      callback: (event: IpcMainEvent, args: Type["fromRenderer"]) => void
+      callback: (event: IpcMainEvent, args: Type["fromRenderer"]) => void,
     ) {
       return ipcMain.addListener(key, callback);
     },
@@ -20,7 +20,7 @@ export default function createMainBridge(window: BrowserWindow) {
     },
     emit<Key extends EventKey, Type extends EventMap[Key]>(
       key: Key,
-      value: Type["fromMain"]
+      value: Type["fromMain"],
     ) {
       return window.webContents.send(key, value);
     },
@@ -28,8 +28,8 @@ export default function createMainBridge(window: BrowserWindow) {
       key: Key,
       callback: (
         event: IpcMainInvokeEvent,
-        args: Type["fromRenderer"]
-      ) => Promise<Type["fromMain"]>
+        args: Type["fromRenderer"],
+      ) => Promise<Type["fromMain"]>,
     ) {
       return ipcMain.handle(key, callback);
     },

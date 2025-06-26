@@ -48,7 +48,7 @@ export default function App() {
               This application is in the early stages of development.
             </Card.Full>
             <Card.Full key={_AppTab.Settings} padding={EdgeInsets.all(20)}>
-              <Flex gap={8} direction={FlexDirection.column}>
+              <Flex gap={8} direction={FlexDirection.Column}>
                 <Button onClick={Managed.window.debug}>[Debug] Renderer</Button>
                 <Button onClick={() => (window as any)["wv"]?.managed.debug()}>
                   [Debug] Webview

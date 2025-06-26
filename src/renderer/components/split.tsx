@@ -1,8 +1,4 @@
-import {
-  motion,
-  useMotionValue,
-  useTransform
-} from "motion/react";
+import { motion, useMotionValue, useTransform } from "motion/react";
 import { ComponentProps, useRef, useState } from "react";
 import { styled } from "styled-components";
 import Flex from "~/renderer/components/flex";

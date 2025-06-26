@@ -4,7 +4,7 @@ import { createRefCell } from "~/shared/core";
 
 export default function createWindowService(
   window: BrowserWindow,
-  bridge: MainBridge
+  bridge: MainBridge,
 ) {
   const isShown = createRefCell(false);
 

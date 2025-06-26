@@ -5,7 +5,7 @@ export default function createRendererBridge() {
   return {
     addEventListener<Key extends EventKey, Type extends EventMap[Key]>(
       key: Key,
-      callback: (event: IpcRendererEvent, args: Type["fromMain"]) => void
+      callback: (event: IpcRendererEvent, args: Type["fromMain"]) => void,
     ) {
       return ipcRenderer.addListener(key, callback);
     },
@@ -14,13 +14,13 @@ export default function createRendererBridge() {
     },
     emit<Key extends EventKey, Type extends EventMap[Key]>(
       key: Key,
-      value: Type["fromRenderer"]
+      value: Type["fromRenderer"],
     ) {
       return ipcRenderer.emit(key, value);
     },
     invoke<Key extends EventKey, Type extends EventMap[Key]>(
       key: Key,
-      args: Type["fromRenderer"]
+      args: Type["fromRenderer"],
     ): Promise<Type["fromMain"]> {
       return ipcRenderer.invoke(key, args);
     },
