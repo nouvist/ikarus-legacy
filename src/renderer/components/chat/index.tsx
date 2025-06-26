@@ -1,8 +1,20 @@
-import { Children, isValidElement, PropsWithChildren } from "react";
+import { ChevronRight24Regular } from "@fluentui/react-icons";
+import {
+  Children,
+  isValidElement,
+  PropsWithChildren,
+  useRef,
+  useState,
+} from "react";
 import { Fragment } from "react/jsx-runtime";
 import styled from "styled-components";
+import Button from "~/renderer/components/button";
 import Card from "~/renderer/components/card";
 import Flex, { FlexDirection } from "~/renderer/components/flex";
+import Input from "~/renderer/components/input";
+import { ColorType, ElevationColor } from "~/renderer/foundations/colors";
+import EdgeFlags from "~/renderer/foundations/edge_flags";
+import EdgeInsets from "~/renderer/foundations/edge_insets";
 
 export interface ChatProps extends PropsWithChildren {}
 
@@ -12,8 +24,48 @@ function Chat({ children }: ChatProps) {
       <_Scroll>
         <_Separator>{children}</_Separator>
       </_Scroll>
-      <Card.Constrained>Hello</Card.Constrained>
+      <_Input />
     </Flex>
+  );
+}
+
+interface _InputProps {
+  onSubmit?: (value: string) => Promise<void>;
+}
+
+function _Input({ onSubmit }: _InputProps) {
+  const input = useRef<HTMLInputElement>(null);
+  async function handleSubmit() {
+    const text = input.current!.value.trim();
+    await onSubmit?.(text);
+    input.current!.value = "";
+  }
+
+  return (
+    <Card.Constrained
+      border={EdgeFlags.top}
+      borderColor={ElevationColor.solid}
+      padding={EdgeInsets.symmetric({
+        horizontal: 40,
+        vertical: 20,
+      })}
+    >
+      <Flex gap={8}>
+        <Flex.Fill>
+          <Input
+            ref={input}
+            placeholder="Ketik pesan di sini..."
+            onKeyDown={(e) => {
+              if (e.key !== "Enter") return;
+              handleSubmit();
+            }}
+          />
+        </Flex.Fill>
+        <Button color={ColorType.primary} onClick={handleSubmit}>
+          <ChevronRight24Regular />
+        </Button>
+      </Flex>
+    </Card.Constrained>
   );
 }
 
