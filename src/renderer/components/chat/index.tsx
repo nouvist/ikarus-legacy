@@ -1,11 +1,5 @@
 import { ChevronRight24Regular } from "@fluentui/react-icons";
-import {
-  Children,
-  isValidElement,
-  PropsWithChildren,
-  useRef,
-  useState,
-} from "react";
+import { Children, isValidElement, PropsWithChildren, useRef } from "react";
 import { Fragment } from "react/jsx-runtime";
 import styled from "styled-components";
 import Button from "~/renderer/components/button";
@@ -46,7 +40,7 @@ function _Input({ onSubmit }: _InputProps) {
       border={EdgeFlags.top}
       borderColor={ElevationColor.solid}
       padding={EdgeInsets.symmetric({
-        horizontal: 40,
+        horizontal: 32,
         vertical: 20,
       })}
     >
@@ -71,14 +65,14 @@ function _Input({ onSubmit }: _InputProps) {
 
 const _Scroll = styled(Card.Full)`
   overflow-y: scroll;
-  padding: 40px;
+  padding: 20px 32px;
 
   &::-webkit-scrollbar {
     display: none;
   }
 
   &:hover {
-    padding-right: 20px;
+    padding-right: 12px;
     &::-webkit-scrollbar {
       display: block;
       width: 20px;
@@ -103,6 +97,7 @@ enum ChatType {
 function _Separator({ children }: PropsWithChildren) {
   let type: ChatType | undefined;
   let isFirst = true;
+
   return Children.map(children, (child) => {
     if (!isValidElement(child)) return child;
     if (typeof child.type !== "function") return child;
@@ -110,8 +105,6 @@ function _Separator({ children }: PropsWithChildren) {
     const nextType = child.type.__chatType as ChatType;
 
     if (nextType === type) {
-      if (isFirst) return child;
-      isFirst = false;
       return (
         <Fragment>
           <_Gap />
@@ -120,11 +113,14 @@ function _Separator({ children }: PropsWithChildren) {
       );
     }
 
+    const gap = isFirst ? 0 : 16;
+    isFirst = false;
     type = nextType;
     return (
       <Fragment>
-        <_Gap />
+        <_Gap size={gap} />
         <ChatTitle type={type!} />
+        <_Gap />
         <Fragment>{child}</Fragment>
       </Fragment>
     );
@@ -173,7 +169,7 @@ function ChatAssistent({ children }: ChatAssistentProps) {
 const _ChatShared = styled.div`
   background: ${(p) => p.theme.elevation.t1};
   color: ${(p) => p.theme.foreground.e0};
-  border: 1px solid ${(p) => p.theme.elevation.t2};
+  border: 1px solid ${(p) => p.theme.elevation.t1};
   border-radius: 8px;
   padding: 14px 20px;
   &[data-right="true"] {
@@ -184,7 +180,14 @@ const _ChatShared = styled.div`
   }
 `;
 
-function ChatTool() {}
+function ChatTool() {
+  return (
+    <_ChatShared data-left>
+      <b>Tool:</b>
+      <span> memproses</span>
+    </_ChatShared>
+  );
+}
 
 export default Object.assign(Chat, {
   User: Object.assign(ChatUser, {

@@ -20,6 +20,8 @@ export default function ChatPage() {
           <Chat.User>
             Aku akan ada di kantorku untuk menghitung uangku.
           </Chat.User>
+          <Chat.Assistent>Memproses</Chat.Assistent>
+          <Chat.Tool/>
         </Chat>
         <Browser controller={wv} />
       </Split>

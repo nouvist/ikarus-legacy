@@ -40,7 +40,7 @@ const _Input = styled.input<InputProps>`
 const _Container = styled.label<InputProps>`
   background: ${(p) => p.theme.elevation.t1};
   color: ${(p) => p.theme.foreground.e0};
-  border: 1px solid ${(p) => p.theme.elevation.t1};
+  border: 1px solid ${(p) => p.theme.elevation.t2};
   border-radius: ${(p) => p.radius ?? 4}px;
   display: flex;
   align-items: center;
@@ -53,8 +53,8 @@ const _Container = styled.label<InputProps>`
   ${(p) => p.constraints?.toCss()}
   cursor: text;
 
-  &:hover {
-    border-color: ${(p) => p.theme.elevation.t2};
+  &:hover, &:focus, &:focus-within {
+    border-color: ${(p) => p.theme.elevation.t3};
   }
 
   &:disabled {
