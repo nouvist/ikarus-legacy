@@ -23,7 +23,7 @@ function Button(
     children,
     ...props
   }: ButtonProps,
-  ref: ForwardedRef<HTMLButtonElement>,
+  ref: ForwardedRef<HTMLButtonElement>
 ) {
   return (
     <_Button
@@ -45,8 +45,11 @@ const _Button = styled.button<ButtonProps>`
   background: ${(p) =>
     p.color ? p.theme.accent[p.color] : p.theme.elevation.t2};
   color: ${(p) => p.theme.foreground.e0};
-  box-shadow: inset 0 0 0 1px
-    ${(p) => (p.color ? p.theme.elevation.t2 : p.theme.elevation.t1)};
+  box-shadow:
+    inset 0 0 0 1px
+      ${(p) => (p.color ? p.theme.elevation.t2 : p.theme.elevation.t1)},
+    inset 0 -1px 0 0
+      ${(p) => (p.color ? p.theme.elevation.t3 : p.theme.elevation.t2)};
   border-radius: ${(p) => p.radius ?? 4}px;
   display: flex;
   align-items: center;

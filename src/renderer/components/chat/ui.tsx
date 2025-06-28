@@ -208,11 +208,30 @@ const _ChatShared = styled.div`
   border-radius: 8px;
   padding: 14px 20px;
   user-select: text;
+
   &[data-right="true"] {
     margin-left: min(120px, 20%);
   }
+
   &[data-left="true"] {
     margin-right: min(120px, 20%);
+  }
+
+  > * {
+    margin-block-start: 0.5em;
+    margin-block-end: 0.5em;
+  }
+
+  > *:nth-child(1) {
+    margin-top: 0;
+  }
+
+  > *:nth-last-child(1) {
+    margin-bottom: 0;
+  }
+
+  > ul {
+    padding-inline-start: 2em;
   }
 `;
 

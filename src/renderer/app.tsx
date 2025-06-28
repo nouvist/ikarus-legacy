@@ -1,22 +1,18 @@
-import { useState } from "react";
-import Button from "~/renderer/components/button";
+import { useEffect, useState } from "react";
 import Card from "~/renderer/components/card";
-import Flex, { FlexDirection } from "~/renderer/components/flex";
 import KeyedStack from "~/renderer/components/keyed_stack";
 import Shell from "~/renderer/components/shell";
 import Theme from "~/renderer/components/theme";
 import Titlebar from "~/renderer/components/titlebar";
-import EdgeInsets from "~/renderer/foundations/edge_insets";
 import ChatPage from "~/renderer/pages/chat";
-
-enum _AppTab {
-  Chat = "chat",
-  Database = "database",
-  Settings = "settings",
-}
+import SettingsPage from "~/renderer/pages/settings";
 
 export default function App() {
   const [tab, setTab] = useState(_AppTab.Chat);
+
+  useEffect(() => {
+    Managed.window.show();
+  }, []);
 
   return (
     <Theme>
@@ -47,21 +43,16 @@ export default function App() {
             <Card.Full key={_AppTab.Database}>
               This application is in the early stages of development.
             </Card.Full>
-            <Card.Full key={_AppTab.Settings} padding={EdgeInsets.all(20)}>
-              <Flex gap={8} direction={FlexDirection.Column}>
-                <Button onClick={Managed.window.debug}>[Debug] Renderer</Button>
-                <Button onClick={() => (window as any)["wv"]?.managed.debug()}>
-                  [Debug] Webview
-                </Button>
-                <br />
-                <center>
-                  This application is in the early stages of development.
-                </center>
-              </Flex>
-            </Card.Full>
+            <SettingsPage key={_AppTab.Settings} />
           </KeyedStack>
         </Card.Full>
       </Shell>
     </Theme>
   );
+}
+
+enum _AppTab {
+  Chat = "chat",
+  Database = "database",
+  Settings = "settings",
 }

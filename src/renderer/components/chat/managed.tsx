@@ -1,3 +1,4 @@
+import Markdown from "react-markdown";
 import { useObservable } from "react-rx";
 import Chat, {
   ChatController,
@@ -61,10 +62,18 @@ interface _ChatProps<Data extends ChatItem> {
 }
 
 function _ChatUser({ chat }: _ChatProps<ChatItemUser>) {
-  return <Chat.Raw.Bubble.User>{chat.content}</Chat.Raw.Bubble.User>;
+  return (
+    <Chat.Raw.Bubble.User>
+      <Markdown>{chat.content}</Markdown>
+    </Chat.Raw.Bubble.User>
+  );
 }
 
 function _ChatAssistent({ chat }: _ChatProps<ChatItemAssistent>) {
   const content = useObservable(chat.content);
-  return <Chat.Raw.Bubble.Assistent>{content}</Chat.Raw.Bubble.Assistent>;
+  return (
+    <Chat.Raw.Bubble.Assistent>
+      <Markdown>{content}</Markdown>
+    </Chat.Raw.Bubble.Assistent>
+  );
 }

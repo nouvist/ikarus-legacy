@@ -1,8 +1,8 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { useRef } from "react";
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
 import { BrowserController } from "~/renderer/components/browser";
-import { createCompleter, createRefCell, getRandom } from "~/shared/core";
+import { createRefCell, getRandom, waitObservableUntil } from "~/shared/core";
 
 export type ChatController = ReturnType<typeof createChatController>;
 
@@ -37,9 +37,8 @@ export interface ChatItemAssistent extends ChatItemShared {
 }
 
 export function createChatController(browser: BrowserController) {
-  const completer = createCompleter<void>();
   const model = createRefCell<ChatGoogleGenerativeAI | undefined>(undefined);
-  const readiness = new BehaviorSubject<boolean>(false);
+  const mutex = new BehaviorSubject<boolean>(false);
   const chats = new BehaviorSubject<ChatItem[]>([]);
 
   async function init() {
@@ -47,10 +46,18 @@ export function createChatController(browser: BrowserController) {
       model: "gemini-2.0-flash-lite",
       apiKey: await Managed.env("GEMINI_API_KEY"),
     });
+    mutex.next(true);
+  }
+
+  function waitUntilReady() {
+    return Promise.all([
+      browser.waitUntilReady(),
+      waitObservableUntil(mutex, Boolean),
+    ]);
   }
 
   async function send(message: string) {
-    readiness.next(false);
+    mutex.next(false);
 
     chats.next([
       ...chats.getValue(),
@@ -99,17 +106,15 @@ export function createChatController(browser: BrowserController) {
         stream.next(stream.getValue() + next.value.text);
       }
     } finally {
+      mutex.next(true);
     }
-    readiness.next(true);
   }
 
-  completer.encapsulate(init()).then(() => readiness.next(true));
+  init();
   return {
     send,
-    chats: () => chats,
-    readiness: () => readiness,
-    waitUntilReady: () => {
-      return Promise.all([browser.waitUntilReady(), completer.wait()]);
-    },
+    waitUntilReady,
+    chats: () => chats as Observable<ChatItem[]>,
+    readiness: () => mutex as Observable<boolean>,
   };
 }

@@ -25,17 +25,11 @@ export interface BrowserProps {
 
 export default forwardRef(Browser);
 function Browser({ controller }: BrowserProps, ref: ForwardedRef<WebviewTag>) {
-  function expose(wv: WebviewTag) {
-    Object.assign(window, {
-      webview: wv,
-    });
-  }
-
   return (
     <Flex direction={FlexDirection.Column}>
       <Controls controller={controller} />
       <webview
-        ref={bindRefs(ref, controller?.bind, expose)}
+        ref={bindRefs(ref, controller?.bind)}
         style={{ flex: 1 }}
         preload={Managed.webview.preload}
       />

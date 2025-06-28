@@ -1,3 +1,5 @@
+import { Observable } from "rxjs";
+
 export function getRandom() {
   return Math.random().toString(16).slice(2, 10);
 }
@@ -51,4 +53,19 @@ export function createCompleter<T>() {
     isRejected: () => isRejected,
     isFinally: () => isResolved || isRejected,
   };
+}
+
+export function waitObservableUntil<T>(
+  observable: Observable<T>,
+  callback: (value: T) => boolean
+) {
+  const { wait, resolve } = createCompleter<void>();
+  const subscription = observable.subscribe(handler);
+  function handler(value: T) {
+    if (!callback(value)) return;
+    subscription.unsubscribe();
+    resolve();
+  }
+
+  return wait();
 }

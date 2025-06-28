@@ -1,4 +1,3 @@
-import { motion } from "motion/react";
 import { Children, ComponentProps, Key } from "react";
 import { styled } from "styled-components";
 import Stack from "~/renderer/components/stack";
@@ -45,7 +44,7 @@ interface _ItemProps extends ComponentProps<"div"> {
   visible?: boolean;
 }
 
-const _Item = motion(styled(Stack.Fill)<_ItemProps>`
+const _Item = styled(Stack.MotionFill)<_ItemProps>`
   z-index: ${(p) => p.index ?? 0};
   pointer-events: ${(p) => (p.visible ? "unset" : "none")};
-`);
+`;
