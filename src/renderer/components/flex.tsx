@@ -1,5 +1,5 @@
 import { motion, MotionValue } from "motion/react";
-import { ComponentProps } from "react";
+import { ComponentProps, ForwardedRef, forwardRef } from "react";
 import styled from "styled-components";
 
 export enum FlexDirection {
@@ -12,46 +12,81 @@ export interface FlexProps extends React.ComponentProps<"div"> {
   gap?: number;
 }
 
-const Flex = styled.div<FlexProps>`
+const Flex = forwardRef(function Flex(
+  { direction, gap, children, ...props }: FlexProps,
+  ref: ForwardedRef<HTMLDivElement>
+) {
+  return (
+    <_Flex {...props} ref={ref} $direction={direction} $gap={gap}>
+      {children}
+    </_Flex>
+  );
+});
+
+interface _FlexProps extends React.ComponentProps<"div"> {
+  $direction?: FlexDirection;
+  $gap?: number;
+}
+
+const _Flex = styled.div<_FlexProps>`
   display: flex;
   width: 100%;
   height: 100%;
   flex: 1;
-  flex-direction: ${(p) => p.direction ?? FlexDirection.Row};
-  gap: ${(p) => p.gap ?? 0}px;
+  flex-direction: ${(p) => p.$direction ?? FlexDirection.Row};
+  gap: ${(p) => p.$gap ?? 0}px;
 `;
 
 export interface FlexFillProps extends React.ComponentProps<"div"> {
   flex?: number | string;
 }
 
-const Fill = styled.div<FlexFillProps>`
-  flex: ${(p) => p.flex ?? 1};
+interface _FlexFillProps extends React.ComponentProps<"div"> {
+  $flex?: number | string;
+}
+
+const FlexFill = forwardRef(function FlexFill(
+  { flex, children, ...props }: FlexFillProps,
+  ref: ForwardedRef<HTMLDivElement>
+) {
+  return (
+    <_FlexFill {...props} ref={ref} $flex={flex}>
+      {children}
+    </_FlexFill>
+  );
+});
+
+const _FlexFill = styled.div<_FlexFillProps>`
+  flex: ${(p) => p.$flex ?? 1};
   width: 100%;
   height: 100%;
 `;
 
-const _MotionFill = motion(Fill);
+const _FlexMotionFill = motion.create(FlexFill);
 
 export interface FlexMotionFillProps
-  extends Omit<ComponentProps<typeof _MotionFill>, "flex"> {
+  extends Omit<ComponentProps<typeof _FlexMotionFill>, "flex"> {
   flex?: MotionValue<number> | number | string;
 }
 
-function MotionFill({ flex, children, ...props }: FlexMotionFillProps) {
+const FlexMotionFill = forwardRef(function FlexMotionFill(
+  { flex, children, ...props }: FlexMotionFillProps,
+  ref: ForwardedRef<HTMLDivElement>
+) {
   return (
-    <_MotionFill
+    <_FlexMotionFill
       {...props}
+      ref={ref}
       style={{
         flex,
       }}
     >
       {children}
-    </_MotionFill>
+    </_FlexMotionFill>
   );
-}
+});
 
 export default Object.assign(Flex, {
-  Fill,
-  MotionFill,
+  Fill: FlexFill,
+  MotionFill: FlexMotionFill,
 });

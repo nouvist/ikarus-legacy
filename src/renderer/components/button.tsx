@@ -29,47 +29,54 @@ function Button(
     <_Button
       {...props}
       ref={ref}
-      color={color}
-      radius={radius}
-      margin={margin}
-      padding={padding ?? EdgeInsets.symmetric({ horizontal: 20 })}
-      constraints={constraints ?? new Constraints({ minHeight: 40 })}
+      $color={color}
+      $radius={radius}
+      $margin={margin}
+      $padding={padding ?? EdgeInsets.symmetric({ horizontal: 20 })}
+      $constraints={constraints ?? new Constraints({ minHeight: 40 })}
     >
       {children}
     </_Button>
   );
 }
 
-const _Button = styled.button<ButtonProps>`
+interface _ButtonProps extends ComponentProps<"button"> {
+  $color?: ColorType;
+  $radius?: number;
+  $margin?: EdgeInsets;
+  $padding?: EdgeInsets;
+  $constraints?: Constraints;
+}
+const _Button = styled.button<_ButtonProps>`
   position: relative;
   background: ${(p) =>
-    p.color ? p.theme.accent[p.color] : p.theme.elevation.t2};
+    p.$color ? p.theme.accent[p.$color] : p.theme.elevation.t2};
   color: ${(p) => p.theme.foreground.e0};
   box-shadow:
     inset 0 0 0 1px
       ${(p) => (p.color ? p.theme.elevation.t2 : p.theme.elevation.t1)},
     inset 0 -1px 0 0
       ${(p) => (p.color ? p.theme.elevation.t3 : p.theme.elevation.t2)};
-  border-radius: ${(p) => p.radius ?? 4}px;
+  border-radius: ${(p) => p.$radius ?? 4}px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition:
     background-color 200ms,
     border-color 200ms ease-in-out;
-  margin: ${(p) => p.margin?.toCssVariable() ?? "0px"};
-  padding: ${(p) => p.padding?.toCssVariable() ?? "0px"};
-  ${(p) => p.constraints?.toCss()}
+  margin: ${(p) => p.$margin?.toCssVariable() ?? "0px"};
+  padding: ${(p) => p.$padding?.toCssVariable() ?? "0px"};
+  ${(p) => p.$constraints?.toCss()}
 
   &:hover {
     background: ${(p) =>
-      p.color ? p.theme.accent[p.color] : p.theme.elevation.t3};
+      p.$color ? p.theme.accent[p.$color] : p.theme.elevation.t3};
     border-color: ${(p) =>
-      p.color ? p.theme.elevation.t3 : p.theme.elevation.t2};
+      p.$color ? p.theme.elevation.t3 : p.theme.elevation.t2};
   }
 
   ${(p) =>
-    p.color &&
+    p.$color &&
     css`
       &::before {
         content: "";

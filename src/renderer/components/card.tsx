@@ -1,4 +1,4 @@
-import { ComponentProps } from "react";
+import { ComponentProps, ForwardedRef, forwardRef } from "react";
 import styled, { css } from "styled-components";
 import EdgeFlags from "~/renderer/foundations/edge_flags";
 import {
@@ -19,40 +19,112 @@ export interface CardProps extends ComponentProps<"div"> {
   padding?: EdgeInsets;
 }
 
-const Card = styled.div<CardProps>`
-  background: ${(p) => p.theme.background[p.background ?? BackgroundColor.E0]};
-  color: ${(p) => p.theme.foreground[p.foreground ?? ForegroundColor.E0]};
-  border-radius: ${(p) => p.radius ?? 0}px;
-  margin: ${(p) => p.margin?.toCssVariable() ?? "0px"};
-  padding: ${(p) => p.padding?.toCssVariable() ?? "0px"};
+const Card = forwardRef(function Card(
+  {
+    background,
+    foreground,
+    radius,
+    border,
+    borderColor,
+    margin,
+    padding,
+    children,
+    ...props
+  }: CardProps,
+  ref: ForwardedRef<HTMLDivElement>
+) {
+  return (
+    <_Card
+      ref={ref}
+      $background={background}
+      $foreground={foreground}
+      $radius={radius}
+      $border={border}
+      $borderColor={borderColor}
+      $margin={margin}
+      $padding={padding}
+      {...props}
+    >
+      {children}
+    </_Card>
+  );
+});
+
+interface _CardProps extends ComponentProps<"div"> {
+  $background?: BackgroundColor;
+  $foreground?: ForegroundColor;
+  $radius?: number;
+  $border?: EdgeFlags;
+  $borderColor?: ElevationColor;
+  $margin?: EdgeInsets;
+  $padding?: EdgeInsets;
+}
+
+const _Card = styled.div<_CardProps>`
+  background: ${(p) => p.theme.background[p.$background ?? BackgroundColor.E0]};
+  color: ${(p) => p.theme.foreground[p.$foreground ?? ForegroundColor.E0]};
+  border-radius: ${(p) => p.$radius ?? 0}px;
+  margin: ${(p) => p.$margin?.toCssVariable() ?? "0px"};
+  padding: ${(p) => p.$padding?.toCssVariable() ?? "0px"};
 
   ${(p) =>
-    p.border?.isLeft &&
+    p.$border?.isLeft &&
     css`
       border-left: 1px solid
-        ${p.theme.elevation[p.borderColor ?? ElevationColor.Solid]};
+        ${p.theme.elevation[p.$borderColor ?? ElevationColor.Solid]};
     `}
   ${(p) =>
-    p.border?.isRight &&
+    p.$border?.isRight &&
     css`
       border-right: 1px solid
-        ${p.theme.elevation[p.borderColor ?? ElevationColor.Solid]};
+        ${p.theme.elevation[p.$borderColor ?? ElevationColor.Solid]};
     `}
   ${(p) =>
-    p.border?.isTop &&
+    p.$border?.isTop &&
     css`
       border-top: 1px solid
-        ${p.theme.elevation[p.borderColor ?? ElevationColor.Solid]};
+        ${p.theme.elevation[p.$borderColor ?? ElevationColor.Solid]};
     `}
   ${(p) =>
-    p.border?.isBottom &&
+    p.$border?.isBottom &&
     css`
       border-bottom: 1px solid
-        ${p.theme.elevation[p.borderColor ?? ElevationColor.Solid]};
+        ${p.theme.elevation[p.$borderColor ?? ElevationColor.Solid]};
     `}
 `;
 
-const CardFull = styled(Card)`
+const CardFull = forwardRef(function CardFull(
+  {
+    background,
+    foreground,
+    radius,
+    border,
+    borderColor,
+    margin,
+    padding,
+    children,
+    ...props
+  }: CardProps,
+  ref: ForwardedRef<HTMLDivElement>
+) {
+  return (
+    <_CardFull
+      ref={ref}
+      $background={background}
+      $foreground={foreground}
+      $radius={radius}
+      $border={border}
+      $borderColor={borderColor}
+      $margin={margin}
+      $padding={padding}
+      {...props}
+    >
+      {children}
+    </_CardFull>
+  );
+});
+
+const _CardFull = styled(_Card)`
   flex: 1;
   width: 100%;
   height: 100%;
@@ -62,8 +134,45 @@ export interface CardConstrainedProps extends CardProps {
   constraints?: Constraints;
 }
 
-const CardConstrained = styled(Card)<CardConstrainedProps>`
-  ${(p) => p.constraints?.toCss()}
+const CardConstrained = forwardRef(function CardConstrained(
+  {
+    background,
+    foreground,
+    radius,
+    border,
+    borderColor,
+    margin,
+    padding,
+    constraints,
+    children,
+    ...props
+  }: CardConstrainedProps,
+  ref: ForwardedRef<HTMLDivElement>
+) {
+  return (
+    <_CardConstrained
+      ref={ref}
+      $background={background}
+      $foreground={foreground}
+      $radius={radius}
+      $border={border}
+      $borderColor={borderColor}
+      $margin={margin}
+      $padding={padding}
+      $constraints={constraints}
+      {...props}
+    >
+      {children}
+    </_CardConstrained>
+  );
+});
+
+interface _CardConstrainedProps extends _CardProps {
+  $constraints?: Constraints;
+}
+
+const _CardConstrained = styled(_Card)<_CardConstrainedProps>`
+  ${(p) => p.$constraints?.toCss()}
 `;
 
 export default Object.assign(Card, {

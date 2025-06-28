@@ -23,8 +23,8 @@ export default function KeyedStack({
         return (
           <_Item
             key={`${mainKey}::${key}`}
-            index={isActive ? 1 : 0}
-            visible={isActive}
+            $index={isActive ? 1 : 0}
+            $enable={isActive}
             animate={{
               opacity: isActive ? 1 : 0,
               scale: isActive ? 1 : 0.95,
@@ -40,11 +40,11 @@ export default function KeyedStack({
 }
 
 interface _ItemProps extends ComponentProps<"div"> {
-  index?: number;
-  visible?: boolean;
+  $index?: number;
+  $enable?: boolean;
 }
 
 const _Item = styled(Stack.MotionFill)<_ItemProps>`
-  z-index: ${(p) => p.index ?? 0};
-  pointer-events: ${(p) => (p.visible ? "unset" : "none")};
+  z-index: ${(p) => p.$index ?? 0};
+  pointer-events: ${(p) => (p.$enable ? "unset" : "none")};
 `;

@@ -14,14 +14,14 @@ export interface InputProps extends ComponentProps<"input"> {
 export default forwardRef(Input);
 function Input(
   { constraints, radius, margin, padding, icon, ...props }: InputProps,
-  ref: ForwardedRef<HTMLInputElement>,
+  ref: ForwardedRef<HTMLInputElement>
 ) {
   return (
     <_Container
-      constraints={constraints ?? new Constraints({ minHeight: 40 })}
-      radius={radius}
-      margin={margin}
-      padding={padding ?? EdgeInsets.symmetric({ horizontal: 12 })}
+      $constraints={constraints ?? new Constraints({ minHeight: 40 })}
+      $radius={radius}
+      $margin={margin}
+      $padding={padding ?? EdgeInsets.symmetric({ horizontal: 12 })}
     >
       {icon}
       <_Input {...props} ref={ref} />
@@ -29,7 +29,15 @@ function Input(
   );
 }
 
-const _Input = styled.input<InputProps>`
+interface _InputProps extends ComponentProps<"input"> {
+  $radius?: number;
+  $margin?: EdgeInsets;
+  $padding?: EdgeInsets;
+  $constraints?: Constraints;
+  $icon?: ReactNode;
+}
+
+const _Input = styled.input<_InputProps>`
   min-width: 0px;
   width: 100%;
   height: 38px;
@@ -37,7 +45,7 @@ const _Input = styled.input<InputProps>`
   flex: 1;
 `;
 
-const _Container = styled.label<InputProps>`
+const _Container = styled.label<_InputProps>`
   cursor: text;
   display: flex;
   align-items: center;
@@ -45,11 +53,11 @@ const _Container = styled.label<InputProps>`
   gap: 8px;
   background: ${(p) => p.theme.elevation.t1};
   color: ${(p) => p.theme.foreground.e0};
-  border-radius: ${(p) => p.radius ?? 4}px;
+  border-radius: ${(p) => p.$radius ?? 4}px;
   transition: box-shadow 200ms ease-in-out;
-  margin: ${(p) => p.margin?.toCssVariable() ?? "0px"};
-  padding: ${(p) => p.padding?.toCssVariable() ?? "0px"};
-  ${(p) => p.constraints?.toCss()}
+  margin: ${(p) => p.$margin?.toCssVariable() ?? "0px"};
+  padding: ${(p) => p.$padding?.toCssVariable() ?? "0px"};
+  ${(p) => p.$constraints?.toCss()}
 
   box-shadow:
     inset 0 0 0 1px ${(p) => p.theme.elevation.t2},
