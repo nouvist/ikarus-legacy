@@ -4,7 +4,9 @@ import {
   FragmentProps,
   isValidElement,
   PropsWithChildren,
+  useEffect,
   useRef,
+  useState,
 } from "react";
 import { Fragment } from "react/jsx-runtime";
 import styled from "styled-components";
@@ -151,7 +153,7 @@ function ChatContainer({ children }: PropsWithChildren) {
         type = nextType;
         return (
           <Fragment>
-            <_Gap size={gap} />
+            <_Gap $size={gap} />
             <ChatTitle type={type!} />
             <_Gap />
             <Fragment>{child}</Fragment>
@@ -163,11 +165,11 @@ function ChatContainer({ children }: PropsWithChildren) {
 }
 
 interface _GapProps {
-  size?: number;
+  $size?: number;
 }
 
 const _Gap = styled.div<_GapProps>`
-  height: ${(p) => p.size ?? 8}px;
+  height: ${(p) => p.$size ?? 8}px;
 `;
 
 interface ChatTitleProps {
@@ -188,6 +190,22 @@ const _ChatTitle = styled.div`
     text-align: right;
   }
 `;
+
+export interface ChatLoadingProps {}
+
+function ChatLoading(_: ChatLoadingProps) {
+  const [dots, setDots] = useState("");
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((prev) => {
+        if (prev.length >= 5) return "";
+        return prev + ".";
+      });
+    }, 250);
+    return () => clearInterval(interval);
+  }, []);
+  return <_ChatShared data-left>Memproses{dots}</_ChatShared>;
+}
 
 export interface ChatUserProps extends PropsWithChildren {}
 
@@ -268,5 +286,6 @@ export default Object.assign(Chat, {
     User: encapsulate(ChatUser, ChatType.User),
     Assistent: encapsulate(ChatAssistent, ChatType.Assistent),
     Tool: encapsulate(ChatTool, ChatType.Assistent),
+    Loading: encapsulate(ChatLoading, ChatType.Assistent),
   },
 });

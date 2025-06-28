@@ -30,7 +30,7 @@ app.on("second-instance", () => {
 function createWindow() {
   const isDebugMode = !!MAIN_WINDOW_VITE_DEV_SERVER_URL;
   const window = new BrowserWindow({
-    show: !isDebugMode,
+    show: isDebugMode,
     roundedCorners: true,
     fullscreenable: false,
     backgroundColor: "#000000",

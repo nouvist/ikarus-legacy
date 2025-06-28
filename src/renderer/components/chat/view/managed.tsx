@@ -1,11 +1,11 @@
 import Markdown from "react-markdown";
 import { useObservable } from "react-rx";
 import Chat, {
+  AssistentMessage,
   ChatController,
-  ChatItem,
-  ChatItemAssistent,
-  ChatItemType,
-  ChatItemUser,
+  Message,
+  MessageRole,
+  UserMessage,
 } from "~/renderer/components/chat";
 
 interface _ChatManagedSharedProps {
@@ -38,14 +38,14 @@ function _ChatLoop({ controller }: _ChatManagedSharedProps) {
   return (
     <Chat.Raw.Container>
       {chats?.map((chat) => {
-        switch (chat.type) {
-          case ChatItemType.User:
+        switch (chat.role) {
+          case MessageRole.User:
             return (
               <Chat.Raw.Bubble.Encapsulate.User>
                 <_ChatUser chat={chat} />
               </Chat.Raw.Bubble.Encapsulate.User>
             );
-          case ChatItemType.Assistent:
+          case MessageRole.Assistent:
             return (
               <Chat.Raw.Bubble.Encapsulate.Assistent>
                 <_ChatAssistent chat={chat} />
@@ -57,20 +57,22 @@ function _ChatLoop({ controller }: _ChatManagedSharedProps) {
   );
 }
 
-interface _ChatProps<Data extends ChatItem> {
+interface _ChatProps<Data extends Message> {
   chat: Data;
 }
 
-function _ChatUser({ chat }: _ChatProps<ChatItemUser>) {
+function _ChatUser({ chat }: _ChatProps<UserMessage>) {
   return (
     <Chat.Raw.Bubble.User>
-      <Markdown>{chat.content}</Markdown>
+      <Markdown>{chat.content()}</Markdown>
     </Chat.Raw.Bubble.User>
   );
 }
 
-function _ChatAssistent({ chat }: _ChatProps<ChatItemAssistent>) {
-  const content = useObservable(chat.content);
+function _ChatAssistent({ chat }: _ChatProps<AssistentMessage>) {
+  const content = useObservable(chat.subject());
+  if (!content || content.length === 0) return <Chat.Raw.Bubble.Loading />;
+
   return (
     <Chat.Raw.Bubble.Assistent>
       <Markdown>{content}</Markdown>

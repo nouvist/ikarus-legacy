@@ -1,4 +1,4 @@
-import { Observable } from "rxjs";
+import { Observable, Subject } from "rxjs";
 
 export function getRandom() {
   return Math.random().toString(16).slice(2, 10);
@@ -55,7 +55,7 @@ export function createCompleter<T>() {
   };
 }
 
-export function waitObservableUntil<T>(
+export async function waitObservableUntil<T>(
   observable: Observable<T>,
   callback: (value: T) => boolean
 ) {
@@ -67,5 +67,18 @@ export function waitObservableUntil<T>(
     resolve();
   }
 
-  return wait();
+  await wait();
+}
+
+export async function waitSubjectUntilClosed<T>(subject: Subject<T>) {
+  if (subject.closed) return;
+  const { wait, resolve } = createCompleter<void>();
+  const subscription = subject.subscribe({
+    complete: () => {
+      subscription.unsubscribe();
+      resolve();
+    },
+  });
+
+  await wait();
 }
