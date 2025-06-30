@@ -1,3 +1,4 @@
+import { ToolCall } from "@langchain/core/dist/messages/tool";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { BehaviorSubject } from "rxjs";
 import { createAlertTool } from "~/renderer/components/chat/llm/tool";
@@ -10,8 +11,7 @@ export async function createRunner() {
     model: "gemini-2.0-flash-lite",
     apiKey: await Managed.env("GEMINI_API_KEY"),
   });
-  // const runner = model.bindTools(tools);
-  const runner = model;
+  const runner = model.bindTools(tools);
 
   function parseMessage(message: Message) {
     return {
@@ -29,19 +29,67 @@ export async function createRunner() {
 
   function stream(messages: Message[]) {
     const message = createAssistentMessage();
-    const promise = (async function () {
+    const calls = (async function () {
       const result = await runner.stream(parseMessages(messages));
+      const tools = [] as ToolCall[];
       while (true) {
         const next = await result.next();
         if (next.done) break;
+        if (next.value.tool_calls) tools.push(...next.value.tool_calls);
         message.subject().next(message.content() + next.value.text);
       }
+
+      message.subject().complete();
+      return tools;
     })();
-    return [message, promise] as const;
+    return [message, calls] as const;
+  }
+
+  async function invoke(messages: Message[]) {
+    const message = createAssistentMessage();
+    const raw = await runner.invoke(parseMessages(messages));
+    message.subject().next(raw.text);
+    message.subject().complete();
+    return [message, raw] as const;
+  }
+
+  async function tool(calls: ToolCall[]) {
+    const results = ["Tool results:"] as string[];
+    for (const call of calls) {
+      const tool = tools.find((tool) => tool.name === call.name);
+      if (!tool) throw new Error(`Tool ${call.name} not found`);
+      const result = await tool.invoke(call.args as any);
+      results.push(`${call.name}: ${result}`);
+    }
+    return createToolMessage(results.join("\n"));
+  }
+
+  async function loop(subject: BehaviorSubject<Message[]>) {
+    if (
+      subject.getValue()[subject.getValue().length - 1].role !==
+      MessageRole.User
+    ) {
+      throw new Error("Last message must be a UserMessage");
+    }
+
+    while (true) {
+      const [message, promise] = stream(subject.getValue());
+      subject.next([...subject.getValue(), message]);
+      const calls = await promise;
+      if (message.content().length === 0) {
+        subject.next(subject.getValue().slice(0, -1));
+      }
+
+      if (!calls) break;
+      if (calls.length === 0) break;
+      subject.next([...subject.getValue(), await tool(calls)]);
+    }
   }
 
   return {
     stream,
+    invoke,
+    loop,
   };
 }
 

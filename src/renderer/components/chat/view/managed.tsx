@@ -33,7 +33,7 @@ function _ChatInput({ controller }: _ChatManagedSharedProps) {
 }
 
 function _ChatLoop({ controller }: _ChatManagedSharedProps) {
-  const chats = useObservable(controller.chats());
+  const chats = useObservable(controller.messages());
 
   return (
     <Chat.Raw.Container>
@@ -71,6 +71,8 @@ function _ChatUser({ chat }: _ChatProps<UserMessage>) {
 
 function _ChatAssistent({ chat }: _ChatProps<AssistentMessage>) {
   const content = useObservable(chat.subject());
+  console.log(content);
+  
   if (!content || content.length === 0) return <Chat.Raw.Bubble.Loading />;
 
   return (

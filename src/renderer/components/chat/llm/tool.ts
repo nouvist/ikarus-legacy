@@ -8,6 +8,7 @@ export function createAlertTool() {
 
   function handle(input: z.infer<typeof schema>) {
     alert(input.message);
+    return "alert successfully shown";
   }
 
   return tool(handle, {

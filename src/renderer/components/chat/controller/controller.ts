@@ -4,9 +4,8 @@ import { BrowserController } from "~/renderer/components/browser";
 import {
   createRunner,
   createUserMessage,
-  Runner,
   Message,
-  createAssistentMessage,
+  Runner
 } from "~/renderer/components/chat";
 import { createRefCell, waitObservableUntil } from "~/shared/core";
 
@@ -37,24 +36,31 @@ export function createChatController(browser: BrowserController) {
     try {
       mutex.next(false);
       messages.next([...messages.getValue(), createUserMessage(message)]);
-      const [response, promise] = llm.value!.stream(messages.getValue());
-      messages.next([...messages.getValue(), response]);
-      await promise;
-    } catch (error) {
-      messages.next([
-        ...messages.getValue().splice(0, messages.getValue().length - 1),
-        createAssistentMessage(`Error: ${error}`),
-      ]);
+      await llm.value!.loop(messages);
     } finally {
       mutex.next(true);
     }
+    // try {
+    //   mutex.next(false);
+    //   messages.next([...messages.getValue(), createUserMessage(message)]);
+    //   const [response, promise] = llm.value!.stream(messages.getValue());
+    //   messages.next([...messages.getValue(), response]);
+    //   await promise;
+    // } catch (error) {
+    //   messages.next([
+    //     ...messages.getValue().splice(0, messages.getValue().length - 1),
+    //     createAssistentMessage(`Error: ${error}`),
+    //   ]);
+    // } finally {
+    //   mutex.next(true);
+    // }
   }
 
   init();
   return {
     send,
     waitUntilReady,
-    chats: () => messages as Observable<Message[]>,
+    messages: () => messages as Observable<Message[]>,
     readiness: () => mutex as Observable<boolean>,
   };
 }
