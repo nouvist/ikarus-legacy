@@ -36,24 +36,9 @@ export function createChatController(browser: BrowserController) {
     try {
       mutex.next(false);
       messages.next([...messages.getValue(), createUserMessage(message)]);
-      await llm.value!.loop(messages);
     } finally {
       mutex.next(true);
     }
-    // try {
-    //   mutex.next(false);
-    //   messages.next([...messages.getValue(), createUserMessage(message)]);
-    //   const [response, promise] = llm.value!.stream(messages.getValue());
-    //   messages.next([...messages.getValue(), response]);
-    //   await promise;
-    // } catch (error) {
-    //   messages.next([
-    //     ...messages.getValue().splice(0, messages.getValue().length - 1),
-    //     createAssistentMessage(`Error: ${error}`),
-    //   ]);
-    // } finally {
-    //   mutex.next(true);
-    // }
   }
 
   init();
