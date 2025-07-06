@@ -1,19 +1,22 @@
-import { tool } from "@langchain/core/tools";
+import { Tool, zodSchema } from "modelfusion";
 import { z } from "zod";
 
-export function createAlertTool() {
-  const schema = z.object({
-    message: z.string(),
-  });
+const _alert = new Tool({
+  name: "alert",
+  parameters: zodSchema(
+    z.object({
+      message: z.string(),
+    })
+  ),
+  execute: async ({ message }) => {
+    alert(message);
+  },
+});
 
-  function handle(input: z.infer<typeof schema>) {
-    alert(input.message);
-    return "alert successfully shown";
-  }
+const _all = [_alert];
 
-  return tool(handle, {
-    name: "alert",
-    description: "Pop up an alert message",
-    schema: schema,
-  });
-}
+const Tools = Object.freeze({
+  alert: _alert,
+  all: _all,
+});
+export default Tools;

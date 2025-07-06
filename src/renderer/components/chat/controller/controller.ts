@@ -5,7 +5,7 @@ import {
   createRunner,
   createUserMessage,
   Message,
-  Runner
+  Runner,
 } from "~/renderer/components/chat";
 import { createRefCell, waitObservableUntil } from "~/shared/core";
 
@@ -36,24 +36,14 @@ export function createChatController(browser: BrowserController) {
     try {
       mutex.next(false);
       messages.next([...messages.getValue(), createUserMessage(message)]);
-      await llm.value!.loop(messages);
+      const { stream, run } = llm.value!;
+      // const response = await run(messages.getValue());
+      // messages.next([...messages.getValue(), ...response]);
+      const response = await stream(messages.getValue());
+      messages.next([...messages.getValue(), response]);
     } finally {
       mutex.next(true);
     }
-    // try {
-    //   mutex.next(false);
-    //   messages.next([...messages.getValue(), createUserMessage(message)]);
-    //   const [response, promise] = llm.value!.stream(messages.getValue());
-    //   messages.next([...messages.getValue(), response]);
-    //   await promise;
-    // } catch (error) {
-    //   messages.next([
-    //     ...messages.getValue().splice(0, messages.getValue().length - 1),
-    //     createAssistentMessage(`Error: ${error}`),
-    //   ]);
-    // } finally {
-    //   mutex.next(true);
-    // }
   }
 
   init();

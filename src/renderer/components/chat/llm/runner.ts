@@ -1,95 +1,73 @@
-import { ToolCall } from "@langchain/core/dist/messages/tool";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import {
+  ChatMessage,
+  openai,
+  OpenAIChatMessage,
+  OpenAICompatibleChatModel,
+  runTools,
+  streamText,
+  ToolCall,
+  ToolCallResult
+} from "modelfusion";
 import { BehaviorSubject } from "rxjs";
-import { createAlertTool } from "~/renderer/components/chat/llm/tool";
+import { GeminiApiConfiguration } from "~/renderer/components/chat/llm/helpers/openai_compatible";
+import Tools from "~/renderer/components/chat/llm/tool";
 import { waitSubjectUntilClosed } from "~/shared/core";
 
 export type Runner = Awaited<ReturnType<typeof createRunner>>;
 export async function createRunner() {
-  const tools = [createAlertTool()];
-  const model = new ChatGoogleGenerativeAI({
+  const gemini = new OpenAICompatibleChatModel({
     model: "gemini-2.0-flash-lite",
-    apiKey: await Managed.env("GEMINI_API_KEY"),
+    api: new GeminiApiConfiguration({
+      apiKey: (await Managed.env("GEMINI_API_KEY"))!,
+    }),
   });
-  const runner = model.bindTools(tools);
 
-  function parseMessage(message: Message) {
-    return {
-      role: message.role,
-      content: message.content(),
-    };
+  const system = createSystemMessage("Kamu adalah Babon.");
+  const model = gemini;
+
+  function parse(messages: Message[]) {
+    return [system.raw(), ...messages.map((message) => message.raw())];
   }
 
-  function parseMessages(messages: Message[]) {
-    return [
-      parseMessage(createSystemMessage("Kamu adalah AI bernama Babon.")),
-      ...messages.map(parseMessage),
-    ];
-  }
-
-  function stream(messages: Message[]) {
+  async function stream(messages: Message[]) {
+    const stream = await streamText({
+      model: model,
+      prompt: parse(messages),
+    });
     const message = createAssistentMessage();
-    const calls = (async function () {
-      const result = await runner.stream(parseMessages(messages));
-      const tools = [] as ToolCall[];
-      while (true) {
-        const next = await result.next();
-        if (next.done) break;
-        if (next.value.tool_calls) tools.push(...next.value.tool_calls);
-        message.subject().next(message.content() + next.value.text);
-      }
 
-      message.subject().complete();
-      return tools;
+    (async () => {
+      const subject = message.subject();
+      for await (const next of stream) {
+        subject.next(subject.getValue() + next);
+      }
+      subject.complete();
     })();
-    return [message, calls] as const;
+
+    return message;
   }
 
-  async function invoke(messages: Message[]) {
-    const message = createAssistentMessage();
-    const raw = await runner.invoke(parseMessages(messages));
-    message.subject().next(raw.text);
-    message.subject().complete();
-    return [message, raw] as const;
-  }
+  async function run(messages: Message[]) {
+    const result = await runTools({
+      model: model,
+      prompt: parse(messages),
+      tools: Tools.all,
+    });
 
-  async function tool(calls: ToolCall[]) {
-    const results = ["Tool results:"] as string[];
-    for (const call of calls) {
-      const tool = tools.find((tool) => tool.name === call.name);
-      if (!tool) throw new Error(`Tool ${call.name} not found`);
-      const result = await tool.invoke(call.args as any);
-      results.push(`${call.name}: ${result}`);
+    const arr: Message[] = [];
+    if (result.text && result.text.length > 0) {
+      arr.push(createAssistentMessage(result.text));
     }
-    return createToolMessage(results.join("\n"));
-  }
-
-  async function loop(subject: BehaviorSubject<Message[]>) {
-    if (
-      subject.getValue()[subject.getValue().length - 1].role !==
-      MessageRole.User
-    ) {
-      throw new Error("Last message must be a UserMessage");
+    if (result.toolResults && result.toolResults.length > 0) {
+      arr.push(createToolMessage(result.toolResults));
     }
 
-    while (true) {
-      const [message, promise] = stream(subject.getValue());
-      subject.next([...subject.getValue(), message]);
-      const calls = await promise;
-      if (message.content().length === 0) {
-        subject.next(subject.getValue().slice(0, -1));
-      }
-
-      if (!calls) break;
-      if (calls.length === 0) break;
-      subject.next([...subject.getValue(), await tool(calls)]);
-    }
+    return arr;
   }
 
   return {
     stream,
-    invoke,
-    loop,
+    run,
   };
 }
 
@@ -107,37 +85,87 @@ export enum MessageRole {
 }
 
 export type AssistentMessage = ReturnType<typeof createAssistentMessage>;
-export function createAssistentMessage(content?: string) {
+export interface AssistentOptions {
+  functionCall?:
+    | {
+        name: string;
+        arguments: string;
+      }
+    | undefined;
+  toolCalls?: ToolCall<string, unknown>[] | null | undefined;
+}
+
+export function createAssistentMessage(
+  content?: string | null | undefined,
+  options?: AssistentOptions
+) {
   const subject = new BehaviorSubject<string>(content ?? "");
+  let raw: OpenAIChatMessage | undefined;
 
   return {
     role: MessageRole.Assistent,
     subject: () => subject,
     waitUntilClosed: () => waitSubjectUntilClosed(subject),
     content: () => subject.getValue(),
+    raw: () => {
+      if (raw) return raw;
+      if (subject.closed) {
+        return (raw = openai.ChatMessage.assistant(
+          subject.getValue(),
+          options
+        ));
+      }
+      return openai.ChatMessage.assistant(subject.getValue(), options);
+    },
   } as const;
 }
 
 export type SystemMessage = ReturnType<typeof createSystemMessage>;
 export function createSystemMessage(content: string) {
+  let hidden = false;
+  const raw = openai.ChatMessage.system(content);
+
   return {
     role: MessageRole.System,
     content: () => content,
+    raw: () => raw,
+    hidden: () => hidden,
+    hide: () => (hidden = true),
+    unhide: () => (hidden = false),
   } as const;
 }
 
 export type ToolMessage = ReturnType<typeof createToolMessage>;
-export function createToolMessage(content: string) {
+export function createToolMessage(
+  results: ToolCallResult<string, unknown, unknown>[]
+) {
+  let hidden = false;
+  const raw = ChatMessage.tool({
+    toolResults: results,
+  });
+
   return {
     role: MessageRole.Tool,
-    content: () => content,
+    content: () =>
+      results.map((result) => `${result.tool} ${result.result}`).join("\n"),
+    raw: () => raw,
+    hidden: () => hidden,
+    hide: () => (hidden = true),
+    unhide: () => (hidden = false),
   } as const;
 }
 
 export type UserMessage = ReturnType<typeof createUserMessage>;
 export function createUserMessage(content: string) {
+  let hidden = false;
+  const raw = openai.ChatMessage.user(content);
+
   return {
     role: MessageRole.User,
     content: () => content,
+    raw: () => raw,
+    hidden: () => hidden,
+    hide: () => (hidden = true),
+    unhide: () => (hidden = false),
   } as const;
 }
