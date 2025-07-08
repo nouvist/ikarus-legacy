@@ -19,6 +19,8 @@
     "@langchain/community": "^0.3.48",
     "@langchain/core": "^0.3.62",
     "@langchain/google-genai": "^0.2.14",
+    "@langchain/langgraph": "^0.3.6",
+    "@langchain/ollama": "^0.2.3",
     "@libsql/client": "^0.15.9",
     "drizzle-orm": "^0.43.1",
     "electron-squirrel-startup": "^1.0.1",

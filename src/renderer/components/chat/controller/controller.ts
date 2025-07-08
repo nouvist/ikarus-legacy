@@ -5,7 +5,7 @@ import {
   createRunner,
   createUserMessage,
   Message,
-  Runner
+  Runner,
 } from "~/renderer/components/chat";
 import { createRefCell, waitObservableUntil } from "~/shared/core";
 
@@ -36,6 +36,9 @@ export function createChatController(browser: BrowserController) {
     try {
       mutex.next(false);
       messages.next([...messages.getValue(), createUserMessage(message)]);
+      const runner = llm.value!;
+      const [stream, calls] = runner.stream(messages.getValue());
+      messages.next([...messages.getValue(), stream]);
     } finally {
       mutex.next(true);
     }
