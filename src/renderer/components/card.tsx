@@ -175,7 +175,34 @@ const _CardConstrained = styled(_Card)<_CardConstrainedProps>`
   ${(p) => p.$constraints?.toCss()}
 `;
 
+const CardScroll = styled(CardFull)<CardProps>`
+  overflow-y: scroll;
+  padding-right: ${(p) => Math.max(p.padding?.right ?? 0, 32)}px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &:hover {
+    padding-right: 12px;
+    &::-webkit-scrollbar {
+      display: block;
+      width: 20px;
+    }
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: ${(p) => p.theme.elevation.t2};
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 6px ${(p) => p.theme.background.e0};
+     &:hover {
+      background-color: ${(p) => p.theme.elevation.t3};
+    }
+  }
+`;
+
 export default Object.assign(Card, {
   Full: CardFull,
   Constrained: CardConstrained,
+  Scroll: CardScroll,
 });

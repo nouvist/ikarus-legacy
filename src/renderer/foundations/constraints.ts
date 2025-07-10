@@ -1,26 +1,34 @@
 import { css } from "styled-components";
 
 export default class Constraints {
-  private _minWidth: number;
-  private _maxWidth: number;
-  private _minHeight: number;
-  private _maxHeight: number;
+  private _minWidth: number | undefined;
+  private _maxWidth: number | undefined;
+  private _minHeight: number | undefined;
+  private _maxHeight: number | undefined;
+  private _width: number | undefined;
+  private _height: number | undefined;
 
   constructor({
-    minWidth = 0,
-    maxWidth = Infinity,
-    minHeight = 0,
-    maxHeight = Infinity,
+    minWidth,
+    maxWidth,
+    minHeight,
+    maxHeight,
+    width,
+    height,
   }: {
     minWidth?: number;
     maxWidth?: number;
     minHeight?: number;
     maxHeight?: number;
+    width?: number;
+    height?: number;
   } = {}) {
     this._minWidth = minWidth;
     this._maxWidth = maxWidth;
     this._minHeight = minHeight;
     this._maxHeight = maxHeight;
+    this._width = width;
+    this._height = height;
 
     this.copyWith = this.copyWith.bind(this);
     this.toCss = this.toCss.bind(this);
@@ -71,18 +79,24 @@ export default class Constraints {
   }
 
   toCss() {
-    const [minWidth, maxWidth, minHeight, maxHeight] = [
+    const [minWidth, maxWidth, minHeight, maxHeight, width, height] = [
       this._minWidth,
       this._maxWidth,
       this._minHeight,
       this._maxHeight,
-    ].map((value) => (isFinite(value) ? `${value}px` : "none"));
+      this._width,
+      this._height,
+    ].map((value) =>
+      value !== undefined ? (isFinite(value) ? `${value}px` : "100%") : "auto"
+    );
 
     return css`
       min-width: ${minWidth};
       max-width: ${maxWidth};
       min-height: ${minHeight};
       max-height: ${maxHeight};
+      width: ${width};
+      height: ${height};
     `;
   }
 

@@ -1,10 +1,10 @@
-import { ToolMessageFieldsWithToolCallId } from "@langchain/core/messages/tool";
 import {
   AIMessage as RawAssistentMessage,
   AIMessageChunk as RawAssistentMessageChunk,
   HumanMessage as RawHumanMessage,
   ToolMessage as RawToolMessage,
 } from "@langchain/core/messages";
+import { ToolMessageFieldsWithToolCallId } from "@langchain/core/messages/tool";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { OllamaEmbeddings } from "@langchain/ollama";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
@@ -20,7 +20,7 @@ export async function createRunner() {
     apiKey: await Managed.env("GEMINI_API_KEY"),
   });
   const embeddings = new OllamaEmbeddings({
-    model: "nomic-embed-text:v1.5"
+    model: "nomic-embed-text:v1.5",
   });
   const runner = model.bindTools(tools);
   const system = createSystemMessage("Kamu adalah AI bernama Babon.");

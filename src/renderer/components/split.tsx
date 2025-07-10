@@ -17,7 +17,7 @@ export default function Split({ children, ...props }: SplitProps) {
   return (
     <Stack ref={container}>
       <Stack.Fill>
-        <Flex {...props}>
+        <Flex fill {...props}>
           <Flex.MotionFill flex={leftFlex}>{left}</Flex.MotionFill>
           <_Splitter
             isDrag={isDrag}

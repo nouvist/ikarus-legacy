@@ -26,7 +26,7 @@ export interface BrowserProps {
 export default forwardRef(Browser);
 function Browser({ controller }: BrowserProps, ref: ForwardedRef<WebviewTag>) {
   return (
-    <Flex direction={FlexDirection.Column}>
+    <Flex fill direction={FlexDirection.Column}>
       <Controls controller={controller} />
       <webview
         ref={bindRefs(ref, controller?.bind)}

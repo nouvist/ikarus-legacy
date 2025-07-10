@@ -7,34 +7,75 @@ export enum FlexDirection {
   Column = "column",
 }
 
+export enum JustifyContent {
+  Start = "flex-start",
+  End = "flex-end",
+  Center = "center",
+  SpaceBetween = "space-between",
+  SpaceAround = "space-around",
+}
+
+export enum AlignItems {
+  Start = "flex-start",
+  End = "flex-end",
+  Center = "center",
+  Stretch = "stretch",
+  Baseline = "baseline",
+}
+
 export interface FlexProps extends React.ComponentProps<"div"> {
-  direction?: FlexDirection;
   gap?: number;
+  direction?: FlexDirection;
+  justifyContent?: JustifyContent;
+  alignItems?: AlignItems;
+  fill?: boolean;
 }
 
 const Flex = forwardRef(function Flex(
-  { direction, gap, children, ...props }: FlexProps,
+  {
+    gap,
+    direction,
+    justifyContent,
+    alignItems,
+    fill,
+    children,
+    ...props
+  }: FlexProps,
   ref: ForwardedRef<HTMLDivElement>
 ) {
   return (
-    <_Flex {...props} ref={ref} $direction={direction} $gap={gap}>
+    <_Flex
+      {...props}
+      ref={ref}
+      $direction={direction}
+      $gap={gap}
+      $justifyContent={justifyContent}
+      $alignItems={alignItems}
+      data-fill={fill}
+    >
       {children}
     </_Flex>
   );
 });
 
 interface _FlexProps extends React.ComponentProps<"div"> {
-  $direction?: FlexDirection;
   $gap?: number;
+  $direction?: FlexDirection;
+  $justifyContent?: JustifyContent;
+  $alignItems?: AlignItems;
 }
 
 const _Flex = styled.div<_FlexProps>`
   display: flex;
-  width: 100%;
-  height: 100%;
   flex: 1;
   flex-direction: ${(p) => p.$direction ?? FlexDirection.Row};
+  justify-content: ${(p) => p.$justifyContent ?? JustifyContent.Start};
+  align-items: ${(p) => p.$alignItems ?? AlignItems.Stretch};
   gap: ${(p) => p.$gap ?? 0}px;
+  &[data-fill="true"] {
+    width: 100%;
+    height: 100%;
+  }
 `;
 
 export interface FlexFillProps extends React.ComponentProps<"div"> {

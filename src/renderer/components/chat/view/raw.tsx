@@ -23,7 +23,7 @@ import { bindRefs } from "~/shared/react";
 export interface ChatProps extends PropsWithChildren {}
 
 function Chat({ children }: ChatProps) {
-  return <Flex direction={FlexDirection.Column}>{children}</Flex>;
+  return <Flex fill direction={FlexDirection.Column}>{children}</Flex>;
 }
 
 interface ChatInputProps {
@@ -48,7 +48,7 @@ function ChatInput({ enabled = true, onSubmit }: ChatInputProps) {
         vertical: 20,
       })}
     >
-      <Flex gap={8}>
+      <Flex fill gap={8}>
         <Flex.Fill>
           <Input
             ref={input}
@@ -73,32 +73,6 @@ function ChatInput({ enabled = true, onSubmit }: ChatInputProps) {
     </Card.Constrained>
   );
 }
-
-const _Scroll = styled(Card.Full)`
-  overflow-y: scroll;
-  padding: 20px 32px;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
-  &:hover {
-    padding-right: 12px;
-    &::-webkit-scrollbar {
-      display: block;
-      width: 20px;
-    }
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: ${(p) => p.theme.elevation.t2};
-    border-radius: 10px;
-    box-shadow: inset 0 0 0 6px ${(p) => p.theme.background.e0};
-    &:hover {
-      background-color: ${(p) => p.theme.elevation.t3};
-    }
-  }
-`;
 
 export enum ChatType {
   User,
@@ -132,7 +106,13 @@ function ChatContainer({ children }: PropsWithChildren) {
   }
 
   return (
-    <_Scroll ref={bindRefs(scroll, initScroll)}>
+    <Card.Scroll
+      ref={bindRefs(scroll, initScroll)}
+      padding={EdgeInsets.symmetric({
+        horizontal: 32,
+        vertical: 20,
+      })}
+    >
       {Children.map(children, (child) => {
         if (!isValidElement(child)) return child;
         if (typeof child.type !== "function") return child;
@@ -160,7 +140,7 @@ function ChatContainer({ children }: PropsWithChildren) {
           </Fragment>
         );
       })}
-    </_Scroll>
+    </Card.Scroll>
   );
 }
 
