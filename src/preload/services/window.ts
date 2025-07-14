@@ -1,4 +1,4 @@
-import { RendererBridge } from "~/renderer/managed/bridge";
+import { RendererBridge } from "~/preload/services/bridge";
 
 export default function createWindowManaged(bridge: RendererBridge) {
   return {

@@ -10,4 +10,16 @@ export default defineConfig({
       "~": path.resolve(__dirname, "src"),
     },
   },
+  optimizeDeps: {
+    exclude: [
+      // "langchain",
+      // "@langchain/community",
+      // "@langchain/core",
+      // "@langchain/google-genai",
+      // "@langchain/langgraph",
+      // "@langchain/ollama",
+      // "drizzle-orm",
+      // "camelcase",
+    ],
+  },
 });

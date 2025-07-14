@@ -6,6 +6,7 @@ import {
 } from "@langchain/core/messages";
 import { ToolMessageFieldsWithToolCallId } from "@langchain/core/messages/tool";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+// import { Annotation, StateGraph } from "@langchain/langgraph";
 import { OllamaEmbeddings } from "@langchain/ollama";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { BehaviorSubject } from "rxjs";
@@ -44,7 +45,6 @@ export async function createRunner() {
         } else {
           chunk = chunk.concat(next.value);
         }
-
         message.subject().next(chunk.text);
       }
 
@@ -63,41 +63,67 @@ export async function createRunner() {
     return [message, raw] as const;
   }
 
-  // async function tool(calls: ToolCall[]) {
-  //   const results = ["Tool results:"] as string[];
-  //   for (const call of calls) {
-  //     const tool = tools.find((tool) => tool.name === call.name);
-  //     if (!tool) throw new Error(`Tool ${call.name} not found`);
-  //     const result = await tool.invoke(call.args as any);
-  //     results.push(`${call.name}: ${result}`);
-  //   }
-  //   return createToolMessage(results.join("\n"));
+  // async function setupRag(url: string, selector = "p") {
+  // const loader = new CheerioWebBaseLoader(url, { selector });
+  // const docs = await loader.load();
+  // const splitter = new RecursiveCharacterTextSplitter({
+  //   chunkSize: 1000,
+  //   chunkOverlap: 200,
+  // });
+  // const allSplits = await splitter.splitDocuments(docs);
+  // await vectors.addDocuments(allSplits);
+  // return allSplits;
   // }
 
-  // async function loop(subject: BehaviorSubject<Message[]>) {
-  // if (
-  //   subject.getValue()[subject.getValue().length - 1].role !==
-  //   MessageRole.User
-  // ) {
-  //   throw new Error("Last message must be a UserMessage");
+  // function buildPrompt(question: string, context: string) {
+  //   return [
+  //     createSystemMessage(
+  //       "Kamu adalah AI bernama Babon. Jawab pertanyaan berikut dengan menggunakan konteks yang diberikan jika relevan."
+  //     ),
+  //     createUserMessage(`Pertanyaan: ${question}\nKonteks:\n${context}`),
+  //   ];
   // }
-  // while (true) {
-  //   const [message, promise] = stream(subject.getValue());
-  //   subject.next([...subject.getValue(), message]);
-  //   const calls = await promise;
-  //   if (message.content().length === 0) {
-  //     subject.next(subject.getValue().slice(0, -1));
-  //   }
-  //   if (!calls) break;
-  //   if (calls.length === 0) break;
-  //   subject.next([...subject.getValue(), await tool(calls)]);
+
+  // const InputStateAnnotation = Annotation.Root({
+  //   question: Annotation<string>,
+  // });
+
+  // const StateAnnotation = Annotation.Root({
+  //   question: Annotation<string>,
+  //   context: Annotation<Document[]>,
+  //   answer: Annotation<string>,
+  // });
+
+  // async function retrieve(state: typeof InputStateAnnotation.State) {
+  //   const retrievedDocs = await vectors.similaritySearch(state.question);
+  //   return { context: retrievedDocs };
   // }
+
+  // async function generate(state: typeof StateAnnotation.State) {
+  //   const docsContent = state.context.map((doc) => doc.pageContent).join("\n");
+  //   const messages = buildPrompt(state.question, docsContent);
+  //   const [msg, raw] = await invoke(messages);
+  //   return { answer: msg.content() };
+  // }
+
+  // const graph = new StateGraph(StateAnnotation)
+  //   .addNode("retrieve", retrieve)
+  //   .addNode("generate", generate)
+  //   .addEdge("__start__", "retrieve")
+  //   .addEdge("retrieve", "generate")
+  //   .addEdge("generate", "__end__")
+  //   .compile();
+
+  // async function rag(question: string) {
+  //   // if (url) await setupRag(url);
+  //   const result = await graph.invoke({ question });
+  //   return result;
   // }
 
   return {
     stream,
     invoke,
-    // loop,
+    // rag,
   };
 }
 

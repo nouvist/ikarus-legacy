@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { BehaviorSubject, Observable } from "rxjs";
 import { BrowserController } from "~/renderer/components/browser";
 import {
+  createAssistentMessage,
   createRunner,
   createUserMessage,
   Message,
@@ -36,9 +37,11 @@ export function createChatController(browser: BrowserController) {
     try {
       mutex.next(false);
       messages.next([...messages.getValue(), createUserMessage(message)]);
-      const runner = llm.value!;
-      const [stream, calls] = runner.stream(messages.getValue());
-      messages.next([...messages.getValue(), stream]);
+      const [result] = await llm.value!.stream(messages.getValue());
+      messages.next([
+        ...messages.getValue(),
+        result,
+      ]);
     } finally {
       mutex.next(true);
     }

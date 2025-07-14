@@ -47,7 +47,7 @@ function createWindow() {
       devTools: isDebugMode,
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: false,
-      nodeIntegration: false,
+      nodeIntegration: true,
       sandbox: false,
       webviewTag: true,
     },
