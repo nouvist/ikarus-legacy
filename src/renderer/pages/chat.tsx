@@ -7,6 +7,7 @@ import Split from "~/renderer/components/split";
 export default function ChatPage() {
   const browser = useBrowserController();
   const chat = useChatController(browser);
+  chat.ensureInitialized();
 
   useEffect(() => {
     Object.assign(window, {

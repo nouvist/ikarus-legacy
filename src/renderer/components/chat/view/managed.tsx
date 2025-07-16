@@ -1,7 +1,7 @@
 import Markdown from "react-markdown";
 import { useObservable } from "react-rx";
 import Chat, {
-  AssistentMessage,
+  AssistantMessage,
   ChatController,
   Message,
   MessageRole,
@@ -24,16 +24,16 @@ export default function ChatManaged({ controller }: ChatManagedProps) {
 }
 
 function _ChatInput({ controller }: _ChatManagedSharedProps) {
-  const readiness = useObservable(controller.readiness());
+  const readiness = useObservable(controller.readiness);
   async function handleSubmit(value: string) {
-    await controller.send(value);
+    await controller.invoke(value);
   }
 
   return <Chat.Raw.Input enabled={readiness} onSubmit={handleSubmit} />;
 }
 
 function _ChatLoop({ controller }: _ChatManagedSharedProps) {
-  const chats = useObservable(controller.messages());
+  const chats = useObservable(controller.messages);
 
   return (
     <Chat.Raw.Container>
@@ -45,7 +45,7 @@ function _ChatLoop({ controller }: _ChatManagedSharedProps) {
                 <_ChatUser chat={chat} />
               </Chat.Raw.Bubble.Encapsulate.User>
             );
-          case MessageRole.Assistent:
+          case MessageRole.Assistant:
             return (
               <Chat.Raw.Bubble.Encapsulate.Assistent>
                 <_ChatAssistent chat={chat} />
@@ -64,15 +64,13 @@ interface _ChatProps<Data extends Message> {
 function _ChatUser({ chat }: _ChatProps<UserMessage>) {
   return (
     <Chat.Raw.Bubble.User>
-      <Markdown>{chat.content()}</Markdown>
+      <Markdown>{chat.content}</Markdown>
     </Chat.Raw.Bubble.User>
   );
 }
 
-function _ChatAssistent({ chat }: _ChatProps<AssistentMessage>) {
-  const content = useObservable(chat.subject());
-  console.log(content);
-  
+function _ChatAssistent({ chat }: _ChatProps<AssistantMessage>) {
+  const content = useObservable(chat.observable);
   if (!content || content.length === 0) return <Chat.Raw.Bubble.Loading />;
 
   return (

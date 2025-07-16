@@ -70,15 +70,18 @@ export async function waitObservableUntil<T>(
   await wait();
 }
 
-export async function waitSubjectUntilClosed<T>(subject: Subject<T>) {
+export async function waitSubjectUntilComplete<T>(subject: Subject<T>) {
   if (subject.closed) return;
-  const { wait, resolve } = createCompleter<void>();
-  const subscription = subject.subscribe({
-    complete: () => {
-      subscription.unsubscribe();
-      resolve();
-    },
-  });
-
-  await wait();
+  try {
+    const { wait, resolve } = createCompleter<void>();
+    const subscription = subject.subscribe({
+      complete: () => {
+        subscription.unsubscribe();
+        resolve();
+      },
+    });
+    await wait();
+  } catch {
+    return;
+  }
 }
