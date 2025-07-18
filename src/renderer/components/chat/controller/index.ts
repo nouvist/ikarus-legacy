@@ -57,18 +57,20 @@ export class ChatController {
     ]);
   }
 
-  concat(messages: Message[]) {
+  concat(next: Message[] | Message) {
     const currentMessages = this._messages.value;
-    this._messages.next([...currentMessages, ...messages]);
+    if (Array.isArray(next)) {
+      this._messages.next([...currentMessages, ...next]);
+    } else {
+      this._messages.next([...currentMessages, next]);
+    }
   }
 
   async invoke(message: string) {
     try {
       this._mutex.next(false);
-      this.concat([new UserMessage(message)]);
-      const result = await this._runner.invoke(this._messages.value);
-      this.concat(result);
-      // await result.waitUntilComplete();
+      this.concat(new UserMessage(message));
+      await this._runner.stream(this._messages.value, this.concat);
     } finally {
       this._mutex.next(true);
     }

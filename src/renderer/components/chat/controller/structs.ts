@@ -5,7 +5,7 @@ import {
   CoreSystemMessage,
   CoreToolMessage,
   CoreUserMessage,
-  ToolCall,
+  ToolCallPart,
   ToolContent,
 } from "ai";
 import { BehaviorSubject } from "rxjs";
@@ -54,6 +54,25 @@ export class AssistantMessage implements CoreAssistantMessage {
     );
     obj.complete();
     return obj;
+  }
+
+  static isEmpty(content: AssistantContent): content is never {
+    return (
+      (Array.isArray(content) && content.length === 0) ||
+      (typeof content === "string" && content.length === 0)
+    );
+  }
+
+  static isText(content: AssistantContent): content is string {
+    return typeof content === "string";
+  }
+
+  static isToolCall(content: AssistantContent): content is ToolCallPart[] {
+    return (
+      Array.isArray(content) &&
+      content.length > 0 &&
+      content[0].type === "tool-call"
+    );
   }
 
   get content() {

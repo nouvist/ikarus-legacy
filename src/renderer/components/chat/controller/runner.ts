@@ -5,6 +5,7 @@ import {
   LanguageModel,
   streamText,
   Tool,
+  ToolResultPart,
 } from "ai";
 import { createOllama } from "ollama-ai-provider";
 import { BrowserController } from "~/renderer/components/browser";
@@ -65,15 +66,15 @@ export default class Runner {
     this._tools = createTools(this._browser);
   }
 
-  async invoke(message: Message[]) {
+  async invoke(messages: Message[]) {
     const result = await generateText({
       model: this.language,
-      messages: [this._system, ...message],
+      messages: [this._system, ...messages],
       tools: this.tools,
       maxSteps: 5,
     });
 
-    const messages = [] as Message[];
+    const next = [] as Message[];
     for (const step of result.steps) {
       const isLast = step === result.steps[result.steps.length - 1];
 
@@ -81,7 +82,7 @@ export default class Runner {
         step.toolCalls.length > 0 ? step.toolCalls : step.text,
         step.providerMetadata
       );
-      messages.push(message);
+      next.push(message);
       message.isReasonable = !isLast;
 
       if (step.toolResults.length > 0) {
@@ -89,30 +90,60 @@ export default class Runner {
           step.toolResults,
           step.providerMetadata
         );
-        messages.push(message);
+        next.push(message);
       }
     }
 
-    console.log(messages);
-    return messages;
+    console.log(next);
+    return next;
   }
 
-  stream(message: Message[]) {
+  async stream(messages: Message[], callback: (message: Message) => void) {
     const stream = streamText({
       model: this.language,
-      messages: [this._system, ...message],
+      messages: [this._system, ...messages],
       tools: this.tools,
       maxSteps: 5,
     });
 
-    const result = new AssistantMessage("");
-    (async () => {
-      for await (const chunk of stream.textStream) {
-        result.concat(chunk);
-      }
-      result.complete();
-    })();
+    let last: Message | undefined;
+    function completeLast() {
+      if (!(last instanceof AssistantMessage)) return;
+      last.complete();
+    }
 
-    return result;
+    for await (const chunk of stream.fullStream) {
+      console.log(chunk);
+      if (chunk.type === "tool-call") {
+        if (
+          last instanceof AssistantMessage &&
+          AssistantMessage.isToolCall(last.content)
+        ) {
+          last.content.push(chunk);
+        } else {
+          completeLast();
+          callback((last = new AssistantMessage([chunk])));
+        }
+      }
+
+      if ((chunk.type as string) === "tool-result") {
+        const chunkAsTool = chunk as any as ToolResultPart;
+        if (last instanceof ToolMessage) {
+          last.content.push(chunkAsTool);
+        } else {
+          completeLast();
+          callback((last = new ToolMessage([chunkAsTool])));
+        }
+      }
+
+      if (chunk.type === "text-delta") {
+        if (last instanceof AssistantMessage) {
+          last.concat(chunk.textDelta);
+        } else {
+          completeLast();
+          callback((last = new AssistantMessage(chunk.textDelta)));
+        }
+      }
+    }
   }
 }
