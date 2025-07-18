@@ -1,4 +1,4 @@
-export function getSelector(el: HTMLElement): string {
+export function getSelector(el: Element): string {
   let current = el.tagName.toLowerCase();
   const id = el.id.trim();
   const cls = el.className

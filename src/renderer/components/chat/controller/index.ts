@@ -37,6 +37,9 @@ export class ChatController {
     this.waitUntilReady = this.waitUntilReady.bind(this);
     this.invoke = this.invoke.bind(this);
     this.concat = this.concat.bind(this);
+
+    (window as any)["chat"] = this;
+    (window as any)["msg"] = this._messages.getValue;
   }
 
   async ensureInitialized() {
@@ -64,7 +67,7 @@ export class ChatController {
       this._mutex.next(false);
       this.concat([new UserMessage(message)]);
       const result = await this._runner.invoke(this._messages.value);
-      this.concat([result]);
+      this.concat(result);
       // await result.waitUntilComplete();
     } finally {
       this._mutex.next(true);

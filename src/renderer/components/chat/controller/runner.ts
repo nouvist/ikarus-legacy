@@ -12,6 +12,7 @@ import {
   AssistantMessage,
   Message,
   SystemMessage,
+  ToolMessage,
 } from "~/renderer/components/chat/controller/structs";
 import createTools from "~/renderer/components/chat/controller/tools";
 import { inline } from "~/shared/core";
@@ -72,8 +73,28 @@ export default class Runner {
       maxSteps: 5,
     });
 
-    const obj = new AssistantMessage(result.text);
-    return obj;
+    const messages = [] as Message[];
+    for (const step of result.steps) {
+      const isLast = step === result.steps[result.steps.length - 1];
+
+      const message = new AssistantMessage(
+        step.toolCalls.length > 0 ? step.toolCalls : step.text,
+        step.providerMetadata
+      );
+      messages.push(message);
+      message.isReasonable = !isLast;
+
+      if (step.toolResults.length > 0) {
+        const message = new ToolMessage(
+          step.toolResults,
+          step.providerMetadata
+        );
+        messages.push(message);
+      }
+    }
+
+    console.log(messages);
+    return messages;
   }
 
   stream(message: Message[]) {

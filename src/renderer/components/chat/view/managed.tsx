@@ -1,5 +1,7 @@
+import { ToolCallPart } from "ai";
 import Markdown from "react-markdown";
 import { useObservable } from "react-rx";
+import { Fragment } from "react/jsx-runtime";
 import Chat, {
   AssistantMessage,
   ChatController,
@@ -37,22 +39,26 @@ function _ChatLoop({ controller }: _ChatManagedSharedProps) {
 
   return (
     <Chat.Raw.Container>
-      {chats?.map((chat) => {
-        switch (chat.role) {
-          case MessageRole.User:
-            return (
-              <Chat.Raw.Bubble.Encapsulate.User>
-                <_ChatUser chat={chat} />
-              </Chat.Raw.Bubble.Encapsulate.User>
-            );
-          case MessageRole.Assistant:
-            return (
-              <Chat.Raw.Bubble.Encapsulate.Assistent>
-                <_ChatAssistent chat={chat} />
-              </Chat.Raw.Bubble.Encapsulate.Assistent>
-            );
-        }
-      })}
+      {chats
+        ?.filter((chat) => chat)
+        .map((chat) => {
+          switch (chat.role) {
+            case MessageRole.User:
+              return (
+                <Chat.Raw.Bubble.Encapsulate.User>
+                  <_ChatUser chat={chat} />
+                </Chat.Raw.Bubble.Encapsulate.User>
+              );
+            case MessageRole.Assistant:
+              return (
+                <Chat.Raw.Bubble.Encapsulate.Assistent>
+                  <_ChatAssistent chat={chat} />
+                </Chat.Raw.Bubble.Encapsulate.Assistent>
+              );
+            // case MessageRole.Tool:
+            //   return <Chat.Raw.Bubble.Tool results={chat.content} />;
+          }
+        })}
     </Chat.Raw.Container>
   );
 }
@@ -72,10 +78,39 @@ function _ChatUser({ chat }: _ChatProps<UserMessage>) {
 function _ChatAssistent({ chat }: _ChatProps<AssistantMessage>) {
   const content = useObservable(chat.observable);
   if (!content || content.length === 0) return <Chat.Raw.Bubble.Loading />;
+  if (typeof content === "string") {
+    return (
+      <Chat.Raw.Bubble.Assistent>
+        <Markdown>{content}</Markdown>
+      </Chat.Raw.Bubble.Assistent>
+    );
+  }
+
+  if (
+    Array.isArray(content) &&
+    content.length > 0 &&
+    content[0].type === "tool-call"
+  ) {
+    return (
+      <Chat.Raw.Bubble.Assistent>
+        <div>
+          <b>[TODO] </b>
+          UI-nya rapiin lagi
+        </div>
+        {(content as ToolCallPart[]).map((part, index) => {
+          return (
+            <div key={`chat-${part.toolCallId}`}>
+              Memanggil {part.toolName}...
+            </div>
+          );
+        })}
+      </Chat.Raw.Bubble.Assistent>
+    );
+  }
 
   return (
     <Chat.Raw.Bubble.Assistent>
-      <Markdown>{content}</Markdown>
+      [TODO] gak tau ini belum dibuat
     </Chat.Raw.Bubble.Assistent>
   );
 }

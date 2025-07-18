@@ -1,10 +1,12 @@
 import { LanguageModelV1ProviderMetadata } from "@ai-sdk/provider";
 import {
+  AssistantContent,
   CoreAssistantMessage,
   CoreSystemMessage,
   CoreToolMessage,
   CoreUserMessage,
-  ToolContent
+  ToolCall,
+  ToolContent,
 } from "ai";
 import { BehaviorSubject } from "rxjs";
 import { waitSubjectUntilComplete } from "~/shared/core";
@@ -28,10 +30,12 @@ export class AssistantMessage implements CoreAssistantMessage {
   readonly role = MessageRole.Assistant as const;
   readonly providerOptions?: ProviderOptions;
 
-  protected _subject = new BehaviorSubject<string>("");
+  protected _subject = new BehaviorSubject<AssistantContent>("");
   readonly observable = this._subject.asObservable();
 
-  constructor(content?: string, providerOptions?: ProviderOptions) {
+  isReasonable = false;
+
+  constructor(content?: AssistantContent, providerOptions?: ProviderOptions) {
     this.providerOptions = providerOptions;
     this.next = this.next.bind(this);
     this.concat = this.concat.bind(this);
@@ -52,7 +56,6 @@ export class AssistantMessage implements CoreAssistantMessage {
     return obj;
   }
 
-
   get content() {
     return this._subject.value;
   }
@@ -69,11 +72,14 @@ export class AssistantMessage implements CoreAssistantMessage {
     return waitSubjectUntilComplete(this._subject);
   }
 
-  next(content: string) {
+  next(content: AssistantContent) {
     this._subject.next(content);
   }
 
   concat(content: string) {
+    if (typeof this.content !== "string") {
+      throw new Error("Cannot concat to non-string content");
+    }
     this._subject.next(this.content + content);
   }
 }

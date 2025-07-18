@@ -1,4 +1,5 @@
 import { ChevronRight24Regular } from "@fluentui/react-icons";
+import { ToolContent } from "ai";
 import {
   Children,
   FragmentProps,
@@ -23,7 +24,11 @@ import { bindRefs } from "~/shared/react";
 export interface ChatProps extends PropsWithChildren {}
 
 function Chat({ children }: ChatProps) {
-  return <Flex fill direction={FlexDirection.Column}>{children}</Flex>;
+  return (
+    <Flex fill direction={FlexDirection.Column}>
+      {children}
+    </Flex>
+  );
 }
 
 interface ChatInputProps {
@@ -233,11 +238,18 @@ const _ChatShared = styled.div`
   }
 `;
 
-function ChatTool() {
+interface ChatToolProps {
+  results: ToolContent;
+}
+
+function ChatTool({ results }: ChatToolProps) {
   return (
     <_ChatShared data-left>
-      <b>Tool:</b>
-      <span> memproses</span>
+      {results.map((result, index) => (
+        <div key={index}>
+          <h3>{result.toolName}</h3>
+        </div>
+      ))}
     </_ChatShared>
   );
 }
@@ -259,6 +271,10 @@ export default Object.assign(Chat, {
         ChatType.User
       ),
       Assistent: encapsulate(
+        (props: FragmentProps) => <Fragment {...props} />,
+        ChatType.Assistent
+      ),
+      Tool: encapsulate(
         (props: FragmentProps) => <Fragment {...props} />,
         ChatType.Assistent
       ),
