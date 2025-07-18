@@ -85,3 +85,11 @@ export async function waitSubjectUntilComplete<T>(subject: Subject<T>) {
     return;
   }
 }
+
+export function inline(str: string) {
+  return str
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .join(" ");
+}

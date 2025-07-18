@@ -11,8 +11,10 @@ import { BrowserController } from "~/renderer/components/browser";
 import {
   AssistantMessage,
   Message,
+  SystemMessage,
 } from "~/renderer/components/chat/controller/structs";
-import createTools from "~/renderer/components/chat/controller/tool";
+import createTools from "~/renderer/components/chat/controller/tools";
+import { inline } from "~/shared/core";
 
 export default class Runner {
   protected _browser: BrowserController;
@@ -20,6 +22,14 @@ export default class Runner {
   protected _embedding?: EmbeddingModel<string>;
   protected _language?: LanguageModel;
   protected _tools?: Record<string, Tool>;
+  protected _system = new SystemMessage(
+    inline(`
+      Kamu adalah Babon, asisten virtual yang membantu pengguna dengan
+      menjelajahi web. Kamu dapat menggunakan alat untuk mendapatkan URL saat
+      ini, mengunjungi URL baru, dan berinteraksi dengan halaman web. Gunakan
+      alat yang tersedia untuk menyelesaikan tugas yang diberikan.
+    `)
+  );
 
   constructor(browser: BrowserController) {
     this._browser = browser;
@@ -57,7 +67,7 @@ export default class Runner {
   async invoke(message: Message[]) {
     const result = await generateText({
       model: this.language,
-      messages: message,
+      messages: [this._system, ...message],
       tools: this.tools,
       maxSteps: 5,
     });
@@ -69,7 +79,7 @@ export default class Runner {
   stream(message: Message[]) {
     const stream = streamText({
       model: this.language,
-      messages: message,
+      messages: [this._system, ...message],
       tools: this.tools,
       maxSteps: 5,
     });
