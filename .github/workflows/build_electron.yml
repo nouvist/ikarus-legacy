@@ -9,12 +9,32 @@ env:
 
 on:
   workflow_dispatch:
+    inputs:
+      win32_x64:
+        type: boolean
+        description: "Build Windows x64"
+        required: false
+        default: true
+      linux_x64:
+        type: boolean
+        description: "Build Linux x64"
+        required: false
+        default: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check build platforms
+        run: |
+          if [[ "${{ github.event.inputs.win32_x64 }}" != "true" && \
+              "${{ github.event.inputs.linux_x64 }}" != "true" \
+          ]]; then
+            echo "No platforms selected for build. Exiting..."
+            exit 1
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -32,24 +52,45 @@ jobs:
 
       - name: Build Electron App (Linux)
         run: pnpm run package -p linux -a x64
+        if: ${{ github.event.inputs.linux_x64 == 'true' }}
 
       - name: Build Electron App (Windows)
         run: pnpm run package -p win32 -a x64
+        if: ${{ github.event.inputs.win32_x64 == 'true' }}
 
-      - name: Remove Old Artifacts
+      - name: Compress Build
         run: |
-          gh api -X GET "/repos/${{ github.repository }}/actions/artifacts" \
-            -q ".artifacts[] .id" | \
-          while read it; do
-            gh api -X DELETE "/repos/${{ github.repository }}/actions/artifacts/$it"
+          find out -maxdepth 1 -name "istn-agent-*" | while read it; do
+            echo "Archiving $it..."
+            tar -czvf "out/$(basename "$it").tar.gz" -C out "$(basename "$it")"
           done
 
-      - name: Compress Build Artifacts
+      - name: Remove old releases
         run: |
-          tar -czvf mbkm.tar.gz -C ./out mbkm
+          gh release list --json tagName,isDraft \
+            --jq '.[] | select(.isDraft == false) | .tagName' |\
+            while read it; do
+            gh release delete "$it" --yes
+          done
 
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: mbkm
-          path: mbkm.tar.gz
+      - name: Remove old tags
+        run: |
+          tags=$(\
+            gh api repos/${{ github.repository }}/git/refs/tags \
+              --jq '.[].ref' \
+              || echo "" \
+            )
+          if [[ -n "$tags" ]]; then
+            echo "$tags" | while read it; do
+              gh api -X DELETE \
+                repos/${{ github.repository }}/git/refs/tags/${it#refs/tags/}
+            done
+          fi
+
+      - name: Create a new release
+        run: |
+          head=$(git rev-parse HEAD)
+          head8=$(echo "$head" | cut -c1-8)
+          files=$(find out -maxdepth 1 -name "istn-agent-*.tar.gz")
+          gh release create "$head8" "$files" \
+            --title "Release $head8"
