@@ -29,11 +29,7 @@ export enum MessageRole {
 export class AssistantMessage implements CoreAssistantMessage {
   readonly role = MessageRole.Assistant as const;
   readonly providerOptions?: ProviderOptions;
-
-  protected _subject = new BehaviorSubject<AssistantContent>("");
-  readonly observable = this._subject.asObservable();
-
-  isReasonable = false;
+  readonly subject = new BehaviorSubject<AssistantContent>("");
 
   constructor(content?: AssistantContent, providerOptions?: ProviderOptions) {
     this.providerOptions = providerOptions;
@@ -76,30 +72,30 @@ export class AssistantMessage implements CoreAssistantMessage {
   }
 
   get content() {
-    return this._subject.value;
+    return this.subject.value;
   }
 
   get isCompleted() {
-    return this._subject.closed;
+    return this.subject.closed;
   }
 
   complete() {
-    this._subject.complete();
+    this.subject.complete();
   }
 
   waitUntilComplete() {
-    return waitSubjectUntilComplete(this._subject);
+    return waitSubjectUntilComplete(this.subject);
   }
 
   next(content: AssistantContent) {
-    this._subject.next(content);
+    this.subject.next(content);
   }
 
   concat(content: string) {
     if (typeof this.content !== "string") {
       throw new Error("Cannot concat to non-string content");
     }
-    this._subject.next(this.content + content);
+    this.subject.next(this.content + content);
   }
 }
 

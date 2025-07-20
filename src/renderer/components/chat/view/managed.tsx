@@ -1,7 +1,6 @@
 import { ToolCallPart } from "ai";
 import Markdown from "react-markdown";
 import { useObservable } from "react-rx";
-import { Fragment } from "react/jsx-runtime";
 import Chat, {
   AssistantMessage,
   ChatController,
@@ -9,6 +8,7 @@ import Chat, {
   MessageRole,
   UserMessage,
 } from "~/renderer/components/chat";
+import { useObservableWithValue } from "~/shared/react";
 
 interface _ChatManagedSharedProps {
   controller: ChatController;
@@ -26,7 +26,7 @@ export default function ChatManaged({ controller }: ChatManagedProps) {
 }
 
 function _ChatInput({ controller }: _ChatManagedSharedProps) {
-  const readiness = useObservable(controller.readiness);
+  const readiness = useObservable(controller.mutex);
   async function handleSubmit(value: string) {
     await controller.invoke(value);
   }
@@ -35,7 +35,7 @@ function _ChatInput({ controller }: _ChatManagedSharedProps) {
 }
 
 function _ChatLoop({ controller }: _ChatManagedSharedProps) {
-  const chats = useObservable(controller.messages);
+  const chats = useObservableWithValue(controller.messages);
 
   return (
     <Chat.Raw.Container>
@@ -76,7 +76,7 @@ function _ChatUser({ chat }: _ChatProps<UserMessage>) {
 }
 
 function _ChatAssistent({ chat }: _ChatProps<AssistantMessage>) {
-  const content = useObservable(chat.observable);
+  const content = useObservableWithValue(chat.subject);
   if (!content || content.length === 0) return <Chat.Raw.Bubble.Loading />;
   if (typeof content === "string") {
     return (

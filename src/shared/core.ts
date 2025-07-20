@@ -93,3 +93,26 @@ export function inline(str: string) {
     .filter((line) => line.length > 0)
     .join(" ");
 }
+
+export function raw(str: string) {
+  const lines = str.split("\n");
+  while (lines[0].trim().length === 0) {
+    lines.shift();
+  }
+  while (lines[lines.length - 1].trim().length === 0) {
+    lines.pop();
+  }
+
+  let leftIndent = Infinity;
+  for (const line in lines) {
+    const indent = line.search(/\S/);
+    if (indent === -1) continue;
+    leftIndent = Math.min(leftIndent, indent);
+  }
+
+  if (leftIndent === Infinity) return "";
+  return lines
+    .map((line) => line.slice(leftIndent).trimEnd())
+    .join("\n")
+    .trim();
+}

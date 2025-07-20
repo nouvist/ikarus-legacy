@@ -1,4 +1,4 @@
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
 import {
   EmbeddingModel,
   generateText,
@@ -7,7 +7,6 @@ import {
   Tool,
   ToolResultPart,
 } from "ai";
-import { createOllama } from "ollama-ai-provider";
 import { BrowserController } from "~/renderer/components/browser";
 import {
   AssistantMessage,
@@ -18,20 +17,50 @@ import {
 import createTools from "~/renderer/components/chat/controller/tools";
 import { inline } from "~/shared/core";
 
+export interface RunnerInvokeOptions {
+  messages: Message[];
+  callback: (message: Message) => void;
+  maxSteps?: number;
+  temperature?: number;
+  abortSignal?: AbortSignal;
+}
+
 export default class Runner {
   protected _browser: BrowserController;
 
   protected _embedding?: EmbeddingModel<string>;
   protected _language?: LanguageModel;
   protected _tools?: Record<string, Tool>;
-  protected _system = new SystemMessage(
-    inline(`
-      Kamu adalah Babon, asisten virtual yang membantu pengguna dengan
-      menjelajahi web. Kamu dapat menggunakan alat untuk mendapatkan URL saat
-      ini, mengunjungi URL baru, dan berinteraksi dengan halaman web. Gunakan
-      alat yang tersedia untuk menyelesaikan tugas yang diberikan.
-    `)
-  );
+  protected static _defaultMessages: Message[] | undefined;
+
+  static createDefaultMessages() {
+    if (!Runner._defaultMessages) {
+      Runner._defaultMessages ??= [
+        new SystemMessage(
+          inline(`
+          Kamu adalah Babon, asisten virtual yang membantu pengguna dengan
+          menjelajahi web. Kamu dapat dan memang diperuntukkan untuk menggunakan
+          alat-alat yang tersedia untuk membantu pengguna. Kamu boleh membantu
+          hal seperti login atau registrasi, dan hal-hal yang bersifat privat
+          lainnya, selama kamu menanyakan konsensus pengguna terlebih dahulu.
+        `)
+        ),
+        new AssistantMessage(
+          inline(`
+          Halo! Aku Babon, asisten virtualmu. Aku bisa bantu kamu menjelajahi
+          dan berinteraksi dengan web. Apa yang bisa aku bantu hari ini?
+        `)
+        ),
+      ];
+
+      for (const message of Runner._defaultMessages) {
+        if (!(message instanceof AssistantMessage)) continue;
+        message.complete();
+      }
+    }
+
+    return Array.from(Runner._defaultMessages);
+  }
 
   constructor(browser: BrowserController) {
     this._browser = browser;
@@ -55,35 +84,51 @@ export default class Runner {
   }
 
   async initializeDebugEnvironment() {
-    const ollama = createOllama();
-    this._embedding = ollama.embedding("nomic-embed-text");
-    // this._language = ollama.languageModel("gemma3:1b");
-    // this._language = ollama.languageModel("phi3:3.8b");
-    const google = createGoogleGenerativeAI({
-      apiKey: await Managed.env("GEMINI_API_KEY"),
+    const ollama = createOpenAI({
+      baseURL: "http://127.0.0.1:11434/v1",
+      apiKey: "ollama",
     });
-    this._language = google.languageModel("gemini-2.0-flash");
+
+    this._embedding = ollama.embedding("nomic-embed-text");
+    this._language = ollama.languageModel("qwen3:0.6b");
     this._tools = createTools(this._browser);
+
+    // const google = createGoogleGenerativeAI({
+    //   apiKey: await Managed.env("GEMINI_API_KEY"),
+    // });
+    // this._language = google.languageModel("gemini-2.0-flash-lite");
   }
 
-  async invoke(messages: Message[]) {
+  async invoke({
+    messages,
+    callback,
+    maxSteps,
+    temperature,
+    abortSignal,
+  }: RunnerInvokeOptions) {
     const result = await generateText({
       model: this.language,
-      messages: [this._system, ...messages],
+      messages: messages,
       tools: this.tools,
-      maxSteps: 5,
+      maxSteps: maxSteps ?? 5,
+      temperature: temperature ?? 0.4,
+      abortSignal,
     });
 
     const next = [] as Message[];
     for (const step of result.steps) {
-      const isLast = step === result.steps[result.steps.length - 1];
+      if (step.text.length > 0) {
+        const message = new AssistantMessage(step.text, step.providerMetadata);
+        next.push(message);
+      }
 
-      const message = new AssistantMessage(
-        step.toolCalls.length > 0 ? step.toolCalls : step.text,
-        step.providerMetadata
-      );
-      next.push(message);
-      message.isReasonable = !isLast;
+      if (step.toolCalls.length > 0) {
+        const message = new AssistantMessage(
+          step.toolCalls,
+          step.providerMetadata
+        );
+        next.push(message);
+      }
 
       if (step.toolResults.length > 0) {
         const message = new ToolMessage(
@@ -95,15 +140,29 @@ export default class Runner {
     }
 
     console.log(next);
+    if (callback) {
+      for (const message of next) {
+        callback(message);
+      }
+    }
+
     return next;
   }
 
-  async stream(messages: Message[], callback: (message: Message) => void) {
+  async stream({
+    messages,
+    callback,
+    maxSteps,
+    temperature,
+    abortSignal,
+  }: RunnerInvokeOptions) {
     const stream = streamText({
       model: this.language,
-      messages: [this._system, ...messages],
+      messages: messages,
       tools: this.tools,
-      maxSteps: 5,
+      maxSteps: maxSteps ?? 5,
+      temperature: temperature ?? 0.4,
+      abortSignal,
     });
 
     let last: Message | undefined;

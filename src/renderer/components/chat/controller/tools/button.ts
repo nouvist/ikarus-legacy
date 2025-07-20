@@ -30,7 +30,7 @@ export class FindButtonTool extends Tool {
     const dom = await this._browser.managed.dom();
 
     text = text.trim().toLowerCase();
-    const lines = Array.from(dom.querySelectorAll("button, a"))
+    const lines = Array.from(dom.querySelectorAll("button, a, input[type=submit]"))
       .filter((el) => el.textContent?.toLowerCase().includes(text))
       .map((el, index) =>
         [

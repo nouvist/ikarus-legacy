@@ -1,11 +1,7 @@
 import { useRef } from "react";
 import { BehaviorSubject } from "rxjs";
 import { BrowserController } from "~/renderer/components/browser";
-import {
-  Message,
-  SystemMessage,
-  UserMessage,
-} from "~/renderer/components/chat";
+import { Message, UserMessage } from "~/renderer/components/chat";
 import Runner from "~/renderer/components/chat/controller/runner";
 import { waitObservableUntil } from "~/shared/core";
 
@@ -15,19 +11,12 @@ export function useChatController(browser: BrowserController) {
 }
 
 export class ChatController {
+  protected _initiliazed = false;
   protected _browser: BrowserController;
   protected _runner: Runner;
 
-  protected _initiliazed = false;
-  protected _mutex = new BehaviorSubject<boolean>(false);
-  protected _messages = new BehaviorSubject<Message[]>([]);
-
-  readonly readiness = this._mutex.asObservable();
-  readonly messages = this._messages.asObservable();
-
-  static readonly _system = new SystemMessage(
-    "Kamu adalah asisten AI bernama Babon."
-  );
+  readonly mutex = new BehaviorSubject<boolean>(false);
+  readonly messages = new BehaviorSubject<Message[]>([]);
 
   constructor(browser: BrowserController) {
     this._browser = browser;
@@ -39,40 +28,43 @@ export class ChatController {
     this.concat = this.concat.bind(this);
 
     (window as any)["chat"] = this;
-    (window as any)["msg"] = this._messages.getValue;
+    (window as any)["msg"] = this.messages.getValue;
   }
 
   async ensureInitialized() {
     if (this._initiliazed) return;
     await this._runner.initializeDebugEnvironment();
-    this._messages.next([ChatController._system]);
+    this.messages.next(Runner.createDefaultMessages());
     this._initiliazed = true;
-    this._mutex.next(true);
+    this.mutex.next(true);
   }
 
   waitUntilReady() {
     return Promise.all([
       this._browser.waitUntilReady(),
-      waitObservableUntil(this._mutex, Boolean),
+      waitObservableUntil(this.mutex, Boolean),
     ]);
   }
 
   concat(next: Message[] | Message) {
-    const currentMessages = this._messages.value;
+    const currentMessages = this.messages.value;
     if (Array.isArray(next)) {
-      this._messages.next([...currentMessages, ...next]);
+      this.messages.next([...currentMessages, ...next]);
     } else {
-      this._messages.next([...currentMessages, next]);
+      this.messages.next([...currentMessages, next]);
     }
   }
 
   async invoke(message: string) {
     try {
-      this._mutex.next(false);
+      this.mutex.next(false);
       this.concat(new UserMessage(message));
-      await this._runner.stream(this._messages.value, this.concat);
+      await this._runner.stream({
+        messages: this.messages.value,
+        callback: this.concat,
+      });
     } finally {
-      this._mutex.next(true);
+      this.mutex.next(true);
     }
   }
 }
