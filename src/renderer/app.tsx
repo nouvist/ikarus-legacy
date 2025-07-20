@@ -11,7 +11,7 @@ export default function App() {
   const [tab, setTab] = useState(_AppTab.Chat);
 
   useEffect(() => {
-    Managed.window.show();
+    managed.window.show();
   }, []);
 
   return (

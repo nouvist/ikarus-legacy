@@ -1,36 +1,48 @@
 import { contextBridge } from "electron";
-import createRendererBridge from "~/preload/services/bridge";
-import createEnvManaged from "~/preload/services/env";
-import createPlatformManaged from "~/preload/services/platform";
-import createWebviewManaged from "~/preload/services/webview";
-import createWindowManaged from "~/preload/services/window";
+import RendererBridge from "~/preload/services/bridge";
+import EnvManaged from "~/preload/services/env";
+import PlatformManaged from "~/preload/services/platform";
+import WebviewManaged from "~/preload/services/webview";
+import WindowManaged from "~/preload/services/window";
 
-export type Managed = ReturnType<typeof createManaged>;
-export default function createManaged() {
-  const bridge = createRendererBridge();
-  const env = createEnvManaged(bridge);
-  const window = createWindowManaged(bridge);
-  const platform = createPlatformManaged();
-  const webview = createWebviewManaged();
-  return Object.freeze({
-    bridge,
-    env,
-    window,
-    platform,
-    webview,
-  });
+export default class Managed {
+  protected _bridge: RendererBridge;
+  readonly env: EnvManaged;
+  readonly platform: PlatformManaged;
+  readonly window: WindowManaged;
+  readonly webview: WebviewManaged;
+
+  constructor() {
+    this._bridge = new RendererBridge();
+    this.env = new EnvManaged(this._bridge);
+    this.platform = new PlatformManaged();
+    this.window = new WindowManaged(this._bridge);
+    this.webview = new WebviewManaged();
+  }
+
+  expose() {
+    try {
+      contextBridge.exposeInMainWorld("Managed", Managed);
+      contextBridge.exposeInMainWorld("managed", this);
+    } catch {
+      Object.defineProperties(window, {
+        Managed: {
+          value: Managed,
+          writable: false,
+        },
+        managed: {
+          value: this,
+          writable: false,
+        },
+      });
+    }
+  }
 }
 
-const managed = createManaged();
-try {
-  contextBridge.exposeInMainWorld("Managed", managed);
-} catch {
-  Object.defineProperty(window, "Managed", {
-    value: managed,
-    writable: false,
-  });
-}
+const managed = new Managed();
+managed.expose();
 
 declare global {
-  const Managed: Managed;
+  const Managed: typeof managed;
+  const managed: Managed;
 }

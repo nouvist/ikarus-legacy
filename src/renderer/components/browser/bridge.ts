@@ -1,75 +1,88 @@
 import { IpcMessageEvent } from "electron";
-import { getRandom, RefCell } from "~/shared/core";
+import { createCompleter, getRandom, RefCell } from "~/shared/core";
 import { WebviewEventKey, WebviewEventMap } from "~/webview/bridge/types";
 
-export type BrowserBridge = ReturnType<typeof createBrowserBridge>;
+export default class BrowserBridge {
+  protected _ref: RefCell<Electron.WebviewTag | undefined>;
+  protected _callbacks = new _CallbackMap();
 
-export default function createBrowserBridge(
-  ref: RefCell<Electron.WebviewTag | undefined>,
-) {
-  const callbacks = createCallbackMap();
-  return {
-    addEventListener: <
-      Key extends WebviewEventKey,
-      Type extends WebviewEventMap[Key],
-    >(
-      key: Key,
-      callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void,
-    ) => {
-      if (callbacks.has(key, callback)) return;
-      ref?.value?.addEventListener(
-        "ipc-message",
-        callbacks.register(key, callback, (event) => {
-          if (event.channel !== key) return;
-          const args = event.args as Type["fromMain"];
-          callback(event, args);
-        }),
-      );
-    },
-    removeEventListener: <
-      Key extends WebviewEventKey,
-      Type extends WebviewEventMap[Key],
-    >(
-      key: Key,
-      callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void,
-    ) => {
-      const binding = callbacks.remove(key, callback);
-      if (!binding) return;
-      ref.value?.removeEventListener("ipc-message", binding);
-    },
-    invoke: <Key extends WebviewEventKey, Type extends WebviewEventMap[Key]>(
-      key: Key,
-      value: Type["fromMain"],
-      timeout = 10e3,
-    ): Promise<Type["fromRenderer"]> => {
-      const random = getRandom();
-      return new Promise((resolve, reject) => {
-        function handle(event: IpcMessageEvent) {
-          const isResolved = event.channel === "__Invoke::resolve";
-          const isRejected = event.channel === "__Invoke::reject";
-          if (!isResolved && !isRejected) return;
+  constructor(ref: RefCell<Electron.WebviewTag | undefined>) {
+    this._ref = ref;
+    this.invoke = this.invoke.bind(this);
+    this.addEventListener = this.addEventListener.bind(this);
+    this.removeEventListener = this.removeEventListener.bind(this);
+  }
 
-          const [id, channel, result] = event.args;
-          if (id !== random) return;
-          if (channel !== key) return;
-          ref.value?.removeEventListener("ipc-message", handle);
+  protected get _raw() {
+    return this._ref.value!;
+  }
 
-          if (isResolved) resolve(result);
-          else if (isRejected) reject(result);
-        }
-        ref.value?.addEventListener("ipc-message", handle);
-        setTimeout(() => {
-          ref.value?.removeEventListener("ipc-message", handle);
-          reject(new Error(`Timeout invoking ${key}`));
-        }, timeout);
-        ref.value?.send("__Invoke::call", [random, key, value]);
-      });
-    },
-  };
+  addEventListener<
+    Key extends WebviewEventKey,
+    Type extends WebviewEventMap[Key],
+  >(
+    key: Key,
+    callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void
+  ) {
+    if (this._callbacks.has(key, callback)) return;
+    this._raw.addEventListener(
+      "ipc-message",
+      this._callbacks.register(key, callback, (event) => {
+        if (event.channel !== key) return;
+        const args = event.args as Type["fromMain"];
+        callback(event, args);
+      })
+    );
+  }
+
+  removeEventListener<
+    Key extends WebviewEventKey,
+    Type extends WebviewEventMap[Key],
+  >(
+    key: Key,
+    callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void
+  ) {
+    const binding = this._callbacks.remove(key, callback);
+    if (!binding) return;
+    this._raw.removeEventListener("ipc-message", binding);
+  }
+
+  invoke<Key extends WebviewEventKey, Type extends WebviewEventMap[Key]>(
+    key: Key,
+    value: Type["fromMain"],
+    timeout?: number
+  ): Promise<Type["fromRenderer"]> {
+    const random = getRandom();
+    const raw = this._raw;
+    const completer = createCompleter<Type["fromRenderer"]>();
+
+    function handle(event: IpcMessageEvent) {
+      const isResolved = event.channel === "__Invoke::resolve";
+      const isRejected = event.channel === "__Invoke::reject";
+      if (!isResolved && !isRejected) return;
+      const [id, channel, result] = event.args;
+      if (id !== random) return;
+      if (channel !== key) return;
+      raw.removeEventListener("ipc-message", handle);
+      if (isResolved) completer.resolve(result);
+      else if (isRejected) completer.reject(result);
+    }
+
+    raw.addEventListener("ipc-message", handle);
+    if (timeout) {
+      setTimeout(() => {
+        raw.removeEventListener("ipc-message", handle);
+        completer.reject(new Error(`Timeout invoking ${key}`));
+      }, timeout);
+    }
+
+    raw.send("__Invoke::call", [random, key, value]);
+    return completer.wait();
+  }
 }
 
-function createCallbackMap() {
-  const map = {} as Record<
+class _CallbackMap {
+  protected _map = {} as Record<
     WebviewEventKey,
     {
       callback: (event: IpcMessageEvent, args: any) => void;
@@ -77,31 +90,39 @@ function createCallbackMap() {
     }[]
   >;
 
-  return {
-    has: <Key extends WebviewEventKey, Type extends WebviewEventMap[Key]>(
-      key: Key,
-      callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void,
-    ) => {
-      return !!map[key]?.some((item) => item.callback === callback);
-    },
-    register: <Key extends WebviewEventKey, Type extends WebviewEventMap[Key]>(
-      key: Key,
-      callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void,
-      binding: (event: IpcMessageEvent) => void,
-    ) => {
-      if (!map[key]) map[key] = [];
-      map[key].push({ callback, binding });
-      return binding;
-    },
-    remove: <Key extends WebviewEventKey, Type extends WebviewEventMap[Key]>(
-      key: Key,
-      callback: (event: IpcMessageEvent, args: Type["fromMain"]) => void,
-    ) => {
-      if (!map[key]) return;
-      const index = map[key].findIndex((item) => item.callback === callback);
-      if (index === -1) return;
-      const [item] = map[key].splice(index, 1);
-      return item.binding;
-    },
-  };
+  constructor() {
+    this.has = this.has.bind(this);
+    this.register = this.register.bind(this);
+    this.remove = this.remove.bind(this);
+  }
+
+  has<Key extends WebviewEventKey>(
+    key: Key,
+    callback: (event: IpcMessageEvent, args: any) => void
+  ) {
+    return !!this._map[key]?.some((item) => item.callback === callback);
+  }
+
+  register<Key extends WebviewEventKey>(
+    key: Key,
+    callback: (event: IpcMessageEvent, args: any) => void,
+    binding: (event: IpcMessageEvent) => void
+  ) {
+    if (!this._map[key]) this._map[key] = [];
+    this._map[key].push({ callback, binding });
+    return binding;
+  }
+
+  remove<Key extends WebviewEventKey>(
+    key: Key,
+    callback: (event: IpcMessageEvent, args: any) => void
+  ) {
+    if (!this._map[key]) return;
+    const index = this._map[key].findIndex(
+      (item) => item.callback === callback
+    );
+    if (index === -1) return;
+    const [item] = this._map[key].splice(index, 1);
+    return item.binding;
+  }
 }

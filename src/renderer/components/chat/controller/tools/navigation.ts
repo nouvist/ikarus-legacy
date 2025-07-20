@@ -1,6 +1,9 @@
 import z from "zod";
 import { BrowserController } from "~/renderer/components/browser";
-import { Tool, ToolRegistrar } from "~/renderer/components/chat/controller/tools/fundamental";
+import {
+  Tool,
+  ToolRegistrar,
+} from "~/renderer/components/chat/controller/tools/fundamental";
 
 export default function registerNavigationTools(
   registrar: ToolRegistrar,
@@ -68,7 +71,9 @@ export class GoToUrlTool extends Tool {
   protected _browser: BrowserController;
   protected _description = "Navigate the browser to a specified URL";
   protected _parameters = z.object({
-    url: z.string().describe("The URL to navigate to"),
+    url: z
+      .string()
+      .describe("The URL to navigate to with its protocol (e.g. https://*)"),
   });
 
   constructor(browser: BrowserController) {

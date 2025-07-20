@@ -1,7 +1,7 @@
 import { WebviewTag } from "electron";
 import { useRef } from "react";
-import createBrowserBridge from "~/renderer/components/browser/bridge";
-import createBrowserManaged from "~/renderer/components/browser/managed";
+import BrowserBridge from "~/renderer/components/browser/bridge";
+import BrowserManaged from "~/renderer/components/browser/managed";
 import { createCompleter, createRefCell } from "~/shared/core";
 
 export function useBrowserController() {
@@ -12,33 +12,24 @@ export function useBrowserController() {
 export class BrowserController {
   protected _completer = createCompleter<void>();
   protected _ref = createRefCell<WebviewTag | undefined>(undefined);
-  protected _bridge = createBrowserBridge(this._ref);
-  protected _managed = createBrowserManaged(
+  protected _bridge = new BrowserBridge(this._ref);
+  readonly managed = new BrowserManaged(
     this._ref,
     this._bridge,
-    this.waitUntilReady()
+    this._completer.wait,
   );
 
   constructor() {
     this.waitUntilReady = this.waitUntilReady.bind(this);
-    this.raw = this.raw.bind(this);
     this.bind = this.bind.bind(this);
   }
 
-  get bridge() {
-    return this._bridge;
-  }
-
-  get managed() {
-    return this._managed;
+  get raw() {
+    return this._ref.value!;
   }
 
   waitUntilReady() {
-    return this._completer.wait;
-  }
-
-  raw() {
-    return this._ref.value;
+    return this._completer.wait();
   }
 
   bind(wv: WebviewTag) {

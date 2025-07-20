@@ -15,7 +15,7 @@ export default function SettingsPage() {
           <_Horizontal>
             <Button
               constraints={new Constraints({ minHeight: 40, width: Infinity })}
-              onClick={Managed.window.debug}
+              onClick={managed.window.debug}
             >
               [Debug] Renderer
             </Button>

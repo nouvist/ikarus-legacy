@@ -1,52 +1,54 @@
 import { BrowserWindow } from "electron";
-import { MainBridge } from "~/main/bridge";
-import { createRefCell } from "~/shared/core";
+import MainBridge from "~/main/bridge";
 
-export default function createWindowService(
-  window: BrowserWindow,
-  bridge: MainBridge,
-) {
-  const isShown = createRefCell(false);
+export default class WindowService {
+  protected _bridge: MainBridge;
+  protected _window: BrowserWindow;
 
-  bridge.handle("Window::close", async () => {
-    window.close();
-  });
+  protected _isShown = false;
 
-  bridge.handle("Window::minimize", async () => {
-    window.minimize();
-  });
+  constructor(window: BrowserWindow, bridge: MainBridge) {
+    this._window = window;
+    this._bridge = bridge;
 
-  bridge.handle("Window::maximize", async () => {
-    if (window.isMaximized()) {
-      window.unmaximize();
-    } else {
-      window.maximize();
-    }
-  });
-
-  bridge.handle("Window::show", async () => {
-    window.show();
-    isShown.value = true;
-  });
-
-  bridge.handle("Window::hide", async () => {
-    window.hide();
-    isShown.value = false;
-  });
-
-  bridge.handle("Window::setTitleBarColor", async (_, color) => {
-    window.setTitleBarOverlay({
-      color,
+    this._bridge.handle("Window::close", async () => {
+      this._window.close();
     });
-  });
 
-  bridge.handle("Window::debug", async () => {
-    window.webContents.openDevTools();
-  });
+    this._bridge.handle("Window::minimize", async () => {
+      this._window.minimize();
+    });
 
-  return {
-    get isShown() {
-      return isShown.value;
-    },
-  };
+    this._bridge.handle("Window::maximize", async () => {
+      if (this._window.isMaximized()) {
+        this._window.unmaximize();
+      } else {
+        this._window.maximize();
+      }
+    });
+
+    this._bridge.handle("Window::show", async () => {
+      this._window.show();
+      this._isShown = true;
+    });
+
+    this._bridge.handle("Window::hide", async () => {
+      this._window.hide();
+      this._isShown = false;
+    });
+
+    this._bridge.handle("Window::setTitleBarColor", async (_, color) => {
+      this._window.setTitleBarOverlay({
+        color,
+      });
+    });
+
+    this._bridge.handle("Window::debug", async () => {
+      this._window.webContents.openDevTools();
+    });
+  }
+
+  get isShown() {
+    return this._isShown;
+  }
 }

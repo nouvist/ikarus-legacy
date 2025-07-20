@@ -31,7 +31,7 @@ function Browser({ controller }: BrowserProps, ref: ForwardedRef<WebviewTag>) {
       <webview
         ref={bindRefs(ref, controller?.bind)}
         style={{ flex: 1 }}
-        preload={Managed.webview.preload}
+        preload={managed.webview.preload}
       />
     </Flex>
   );
@@ -54,7 +54,7 @@ function Controls({ controller }: { controller: BrowserController }) {
     (async () => {
       await controller.waitUntilReady();
       controller.managed.go("https://bing.com");
-      const wv = controller.raw()!;
+      const wv = controller.raw;
       wv.addEventListener("did-navigate", handleNavigate);
       wv.addEventListener("did-navigate-in-page", handleNavigate);
       Object.defineProperty(window, "wv", {
@@ -63,7 +63,7 @@ function Controls({ controller }: { controller: BrowserController }) {
     })();
 
     return () => {
-      const wv = controller.raw()!;
+      const wv = controller.raw;
       if (!wv) return;
       wv.removeEventListener("did-navigate", handleNavigate);
       wv.removeEventListener("did-navigate-in-page", handleNavigate);

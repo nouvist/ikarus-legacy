@@ -20,9 +20,10 @@ import { inline } from "~/shared/core";
 export interface RunnerInvokeOptions {
   messages: Message[];
   callback: (message: Message) => void;
+  abortSignal?: AbortSignal;
   maxSteps?: number;
   temperature?: number;
-  abortSignal?: AbortSignal;
+  frequencyPenalty?: number;
 }
 
 export default class Runner {
@@ -102,17 +103,19 @@ export default class Runner {
   async invoke({
     messages,
     callback,
+    abortSignal,
     maxSteps,
     temperature,
-    abortSignal,
+    frequencyPenalty,
   }: RunnerInvokeOptions) {
     const result = await generateText({
+      abortSignal,
       model: this.language,
       messages: messages,
       tools: this.tools,
       maxSteps: maxSteps ?? 5,
       temperature: temperature ?? 0.4,
-      abortSignal,
+      frequencyPenalty: frequencyPenalty ?? 0.75,
     });
 
     const next = [] as Message[];
@@ -152,17 +155,19 @@ export default class Runner {
   async stream({
     messages,
     callback,
+    abortSignal,
     maxSteps,
     temperature,
-    abortSignal,
+    frequencyPenalty,
   }: RunnerInvokeOptions) {
     const stream = streamText({
+      abortSignal,
       model: this.language,
       messages: messages,
       tools: this.tools,
       maxSteps: maxSteps ?? 5,
       temperature: temperature ?? 0.4,
-      abortSignal,
+      frequencyPenalty: frequencyPenalty ?? 0.75,
     });
 
     let last: Message | undefined;

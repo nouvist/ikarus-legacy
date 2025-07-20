@@ -6,7 +6,7 @@ export interface TitlebarProps extends ComponentProps<"div"> {}
 
 function Titlebar({ children, ...props }: TitlebarProps) {
   const theme = useTheme();
-  Managed.window.setControlColors(theme.background.e0);
+  managed.window.setControlColors(theme.background.e0);
 
   return <_Container {...props}>{children}</_Container>;
 }

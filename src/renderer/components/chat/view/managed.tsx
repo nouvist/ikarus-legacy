@@ -79,9 +79,29 @@ function _ChatAssistent({ chat }: _ChatProps<AssistantMessage>) {
   const content = useObservableWithValue(chat.subject);
   if (!content || content.length === 0) return <Chat.Raw.Bubble.Loading />;
   if (typeof content === "string") {
+    let result: string | undefined;
+    let thoughts: string | undefined;
+    if (content.startsWith("<think>")) {
+      const end = content.indexOf("</think>");
+      if (end !== -1) {
+        thoughts = content.slice(7, end);
+        result = content.slice(end + 8);
+      } else {
+        thoughts = content.slice(7);
+        result = "";
+      }
+    } else {
+      result = content;
+    }
+
     return (
       <Chat.Raw.Bubble.Assistent>
-        <Markdown>{content}</Markdown>
+        {thoughts && (
+          <Chat.Raw.Bubble.Assistent.Thinking>
+            <Markdown>{thoughts}</Markdown>
+          </Chat.Raw.Bubble.Assistent.Thinking>
+        )}
+        {result && <Markdown>{result}</Markdown>}
       </Chat.Raw.Bubble.Assistent>
     );
   }

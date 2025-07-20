@@ -211,6 +211,7 @@ const _ChatShared = styled.div`
   border-radius: 8px;
   padding: 14px 20px;
   user-select: text;
+  overflow-wrap: break-word;
 
   &[data-right="true"] {
     margin-left: min(120px, 20%);
@@ -236,6 +237,11 @@ const _ChatShared = styled.div`
   > ul {
     padding-inline-start: 2em;
   }
+
+  > a {
+    color: ${(p) => p.theme.accent.primary};
+    text-decoration: none;
+  }
 `;
 
 interface ChatToolProps {
@@ -260,6 +266,28 @@ function encapsulate<T extends object>(component: T, type: ChatType) {
   });
 }
 
+export interface ChatThinkingProps extends PropsWithChildren {}
+
+function ChatThinking({ children }: ChatThinkingProps) {
+  return (
+    <Fragment>
+      <h4>Berpikir</h4>
+      <_ChatThinking>{children}</_ChatThinking>
+    </Fragment>
+  );
+}
+
+const _ChatThinking = styled.div`
+  color: ${(p) => p.theme.foreground.e1};
+  user-select: text;
+  overflow-wrap: break-word;
+  margin: 0;
+  &:has(+ *) {
+    border-bottom: 1px solid ${(p) => p.theme.elevation.t3};
+    margin-bottom: 0.5em;
+  }
+`;
+
 export default Object.assign(Chat, {
   Input: ChatInput,
   Container: ChatContainer,
@@ -280,7 +308,9 @@ export default Object.assign(Chat, {
       ),
     },
     User: encapsulate(ChatUser, ChatType.User),
-    Assistent: encapsulate(ChatAssistent, ChatType.Assistent),
+    Assistent: Object.assign(encapsulate(ChatAssistent, ChatType.Assistent), {
+      Thinking: ChatThinking,
+    }),
     Tool: encapsulate(ChatTool, ChatType.Assistent),
     Loading: encapsulate(ChatLoading, ChatType.Assistent),
   },

@@ -1,51 +1,69 @@
-import { BrowserBridge } from "~/renderer/components/browser/bridge";
+import BrowserBridge from "~/renderer/components/browser/bridge";
 import { RefCell } from "~/shared/core";
 import { getSelector } from "~/shared/html";
 
-export default function createBrowserManaged(
-  ref: RefCell<Electron.WebviewTag | undefined>,
-  bridge: BrowserBridge,
-  wait: () => Promise<void>,
-) {
-  function debug() {
-    ref.value?.openDevTools();
-  }
+export default class BrowserManaged {
+  protected _ref: RefCell<Electron.WebviewTag | undefined>;
+  protected _bridge: BrowserBridge;
+  protected _wait: () => Promise<void>;
 
-  async function go(src: string) {
-    await wait();
-    ref.value!.src = src;
-  }
-
-  function goBack() {
-    if (!ref.value?.canGoBack()) return;
-    ref.value.goBack();
-  }
-
-  function goForward() {
-    if (!ref.value?.canGoForward()) return;
-    ref.value.goForward();
-  }
-
-  function canGoBack() {
-    return ref.value?.canGoBack() ?? false;
-  }
-
-  function canGoForward() {
-    return ref.value?.canGoForward() ?? false;
-  }
-
-  function js<T, O extends { [k: string]: any } | undefined>(
-    callback: (obj: O) => T,
-    obj?: O,
+  constructor(
+    ref: RefCell<Electron.WebviewTag | undefined>,
+    bridge: BrowserBridge,
+    wait: () => Promise<void>
   ) {
-    return bridge.invoke(
+    this._ref = ref;
+    this._bridge = bridge;
+    this._wait = wait;
+    this.debug = this.debug.bind(this);
+    this.go = this.go.bind(this);
+    this.goBack = this.goBack.bind(this);
+    this.goForward = this.goForward.bind(this);
+    this.canGoBack = this.canGoBack.bind(this);
+    this.canGoForward = this.canGoForward.bind(this);
+    this.js = this.js.bind(this);
+    this.dom = this.dom.bind(this);
+  }
+
+  debug() {
+    this._ref.value?.openDevTools();
+  }
+
+  async go(src: string) {
+    await this._wait();
+    this._ref.value!.src = src;
+  }
+
+  goBack() {
+    if (!this._ref.value?.canGoBack()) return;
+    this._ref.value.goBack();
+  }
+
+  goForward() {
+    if (!this._ref.value?.canGoForward()) return;
+    this._ref.value.goForward();
+  }
+
+  canGoBack() {
+    return this._ref.value?.canGoBack() ?? false;
+  }
+
+  canGoForward() {
+    return this._ref.value?.canGoForward() ?? false;
+  }
+
+  js<T, O extends Object = any>(
+    callback: (obj: O) => T,
+    obj?: O
+  ) {
+    return this._bridge.invoke(
       "Js::eval",
-      `(${callback.toString()})(${JSON.stringify(obj)});`,
+      `(${callback.toString()})(${JSON.stringify(obj)});`
     ) as Promise<T>;
   }
 
-  async function dom() {
-    const html = await js(() => document.documentElement.outerHTML);
+  async dom() {
+    const html = await this.js(() => document.documentElement.outerHTML);
     const parser = new DOMParser();
     const document = parser.parseFromString(html, "text/html");
 
@@ -57,7 +75,7 @@ export default function createBrowserManaged(
         if (eventType === "input" || eventType === "change") {
           value = (el as HTMLInputElement).value;
         }
-        await js(
+        await this.js(
           ({ id, eventType, value }) => {
             const element = document.querySelector(id);
             if (element) {
@@ -69,22 +87,11 @@ export default function createBrowserManaged(
                 (element as HTMLInputElement).value = value;
             }
           },
-          { id, eventType, value },
+          { id, eventType, value }
         );
       });
     }
 
     return document;
   }
-
-  return {
-    debug,
-    go,
-    goBack,
-    goForward,
-    canGoBack,
-    canGoForward,
-    js,
-    dom,
-  };
 }

@@ -1,10 +1,10 @@
 import { app, BrowserWindow, dialog } from "electron";
 import squirrel from "electron-squirrel-startup";
 import path from "node:path";
-import createMainBridge from "~/main/bridge";
-import createEnvService from "~/main/services/env";
-import createRefreshService from "~/main/services/refresh";
-import createWindowService from "~/main/services/window";
+import MainBridge from "~/main/bridge";
+import EnvService from "~/main/services/env";
+import RefreshService from "~/main/services/refresh";
+import WindowService from "~/main/services/window";
 
 if (squirrel) app.quit();
 if (!app.requestSingleInstanceLock()) app.quit();
@@ -53,10 +53,12 @@ function createWindow() {
     },
   });
 
-  const bridge = createMainBridge(window);
-  const winsvc = createWindowService(window, bridge);
-  createRefreshService(window, isDebugMode);
-  createEnvService(bridge);
+  const bridge = new MainBridge(window);
+  const winsvc = new WindowService(window, bridge);
+  const refsvc = new RefreshService(window, isDebugMode);
+  new EnvService(bridge);
+
+  if (!isDebugMode) refsvc.enable();
 
   setTimeout(async () => {
     if (winsvc.isShown) return;
@@ -72,11 +74,7 @@ function createWindow() {
     window.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
     window.loadFile(
-      path.join(
-        __dirname,
-        "../renderer",
-        `${MAIN_WINDOW_VITE_NAME}/index.html`,
-      ),
+      path.join(__dirname, "../renderer", `${MAIN_WINDOW_VITE_NAME}/index.html`)
     );
   }
 }

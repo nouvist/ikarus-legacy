@@ -1,9 +1,16 @@
-import { RendererBridge } from "~/preload/services/bridge";
+import RendererBridge from "~/preload/services/bridge";
 
-export type EnvManaged = ReturnType<typeof createEnvManaged>;
-export default function createEnvManaged(bridge: RendererBridge) {
-  const cache = {} as Record<string, string | undefined>;
-  return async function get(key: string) {
-    return (cache[key] ??= await bridge.invoke("Env::get", key));
-  };
+export default class EnvManaged {
+  protected _bridge: RendererBridge;
+  protected _cache = {} as Record<string, string | undefined>;
+
+  constructor(bridge: RendererBridge) {
+    this._bridge = bridge;
+    this.get = this.get.bind(this);
+    Object.assign(this, this.get);
+  }
+
+  async get(key: string) {
+    return (this._cache[key] ??= await this._bridge.invoke("Env::get", key));
+  }
 }
