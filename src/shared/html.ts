@@ -24,6 +24,12 @@ export abstract class HtmlUtils {
     return `${HtmlUtils.getSelectorFromElement(parent, false)} > ${current}:nth-child(${index})`;
   }
 
+  static isParentOf(child: Element, parent: Element): boolean {
+    if (parent === child) return true;
+    if (!child.parentElement) return false;
+    return HtmlUtils.isParentOf(child.parentElement, parent);
+  }
+
   static getHashFromElement(el: Element) {
     return fnv.fast1a32(el.outerHTML);
   }

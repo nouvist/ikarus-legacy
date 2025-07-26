@@ -97,13 +97,10 @@ export default class TextInputFetcher {
         };
       })
       .sort((a, b) => a.selector.localeCompare(b.selector));
-
     if (abortSignal?.aborted) return;
-
-    console.log(`[Fetcher::fetchTextInputs] found ${inputs.length} inputs`);
+    console.log(`[Fetcher::fetchTextInputs] nemu ${inputs.length}`);
 
     let existings = await this._memory.textInputs.getAll();
-
     let removed = 0;
     for (const cursor of existings) {
       if (abortSignal?.aborted) break;
@@ -111,7 +108,8 @@ export default class TextInputFetcher {
       await this._memory.textInputs.remove(cursor.hash);
       removed++;
     }
-    console.log(`[Fetcher::fetchTextInputs] removed ${removed} existings`);
+    console.log(`[Fetcher::fetchTextInputs] ada ${removed} dari db`);
+    console.log(`[Fetcher::fetchTextInputs] hapus ${removed} dari db`);
 
     for (let i = 0; i < inputs.length; i++) {
       const cursor = inputs[i];
@@ -122,11 +120,11 @@ export default class TextInputFetcher {
 
     if (abortSignal?.aborted) return;
     if (inputs.length === 0) {
-      console.log("[Fetcher::fetchTextInputs] no new inputs to add");
+      console.log("[Fetcher::fetchTextInputs] gak ada yang baru");
       return;
     }
 
-    console.log(`[Fetcher::fetchTextInputs] embedding inputs...`);
+    console.log(`[Fetcher::fetchTextInputs] embedding...`);
     const { embeddings } = await this._runner.embedMany(
       inputs.map((input) =>
         [
@@ -141,13 +139,12 @@ export default class TextInputFetcher {
       abortSignal
     );
 
-    console.log(`[Fetcher::fetchTextInputs] adding inputs to memory...`);
+    console.log(`[Fetcher::fetchTextInputs] nambahin...`);
     await this._memory.textInputs.add(
       inputs.map((input, index) => ({
         ...input,
         embedding: embeddings[index],
       }))
     );
-    console.log(`[Fetcher::fetchTextInputs] inputs added to memory`);
   }
 }

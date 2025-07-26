@@ -58,7 +58,10 @@ export default class Fetcher {
     });
 
     console.log("[Runner::fetchAll] mulai ambil data...");
-    await this.fetchButtons(abort.signal);
+    await Promise.all([
+      this.fetchButtons(abort.signal),
+      this.fetchTextInputs(abort.signal),
+    ]);
 
     console.log("[Runner::fetchAll] selesai ambil data!");
     this._mutex.next(true);

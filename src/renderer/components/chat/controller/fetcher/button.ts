@@ -57,28 +57,25 @@ export default class ButtonFetcher {
       .filter(({ text }) => text.length > 0)
       .sort((a, b) => a.selector.localeCompare(b.selector));
     if (abortSignal?.aborted) return;
-
-    console.log(`[Fetcher::fetchButtons] found ${buttons.length} buttons`);
+    console.log(`[Fetcher::fetchButtons] nemu ${buttons.length}`);
 
     for (let i = 0; i < buttons.length; i++) {
-      const current = buttons[i];
+      const child = buttons[i];
       for (let j = i + 1; j < buttons.length; j++) {
-        const other = buttons[j];
-
-        if (other.element.querySelector(current.selector)) {
+        const parent = buttons[j];
+        if (HtmlUtils.isParentOf(child.element, parent.element)) {
           buttons.splice(i, 1);
           i--;
           break;
+        } else if (HtmlUtils.isParentOf(parent.element, child.element)) {
+          buttons.splice(j, 1);
+          j--;
         }
       }
     }
-    if (abortSignal?.aborted) return;
-    console.log(`[Fetcher::fetchButtons] filtered ${buttons.length} buttons`);
+    console.log(`[Fetcher::fetchButtons] filter ${buttons.length}`);
 
     let existings = await this._memory.buttons.getAll();
-
-    console.log(existings.map((b) => b.hash));
-    console.log(buttons.map((b) => b.hash));
     let removed = 0;
     for (const cursor of existings) {
       if (abortSignal?.aborted) break;
@@ -86,8 +83,8 @@ export default class ButtonFetcher {
       await this._memory.buttons.remove(cursor.hash);
       removed++;
     }
-    console.log(`[Fetcher::fetchButtons] found ${existings.length} existings`);
-    console.log(`[Fetcher::fetchButtons] removed ${removed} existings`);
+    console.log(`[Fetcher::fetchButtons] ada ${existings.length} dari db`);
+    console.log(`[Fetcher::fetchButtons] hapus ${removed} dari db`);
 
     for (let i = 0; i < buttons.length; i++) {
       const cursor = buttons[i];
@@ -98,18 +95,17 @@ export default class ButtonFetcher {
 
     if (abortSignal?.aborted) return;
     if (buttons.length === 0) {
-      console.log("[Fetcher::fetchButtons] no new buttons to add");
+      console.log("[Fetcher::fetchButtons] gak ada button baru");
       return;
     }
 
-    console.log(`[Fetcher::fetchButtons] should add ${buttons.length}`);
-    console.log(`[Fetcher::fetchButtons] embedding buttons...`);
+    console.log(`[Fetcher::fetchButtons] embedding...`);
     const { embeddings } = await this._runner.embedMany(
       buttons.map(({ text }) => text),
       abortSignal
     );
 
-    console.log(`[Fetcher::fetchButtons] adding buttons to memory...`);
+    console.log(`[Fetcher::fetchButtons] nambahin...`);
     await this._memory.buttons.add(
       buttons.map((button, index) => ({
         selector: button.selector,
@@ -123,6 +119,5 @@ export default class ButtonFetcher {
         embedding: embeddings[index],
       }))
     );
-    console.log(`[Fetcher::fetchButtons] buttons added to memory`);
   }
 }
