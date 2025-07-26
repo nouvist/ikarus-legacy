@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import Browser, { useBrowserController } from "~/renderer/components/browser";
+import Browser, { useBrowserController } from "~/renderer/components/browser/view/raw";
 import Card from "~/renderer/components/card";
 import Chat, { useChatController } from "~/renderer/components/chat";
 import Split from "~/renderer/components/split";

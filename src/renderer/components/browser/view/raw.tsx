@@ -27,7 +27,7 @@ export default forwardRef(Browser);
 function Browser({ controller }: BrowserProps, ref: ForwardedRef<WebviewTag>) {
   return (
     <Flex fill direction={FlexDirection.Column}>
-      <Controls controller={controller} />
+      <_Controls controller={controller} />
       <webview
         ref={bindRefs(ref, controller?.bind)}
         style={{ flex: 1 }}
@@ -37,7 +37,7 @@ function Browser({ controller }: BrowserProps, ref: ForwardedRef<WebviewTag>) {
   );
 }
 
-function Controls({ controller }: { controller: BrowserController }) {
+function _Controls({ controller }: { controller: BrowserController }) {
   const theme = useTheme();
   const currentUrl = useRef("");
   const [url, setUrl] = useState("");
@@ -52,9 +52,9 @@ function Controls({ controller }: { controller: BrowserController }) {
     }
 
     (async () => {
-      await controller.waitUntilReady();
-      controller.managed.go("https://bing.com");
-      const wv = controller.raw;
+      await controller.waitUntilBound();
+      controller.managed.go("https://github.com");
+      const wv = controller.raw!;
       wv.addEventListener("did-navigate", handleNavigate);
       wv.addEventListener("did-navigate-in-page", handleNavigate);
       Object.defineProperty(window, "wv", {

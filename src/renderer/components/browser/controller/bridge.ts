@@ -1,5 +1,5 @@
 import { IpcMessageEvent } from "electron";
-import { createCompleter, getRandom, RefCell } from "~/shared/core";
+import { Completer, getRandom, RefCell } from "~/shared/core";
 import { WebviewEventKey, WebviewEventMap } from "~/webview/bridge/types";
 
 export default class BrowserBridge {
@@ -54,7 +54,7 @@ export default class BrowserBridge {
   ): Promise<Type["fromRenderer"]> {
     const random = getRandom();
     const raw = this._raw;
-    const completer = createCompleter<Type["fromRenderer"]>();
+    const completer = new Completer<Type["fromRenderer"]>();
 
     function handle(event: IpcMessageEvent) {
       const isResolved = event.channel === "__Invoke::resolve";

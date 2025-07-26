@@ -1,18 +1,30 @@
-export function getSelector(el: Element): string {
-  let current = el.tagName.toLowerCase();
-  const id = el.id.trim();
-  const cls = el.className
-    .split(" ")
-    .map((el) => el.trim())
-    .filter((el) => el);
-  if (id) current += el.id ? `#${el.id}` : "";
-  for (const c of cls) {
-    current += `.${c}`;
+import fnv from "fnv-plus";
+
+export abstract class HtmlUtils {
+  static getSelectorFromElement(el: Element, includeClasses = true): string {
+    let current = el.tagName.toLowerCase();
+    const id = el.id.trim();
+    if (id) current += `#${CSS.escape(id)}`;
+
+    if (includeClasses && el.classList.length > 0) {
+      const classes = Array.from(el.classList)
+        .map((cls) => CSS.escape(cls.trim()))
+        .filter(Boolean);
+      current += `.${classes.join(".")}`;
+    }
+
+    if (el.tagName === "INPUT" && el.hasAttribute("type")) {
+      current += `[type="${CSS.escape(el.getAttribute("type")!)}"]`;
+    }
+
+    if (!el.parentElement) return current;
+    const parent = el.parentElement!;
+    const index = Array.from(el.parentElement!.children).indexOf(el) + 1;
+
+    return `${HtmlUtils.getSelectorFromElement(parent, false)} > ${current}:nth-child(${index})`;
   }
 
-  if (!el.parentElement) return current;
-  const parent = el.parentElement!;
-  const index = Array.from(el.parentElement!.children).indexOf(el) + 1;
-
-  return `${getSelector(parent)} > ${current}:nth-child(${index})`;
+  static getHashFromElement(el: Element) {
+    return fnv.fast1a32(el.outerHTML);
+  }
 }

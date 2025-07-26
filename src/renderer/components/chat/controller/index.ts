@@ -1,9 +1,15 @@
 import { useRef } from "react";
 import { BehaviorSubject } from "rxjs";
-import { BrowserController } from "~/renderer/components/browser";
-import { Message, UserMessage } from "~/renderer/components/chat";
-import Runner from "~/renderer/components/chat/controller/runner";
-import { waitObservableUntil } from "~/shared/core";
+import { BrowserController } from "~/renderer/components/browser/view/raw";
+import {
+  AssistantMessage,
+  Message,
+  SystemMessage,
+  UserMessage,
+} from "~/renderer/components/chat";
+import RunnerFacade from "~/renderer/components/chat/controller/facade";
+import { inline } from "~/shared/core";
+import { CombinedMutexes, Mutex, waitObservableUntil } from "~/shared/rxjs";
 
 export function useChatController(browser: BrowserController) {
   const ref = useRef<ChatController>(null);
@@ -11,16 +17,54 @@ export function useChatController(browser: BrowserController) {
 }
 
 export class ChatController {
-  protected _initiliazed = false;
+  protected _isInitialized = false;
   protected _browser: BrowserController;
-  protected _runner: Runner;
+  protected _runner = new RunnerFacade();
+  protected _messagesMutex = new Mutex();
+  protected _mutex = new CombinedMutexes(
+    this._messagesMutex,
+    this._runner.mutex
+  );
 
-  readonly mutex = new BehaviorSubject<boolean>(false);
   readonly messages = new BehaviorSubject<Message[]>([]);
+  readonly mutex = this._mutex.asImmutable();
+
+  protected static _defaultMessages: Message[] | undefined;
+
+  protected static createDefaultMessages() {
+    if (!this._defaultMessages) {
+      this._defaultMessages = [
+        new SystemMessage(
+          inline(`
+            Kamu adalah Babon, asisten virtual yang membantu pengguna dengan
+            menjelajahi web. Kamu hanya fokus pada memberikan hasil yang relevan
+            tanpa menjelaskan detail teknis atau cara kerja alat. Kamu harus
+            berpikir layaknya sebuah browser. Hasil dari alat yang kamu gunakan
+            hanya akan bisa dilihat olehmu dan tidak akan ditampilkan ke
+            pengguna. Jadi, kamu perlu menjelaskan atau merangkum hasilnya dalam
+            bahasa yang mudah dipahami.
+          `)
+        ),
+        new AssistantMessage(
+          inline(`
+            Halo! Aku Babon, asisten virtual yang siap bantu kamu menjelajahi
+            web. Kasih tahu aku apa yang kamu butuhkan, dan aku bakal kendalikan
+            browser untukmu.
+          `)
+        ),
+      ];
+
+      for (const message of this._defaultMessages) {
+        if (!(message instanceof AssistantMessage)) continue;
+        message.complete();
+      }
+    }
+
+    return Array.from(this._defaultMessages);
+  }
 
   constructor(browser: BrowserController) {
     this._browser = browser;
-    this._runner = new Runner(browser);
 
     this.ensureInitialized = this.ensureInitialized.bind(this);
     this.waitUntilReady = this.waitUntilReady.bind(this);
@@ -32,17 +76,18 @@ export class ChatController {
   }
 
   async ensureInitialized() {
-    if (this._initiliazed) return;
-    await this._runner.initializeDebugEnvironment();
-    this.messages.next(Runner.createDefaultMessages());
-    this._initiliazed = true;
-    this.mutex.next(true);
+    if (this._isInitialized) return;
+    this._isInitialized = true;
+
+    await this._runner.initialize(this._browser);
+    this.messages.next(ChatController.createDefaultMessages());
+    this._messagesMutex.next(true);
   }
 
   waitUntilReady() {
     return Promise.all([
-      this._browser.waitUntilReady(),
-      waitObservableUntil(this.mutex, Boolean),
+      this._browser.waitUntilBound(),
+      waitObservableUntil(this._messagesMutex, Boolean),
     ]);
   }
 
@@ -57,14 +102,17 @@ export class ChatController {
 
   async invoke(message: string) {
     try {
-      this.mutex.next(false);
+      this._messagesMutex.next(false);
       this.concat(new UserMessage(message));
+      const abort = new AbortController();
+      (window as any)["cancel"] = abort.abort.bind(abort);
       await this._runner.stream({
         messages: this.messages.value,
         callback: this.concat,
+        abortSignal: abort.signal,
       });
     } finally {
-      this.mutex.next(true);
+      this._messagesMutex.next(true);
     }
   }
 }

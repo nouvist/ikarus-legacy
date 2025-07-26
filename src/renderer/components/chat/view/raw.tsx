@@ -211,7 +211,6 @@ const _ChatShared = styled.div`
   border-radius: 8px;
   padding: 14px 20px;
   user-select: text;
-  overflow-wrap: break-word;
 
   &[data-right="true"] {
     margin-left: min(120px, 20%);
@@ -219,6 +218,12 @@ const _ChatShared = styled.div`
 
   &[data-left="true"] {
     margin-right: min(120px, 20%);
+  }
+
+  &,
+  & * {
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
   }
 
   > * {
@@ -238,7 +243,7 @@ const _ChatShared = styled.div`
     padding-inline-start: 2em;
   }
 
-  > a {
+  a {
     color: ${(p) => p.theme.accent.primary};
     text-decoration: none;
   }
@@ -280,8 +285,14 @@ function ChatThinking({ children }: ChatThinkingProps) {
 const _ChatThinking = styled.div`
   color: ${(p) => p.theme.foreground.e1};
   user-select: text;
-  overflow-wrap: break-word;
   margin: 0;
+
+  &,
+  & * {
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+  }
+
   &:has(+ *) {
     border-bottom: 1px solid ${(p) => p.theme.elevation.t3};
     margin-bottom: 0.5em;

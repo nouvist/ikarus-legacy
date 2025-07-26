@@ -1,5 +1,5 @@
 import z from "zod";
-import { BrowserController } from "~/renderer/components/browser";
+import { BrowserController } from "~/renderer/components/browser/view/raw";
 import {
   Tool,
   ToolRegistrar,
@@ -9,10 +9,10 @@ export default function registerNavigationTools(
   registrar: ToolRegistrar,
   browser: BrowserController
 ) {
-  registrar.register("getUrl", new GetUrlTool(browser));
-  registrar.register("goToUrl", new GoToUrlTool(browser));
-  registrar.register("goBack", new GoBackTool(browser));
-  registrar.register("goForward", new GoForwardTool(browser));
+  registrar.register("Navigation.getUrl", new GetUrlTool(browser));
+  registrar.register("Navigation.goToUrl", new GoToUrlTool(browser));
+  registrar.register("Navigation.goBack", new GoBackTool(browser));
+  registrar.register("Navigation.goForward", new GoForwardTool(browser));
 }
 
 export class GoBackTool extends Tool {
@@ -26,9 +26,11 @@ export class GoBackTool extends Tool {
   }
 
   async execute() {
-    await this._browser.managed.js(() => {
-      window.history.back();
-    });
+    if (!this._browser.managed.canGoBack()) {
+      return "Cannot go back, no previous page available";
+    }
+
+    await this._browser.managed.goForward();
     return "Navigated back to the previous page";
   }
 }
@@ -44,9 +46,11 @@ export class GoForwardTool extends Tool {
   }
 
   async execute() {
-    await this._browser.managed.js(() => {
-      window.history.forward();
-    });
+    if (!this._browser.managed.canGoForward()) {
+      return "Cannot go forward, no next page available";
+    }
+
+    await this._browser.managed.goForward();
     return "Navigated forward to the next page";
   }
 }
@@ -81,10 +85,8 @@ export class GoToUrlTool extends Tool {
     this._browser = browser;
   }
 
-  async execute(args: z.infer<typeof this._parameters>) {
-    await this._browser.managed.js(({ url }) => {
-      location.href = url;
-    }, args);
-    return `Navigated to ${args.url}`;
+  async execute({ url }: z.infer<typeof this._parameters>) {
+    await this._browser.managed.go(url);
+    return `Navigated to ${url}`;
   }
 }

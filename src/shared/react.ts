@@ -1,7 +1,7 @@
 import { Children, Key, ReactNode, Ref, useRef } from "react";
 import { useObservable } from "react-rx";
 import { Observable } from "rxjs";
-import { Completer, createCompleter, getRandom } from "~/shared/core";
+import { Completer, getRandom } from "~/shared/core";
 
 export function getKey(child: ReactNode) {
   if (typeof child !== "object") return undefined;
@@ -27,7 +27,7 @@ export function useRandom() {
 
 export function useCompleter<T>() {
   const ref = useRef<Completer<T>>(null);
-  return (ref.current ??= createCompleter<T>());
+  return (ref.current ??= new Completer<T>());
 }
 
 export function useObservableWithValue<T>(value: Observable<T> & { value: T }) {

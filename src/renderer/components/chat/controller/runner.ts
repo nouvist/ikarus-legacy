@@ -1,103 +1,38 @@
-import { createOpenAI } from "@ai-sdk/openai";
 import {
+  embed,
   EmbeddingModel,
+  embedMany,
   generateText,
   LanguageModel,
   streamText,
   Tool,
   ToolResultPart,
 } from "ai";
-import { BrowserController } from "~/renderer/components/browser";
 import {
   AssistantMessage,
   Message,
-  SystemMessage,
   ToolMessage,
-} from "~/renderer/components/chat/controller/structs";
-import createTools from "~/renderer/components/chat/controller/tools";
-import { inline } from "~/shared/core";
-
-export interface RunnerInvokeOptions {
-  messages: Message[];
-  callback: (message: Message) => void;
-  abortSignal?: AbortSignal;
-  maxSteps?: number;
-  temperature?: number;
-  frequencyPenalty?: number;
-}
+} from "~/renderer/components/chat";
+import { RunnerInvokeOptions } from "~/renderer/components/chat/controller/facade";
+import { RefCell } from "~/shared/core";
 
 export default class Runner {
-  protected _browser: BrowserController;
+  protected _embedding: RefCell<EmbeddingModel<string>>;
+  protected _language: RefCell<LanguageModel>;
+  protected _tools: RefCell<Record<string, Tool>>;
 
-  protected _embedding?: EmbeddingModel<string>;
-  protected _language?: LanguageModel;
-  protected _tools?: Record<string, Tool>;
-  protected static _defaultMessages: Message[] | undefined;
+  constructor(
+    _embedding: RefCell<EmbeddingModel<string>>,
+    _language: RefCell<LanguageModel>,
+    _tools: RefCell<Record<string, Tool>>
+  ) {
+    this._embedding = _embedding;
+    this._language = _language;
+    this._tools = _tools;
 
-  static createDefaultMessages() {
-    if (!Runner._defaultMessages) {
-      Runner._defaultMessages ??= [
-        new SystemMessage(
-          inline(`
-          Kamu adalah Babon, asisten virtual yang membantu pengguna dengan
-          menjelajahi web. Kamu dapat dan memang diperuntukkan untuk menggunakan
-          alat-alat yang tersedia untuk membantu pengguna. Kamu boleh membantu
-          hal seperti login atau registrasi, dan hal-hal yang bersifat privat
-          lainnya, selama kamu menanyakan konsensus pengguna terlebih dahulu.
-        `)
-        ),
-        new AssistantMessage(
-          inline(`
-          Halo! Aku Babon, asisten virtualmu. Aku bisa bantu kamu menjelajahi
-          dan berinteraksi dengan web. Apa yang bisa aku bantu hari ini?
-        `)
-        ),
-      ];
-
-      for (const message of Runner._defaultMessages) {
-        if (!(message instanceof AssistantMessage)) continue;
-        message.complete();
-      }
-    }
-
-    return Array.from(Runner._defaultMessages);
-  }
-
-  constructor(browser: BrowserController) {
-    this._browser = browser;
-    this.initializeDebugEnvironment =
-      this.initializeDebugEnvironment.bind(this);
-  }
-
-  get embedding() {
-    if (!this._embedding) throw new Error("Embedding model is not initialized");
-    return this._embedding;
-  }
-
-  get language() {
-    if (!this._language) throw new Error("Language model is not initialized");
-    return this._language;
-  }
-
-  get tools() {
-    if (!this._tools) throw new Error("Tools are not initialized");
-    return this._tools;
-  }
-
-  async initializeDebugEnvironment() {
-    const ollama = createOpenAI({
-      baseURL: "http://127.0.0.1:11434/v1",
-      apiKey: "ollama",
-    });
-
-    this._embedding = ollama.embedding("nomic-embed-text");
-    this._language = ollama.languageModel("qwen3:0.6b");
-    this._tools = createTools(this._browser);
-
-    // const google = createGoogleGenerativeAI({
-    //   apiKey: await Managed.env("GEMINI_API_KEY"),
-    // });
-    // this._language = google.languageModel("gemini-2.0-flash-lite");
+    this.invoke = this.invoke.bind(this);
+    this.embed = this.embed.bind(this);
+    this.embedMany = this.embedMany.bind(this);
   }
 
   async invoke({
@@ -110,9 +45,9 @@ export default class Runner {
   }: RunnerInvokeOptions) {
     const result = await generateText({
       abortSignal,
-      model: this.language,
+      model: this._language.value,
       messages: messages,
-      tools: this.tools,
+      tools: this._tools.value,
       maxSteps: maxSteps ?? 5,
       temperature: temperature ?? 0.4,
       frequencyPenalty: frequencyPenalty ?? 0.75,
@@ -162,9 +97,9 @@ export default class Runner {
   }: RunnerInvokeOptions) {
     const stream = streamText({
       abortSignal,
-      model: this.language,
+      model: this._language.value,
       messages: messages,
-      tools: this.tools,
+      tools: this._tools.value,
       maxSteps: maxSteps ?? 5,
       temperature: temperature ?? 0.4,
       frequencyPenalty: frequencyPenalty ?? 0.75,
@@ -209,5 +144,21 @@ export default class Runner {
         }
       }
     }
+  }
+
+  async embed(value: string, abortSignal?: AbortSignal) {
+    return embed({
+      model: this._embedding.value,
+      value: value,
+      abortSignal: abortSignal,
+    });
+  }
+
+  async embedMany(values: string[], abortSignal?: AbortSignal) {
+    return embedMany({
+      model: this._embedding.value,
+      values: values,
+      abortSignal: abortSignal,
+    });
   }
 }

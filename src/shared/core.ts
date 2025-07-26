@@ -1,89 +1,83 @@
-import { Observable, Subject } from "rxjs";
-
-export function getRandom() {
-  return Math.random().toString(16).slice(2, 10);
+export class RefCell<T> {
+  constructor(public value: T) {}
 }
 
-export interface RefCell<T> {
-  value: T;
-}
-
-export function createRefCell<T>(value: T) {
-  return {
-    value,
-  } as RefCell<T>;
-}
-
-export type Completer<T> = ReturnType<typeof createCompleter<T>>;
-
-export function createCompleter<T>() {
-  let resolveCallback: (value: T) => void;
-  let rejectCallback: (reason?: any) => void;
-  let isResolved = false;
-  let isRejected = false;
-  const promise = new Promise<T>((res, rej) => {
-    resolveCallback = res;
-    rejectCallback = rej;
-  });
-
-  function resolve(value: T) {
-    if (isResolved || isRejected) return false;
-    isResolved = true;
-    resolveCallback(value);
+export class LateRefCell<T> extends RefCell<T> {
+  constructor() {
+    super(undefined as never);
   }
 
-  function reject(reason?: any) {
-    if (isResolved || isRejected) return false;
-    isRejected = true;
-    rejectCallback(reason);
+  get isInitialized() {
+    return this.value !== undefined;
+  }
+
+  get isUninitialized() {
+    return !this.isInitialized;
+  }
+}
+
+export class Completer<T = void> {
+  protected _isResolved = false;
+  protected _isRejected = false;
+  protected _resolve?: (value: T) => void;
+  protected _reject?: (reason?: any) => void;
+  protected _promise: Promise<T>;
+
+  constructor() {
+    this._promise = new Promise<T>((resolve, reject) => {
+      this._resolve = resolve;
+      this._reject = reject;
+    });
+
+    this.resolve = this.resolve.bind(this);
+    this.reject = this.reject.bind(this);
+    this.encapsulate = this.encapsulate.bind(this);
+    this.wait = this.wait.bind(this);
+  }
+
+  resolve(value: T) {
+    if (this._isResolved || this._isRejected) return false;
+    if (!this._resolve) return setImmediate(() => this.resolve(value));
+    this._isResolved = true;
+    this._resolve(value);
     return true;
   }
 
-  function encapsulate(value: T | Promise<T>): Promise<T> {
-    Promise.resolve(value).then(resolve, reject);
-    return promise;
+  reject(reason?: any) {
+    if (this._isResolved || this._isRejected) return false;
+    if (!this._reject) return setImmediate(() => this.reject(reason));
+    this._isRejected = true;
+    this._reject(reason);
+    return true;
   }
 
-  return {
-    resolve,
-    reject,
-    encapsulate,
-    wait: () => promise,
-    isResolved: () => isResolved,
-    isRejected: () => isRejected,
-    isFinally: () => isResolved || isRejected,
-  };
+  encapsulate(value: T | Promise<T>): Promise<T> {
+    Promise.resolve(value).then(
+      this.resolve.bind(this),
+      this.reject.bind(this)
+    );
+    return this._promise;
+  }
+
+  wait(): Promise<T> {
+    return this._promise;
+  }
+
+  get isResolved() {
+    return this._isResolved;
+  }
+
+  get isRejected() {
+    return this._isRejected;
+  }
+
+  get isFinally() {
+    return this._isResolved || this._isRejected;
+  }
 }
 
-export async function waitObservableUntil<T>(
-  observable: Observable<T>,
-  callback: (value: T) => boolean
-) {
-  const { wait, resolve } = createCompleter<void>();
-  const subscription = observable.subscribe(handler);
-  function handler(value: T) {
-    if (!callback(value)) return;
-    subscription.unsubscribe();
-    resolve();
-  }
-
-  await wait();
-}
-
-export async function waitSubjectUntilComplete<T>(subject: Subject<T>) {
-  if (subject.closed) return;
-  try {
-    const { wait, resolve } = createCompleter<void>();
-    const subscription = subject.subscribe({
-      complete: () => {
-        subscription.unsubscribe();
-        resolve();
-      },
-    });
-    await wait();
-  } catch {
-    return;
-  }
+export function getRandom() {
+  return Math.random().toString(16).slice(2, 10);
 }
 
 export function inline(str: string) {

@@ -1,22 +1,23 @@
 import z from "zod";
-import { BrowserController } from "~/renderer/components/browser";
+import { BrowserController } from "~/renderer/components/browser/view/raw";
 import {
   Tool,
   ToolRegistrar,
 } from "~/renderer/components/chat/controller/tools/fundamental";
-import { getSelector } from "~/shared/html";
+import { inline } from "~/shared/core";
+import { HtmlUtils } from "~/shared/html";
 
 export default function registerInputTools(
   registrar: ToolRegistrar,
   browser: BrowserController
 ) {
-  registrar.register("findInput", new FindInputTool(browser));
-  registrar.register("changeInput", new ChangeInputTool(browser));
+  registrar.register("Input.findBySemantic", new FindInputTool(browser));
+  registrar.register("Input.changeBySelector", new ChangeInputTool(browser));
 }
 
 export class FindInputTool extends Tool {
   protected _browser: BrowserController;
-  protected _description = "Get input field information from the page";
+  protected _description = "Get input field information from the page.";
   protected _parameters = z.object({
     text: z.string().describe("The text of the input field to get"),
   });
@@ -45,7 +46,7 @@ export class FindInputTool extends Tool {
           `Element ${index + 1}:`,
           `type: ${el.tagName.toLowerCase()}`,
           `placeholder: ${JSON.stringify(el.placeholder?.trim() || "")}`,
-          `selector: ${getSelector(el)}`,
+          `selector: ${HtmlUtils.getSelectorFromElement(el)}`,
         ].join("\n")
       );
 
@@ -56,8 +57,10 @@ export class FindInputTool extends Tool {
 
 export class ChangeInputTool extends Tool {
   protected _browser: BrowserController;
-  protected _description =
-    "Change the value of an input field on the page, given its selector (use findInput if you don't know the selector)";
+  protected _description = inline(`
+    Change the value of an input field on the page, given its selector. Use
+    findInput if you don't know the selector.
+  `);
   protected _parameters = z.object({
     selector: z.string().describe("The selector of the input field to change"),
     value: z.string().describe("The new value to set in the input field"),

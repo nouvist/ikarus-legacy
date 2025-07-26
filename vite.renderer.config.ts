@@ -10,16 +10,22 @@ export default defineConfig({
       "~": path.resolve(__dirname, "src"),
     },
   },
+  build: {
+    rollupOptions: {
+      external: [
+        "@lancedb/lancedb",
+        "@lancedb/lancedb-darwin-arm64",
+        "@lancedb/lancedb-darwin-x64",
+        "@lancedb/lancedb-linux-arm64-gnu",
+        "@lancedb/lancedb-linux-arm64-musl",
+        "@lancedb/lancedb-linux-x64-gnu",
+        "@lancedb/lancedb-linux-x64-musl",
+        "@lancedb/lancedb-win32-arm64-msvc",
+        "@lancedb/lancedb-win32-x64-msvc",
+      ],
+    },
+  },
   optimizeDeps: {
-    exclude: [
-      // "langchain",
-      // "@langchain/community",
-      // "@langchain/core",
-      // "@langchain/google-genai",
-      // "@langchain/langgraph",
-      // "@langchain/ollama",
-      // "drizzle-orm",
-      // "camelcase",
-    ],
+    exclude: ["@lancedb/lancedb"],
   },
 });

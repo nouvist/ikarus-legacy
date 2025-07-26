@@ -1,5 +1,5 @@
 import z from "zod";
-import { BrowserController } from "~/renderer/components/browser";
+import { BrowserController } from "~/renderer/components/browser/view/raw";
 import {
   Tool,
   ToolRegistrar,
@@ -9,7 +9,7 @@ export default function registerHtmlTools(
   registrar: ToolRegistrar,
   browser: BrowserController
 ) {
-  registrar.register("getAllHtml", new GetAllHtmlTool(browser));
+  registrar.register("Html.getAllRawHtml", new GetAllHtmlTool(browser));
 }
 
 export class GetAllHtmlTool extends Tool {

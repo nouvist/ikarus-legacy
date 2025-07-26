@@ -9,7 +9,7 @@ import {
   ToolContent,
 } from "ai";
 import { BehaviorSubject } from "rxjs";
-import { waitSubjectUntilComplete } from "~/shared/core";
+import { waitSubjectUntilComplete } from "~/shared/rxjs";
 
 type ProviderOptions = LanguageModelV1ProviderMetadata;
 

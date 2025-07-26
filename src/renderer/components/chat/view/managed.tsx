@@ -76,11 +76,17 @@ function _ChatUser({ chat }: _ChatProps<UserMessage>) {
 }
 
 function _ChatAssistent({ chat }: _ChatProps<AssistantMessage>) {
-  const content = useObservableWithValue(chat.subject);
+  let content = useObservableWithValue(chat.subject);
   if (!content || content.length === 0) return <Chat.Raw.Bubble.Loading />;
+
   if (typeof content === "string") {
     let result: string | undefined;
     let thoughts: string | undefined;
+
+    while (content.includes("\n\n")) {
+      content = content.replace("\n\n", "\n");
+    }
+
     if (content.startsWith("<think>")) {
       const end = content.indexOf("</think>");
       if (end !== -1) {
@@ -117,7 +123,7 @@ function _ChatAssistent({ chat }: _ChatProps<AssistantMessage>) {
           <b>[TODO] </b>
           UI-nya rapiin lagi
         </div>
-        {(content as ToolCallPart[]).map((part, index) => {
+        {(content as ToolCallPart[]).map((part) => {
           return (
             <div key={`chat-${part.toolCallId}`}>
               Memanggil {part.toolName}...
