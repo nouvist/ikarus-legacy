@@ -10,26 +10,26 @@ import InMemoryTable from "~/renderer/memory/tables/abstract";
 
 export enum ButtonDataType {
   Button = "button",
-  Anchor = "anchor",
+  Anchor = "a",
 }
 
 export interface ButtonData {
-  selector: string;
-  type: ButtonDataType;
+  tag: ButtonDataType;
   text: string;
-  hash: number;
   href?: string;
+  hash: number;
+  selector: string;
   embedding: number[];
 }
 
 export default class ButtonTable extends InMemoryTable<ButtonData> {
   protected _name = "buttons";
   protected _schema = new Schema([
-    new Field("selector", new Utf8()),
-    new Field("type", new Utf8()),
+    new Field("tag", new Utf8()),
     new Field("text", new Utf8()),
-    new Field("hash", new Uint32()),
     new Field("href", new Utf8(), true),
+    new Field("selector", new Utf8()),
+    new Field("hash", new Uint32()),
     new Field(
       "embedding",
       new FixedSizeList(768, new Field("item", new Float32()))

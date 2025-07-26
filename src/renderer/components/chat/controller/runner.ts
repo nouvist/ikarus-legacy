@@ -49,7 +49,7 @@ export default class Runner {
       messages: messages,
       tools: this._tools.value,
       maxSteps: maxSteps ?? 5,
-      temperature: temperature ?? 0.4,
+      temperature: temperature ?? 0,
       frequencyPenalty: frequencyPenalty ?? 0.75,
     });
 
@@ -101,7 +101,7 @@ export default class Runner {
       messages: messages,
       tools: this._tools.value,
       maxSteps: maxSteps ?? 5,
-      temperature: temperature ?? 0.4,
+      temperature: temperature ?? 0,
       frequencyPenalty: frequencyPenalty ?? 0.75,
     });
 

@@ -1,61 +1,64 @@
 import z from "zod";
 import { BrowserController } from "~/renderer/components/browser/view/raw";
+import Fetcher from "~/renderer/components/chat/controller/fetcher";
 import {
   Tool,
   ToolRegistrar,
 } from "~/renderer/components/chat/controller/tools/fundamental";
 import { inline } from "~/shared/core";
-import { HtmlUtils } from "~/shared/html";
 
-export default function registerInputTools(
+export default function registerTextInputTools(
   registrar: ToolRegistrar,
-  browser: BrowserController
+  browser: BrowserController,
+  fetcher: Fetcher
 ) {
-  registrar.register("Input.findBySemantic", new FindInputTool(browser));
-  registrar.register("Input.changeBySelector", new ChangeInputTool(browser));
+  registrar.register(
+    "TextInput.findBySemantics",
+    new FindTextInputTool(browser, fetcher)
+  );
+  registrar.register(
+    "TextInput.changeBySelector",
+    new ChangeTextInputTool(browser)
+  );
 }
 
-export class FindInputTool extends Tool {
+export class FindTextInputTool extends Tool {
   protected _browser: BrowserController;
+  protected _fetcher: Fetcher;
   protected _description = "Get input field information from the page.";
   protected _parameters = z.object({
-    text: z.string().describe("The text of the input field to get"),
+    semantics: z.string().describe("Description of the input to find."),
   });
 
-  constructor(browser: BrowserController) {
+  constructor(browser: BrowserController, fetcher: Fetcher) {
     super();
     this._browser = browser;
+    this._fetcher = fetcher;
   }
 
-  async execute({ text }: z.infer<typeof this._parameters>) {
-    const dom = await this._browser.managed.dom();
+  async execute({ semantics }: z.infer<typeof this._parameters>) {
+    await this._fetcher.fetchTextInputs();
 
-    text = text.trim().toLowerCase();
-    const lines = Array.from(
-      dom.querySelectorAll<HTMLInputElement>("input, textarea")
-    )
-      .filter(
-        (el) =>
-          el.placeholder?.toLowerCase().includes(text) ||
-          el.name?.toLowerCase().includes(text) ||
-          el.id?.toLowerCase().includes(text) ||
-          el.className.toLowerCase().replace(/[\-_]/g, " ").includes(text)
-      )
-      .map((el, index) =>
-        [
-          `Element ${index + 1}:`,
-          `type: ${el.tagName.toLowerCase()}`,
-          `placeholder: ${JSON.stringify(el.placeholder?.trim() || "")}`,
-          `selector: ${HtmlUtils.getSelectorFromElement(el)}`,
-        ].join("\n")
-      );
+    semantics = semantics.trim().toLowerCase();
+    const inputs = await this._fetcher.findTextInput(semantics);
+    const lines = inputs.map((input) =>
+      [
+        `Tag: ${input.tag}`,
+        `Type: ${input.type || "N/A"}`,
+        `ID: ${input.id || "N/A"}`,
+        `Name: ${input.name || "N/A"}`,
+        `Label: ${input.label || "N/A"}`,
+        `Placeholder: ${input.placeholder}`,
+        `Selector: ${input.selector}`,
+      ].join("\n")
+    );
 
-    lines.push(`Found ${lines.length} elements matching "${text}"`);
+    lines.push(`Found ${lines.length} elements matching "${semantics}"`);
     return lines.join("\n\n");
   }
 }
 
-export class ChangeInputTool extends Tool {
+export class ChangeTextInputTool extends Tool {
   protected _browser: BrowserController;
   protected _description = inline(`
     Change the value of an input field on the page, given its selector. Use

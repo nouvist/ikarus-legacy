@@ -6,25 +6,24 @@ import { RefCell } from "~/shared/core";
 import { HtmlUtils } from "~/shared/html";
 import { Mutex } from "~/shared/rxjs";
 
-export default class Fetcher {
+export default class ButtonFetcher {
   protected _browser: RefCell<BrowserController>;
   protected _memory: InMemory;
   protected _runner: Runner;
-  protected _mutex = new Mutex(true);
-
-  readonly mutex = this._mutex.asImmutable();
+  protected _mutex: Mutex;
 
   constructor(
     browser: RefCell<BrowserController>,
     memory: InMemory,
-    runner: Runner
+    runner: Runner,
+    mutex: Mutex
   ) {
     this._browser = browser;
     this._memory = memory;
     this._runner = runner;
+    this._mutex = mutex;
 
     this.findButton = this.findButton.bind(this);
-    this.fetchAll = this.fetchAll.bind(this);
     this.fetchButtons = this.fetchButtons.bind(this);
   }
 
@@ -33,41 +32,14 @@ export default class Fetcher {
     return this._memory.buttons.findNearestTo(embedding, limit);
   }
 
-  async fetchAll() {
-    console.log("[Runner::fetchAll] mau ngambil data...");
-    if (this._mutex.isLocked) {
-      console.log("[Runner::fetchAll] cancel yang udah ada...");
-      this._mutex.unlock();
-    }
-
-    const abort = new AbortController();
-    const subscription = this._mutex.subscribe((locked) => {
-      if (locked) return;
-      console.log("[Runner::fetchAll] cancel diterima...");
-      abort.abort();
-    });
-
-    console.log("[Runner::fetchAll] mulai ambil data...");
-    await this.fetchButtons(abort.signal);
-
-    console.log("[Runner::fetchAll] selesai ambil data!");
-    this._mutex.next(true);
-    subscription.unsubscribe();
-  }
-
   async fetchButtons(abortSignal?: AbortSignal) {
     const dom = await this._browser.value.managed.dom();
     const buttons = Array.from(
       dom.querySelectorAll("button, a, input[type='submit']")
     )
       .filter((el) => {
-        const lower = el.tagName.toLowerCase();
-        return (
-          (lower === "button" ||
-            lower === "a" ||
-            (lower === "input" && el.getAttribute("type") === "submit")) &&
-          (el.textContent?.length ?? 0) > 0
-        );
+        const value = el.getAttribute("hidden");
+        return value === "false" || !value;
       })
       .map((element) => {
         const selector = HtmlUtils.getSelectorFromElement(element);
@@ -111,7 +83,7 @@ export default class Fetcher {
     for (const cursor of existings) {
       if (abortSignal?.aborted) break;
       if (buttons.some((b) => b.hash === cursor.hash)) continue;
-      this._memory.buttons.remove(cursor.hash);
+      await this._memory.buttons.remove(cursor.hash);
       removed++;
     }
     console.log(`[Fetcher::fetchButtons] found ${existings.length} existings`);
@@ -141,7 +113,7 @@ export default class Fetcher {
     await this._memory.buttons.add(
       buttons.map((button, index) => ({
         selector: button.selector,
-        type:
+        tag:
           button.element.tagName.toLowerCase() === "a"
             ? ButtonDataType.Anchor
             : ButtonDataType.Button,

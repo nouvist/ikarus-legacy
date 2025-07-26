@@ -23,12 +23,9 @@ export class FindButtonTool extends Tool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
 
-  protected _description = inline(`
-    Get button or anchor information from the page. Prefetch is *required* to
-    use this tool if the page changes.
-  `);
+  protected _description = "Get button or anchor information from the page.";
   protected _parameters = z.object({
-    semantics: z.string().describe("The text of the button to get"),
+    semantics: z.string().describe("Description of the button to find."),
   });
 
   constructor(browser: BrowserController, memory: Fetcher) {
@@ -37,14 +34,16 @@ export class FindButtonTool extends Tool {
     this._fetcher = memory;
   }
 
-  async execute({ semantics: text }: z.infer<typeof this._parameters>) {
+  async execute({ semantics }: z.infer<typeof this._parameters>) {
     await this._fetcher.fetchButtons();
-    const buttons = await this._fetcher.findButton(text);
+
+    semantics = semantics.trim().toLowerCase();
+    const buttons = await this._fetcher.findButton(semantics);
     const lines = buttons.map((button) =>
       [
-        `text: ${button.text}`,
-        `type: ${button.type}`,
-        `selector: ${button.selector}`,
+        `Text: ${button.text}`,
+        `Type: ${button.tag}`,
+        `Selector: ${button.selector}`,
       ].join("\n")
     );
 

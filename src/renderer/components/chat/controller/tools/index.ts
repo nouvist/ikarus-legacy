@@ -3,7 +3,7 @@ import Fetcher from "~/renderer/components/chat/controller/fetcher";
 import registerButtonTools from "~/renderer/components/chat/controller/tools/button";
 import { ToolRegistrar } from "~/renderer/components/chat/controller/tools/fundamental";
 import registerHtmlTools from "~/renderer/components/chat/controller/tools/html";
-import registerInputTools from "~/renderer/components/chat/controller/tools/input";
+import registerTextInputTools from "~/renderer/components/chat/controller/tools/text_input";
 import registerNavigationTools from "~/renderer/components/chat/controller/tools/navigation";
 
 export default function createTools(
@@ -13,7 +13,7 @@ export default function createTools(
   const registrar = new ToolRegistrar();
   registerNavigationTools(registrar, browser);
   registerButtonTools(registrar, browser, fetcher);
-  registerInputTools(registrar, browser);
+  registerTextInputTools(registrar, browser, fetcher);
   registerHtmlTools(registrar, browser);
 
   return registrar.finalize();
