@@ -75,6 +75,22 @@ function _ChatUser({ chat }: _ChatProps<UserMessage>) {
   );
 }
 
+const _map = {
+  "Navigation.getUrl": "Bentar ya, lagi aku cek alamat halamannya...",
+  "Navigation.goToUrl":
+    "Oke, aku coba buka halaman yang kamu mau. Sabar, ya...",
+  "Navigation.goBack":
+    "Siap, balik ke halaman sebelumnya nih. Tunggu sebentar...",
+  "Navigation.goForward": "Lanjut ke halaman selanjutnya ya. Mohon bersabar...",
+  "Button.findBySemantics": "Lagi aku cariin tombolnya nih. Sabar, ya...",
+  "Button.clickBySelector": "Ini aku coba klik tombolnya. Tunggu sebentar...",
+  "TextInput.findBySemantics":
+    "Aku lagi nyari kotak buat nulis teksnya. Mohon tunggu...",
+  "TextInput.changeBySelector": "Aku ubah dulu ya isi teksnya. Sabar, ya...",
+  "Html.getAllRawHtml":
+    "Lagi aku ambil semua 'isi' halaman ini. Tunggu sebentar...",
+} as Record<string, string>;
+
 function _ChatAssistent({ chat }: _ChatProps<AssistantMessage>) {
   let content = useObservableWithValue(chat.subject);
   if (!content || content.length === 0) return <Chat.Raw.Bubble.Loading />;
@@ -117,17 +133,17 @@ function _ChatAssistent({ chat }: _ChatProps<AssistantMessage>) {
     content.length > 0 &&
     content[0].type === "tool-call"
   ) {
+    // TODO: rapihin lagi
     return (
       <Chat.Raw.Bubble.Assistent>
-        <div>
-          <b>[TODO] </b>
-          UI-nya rapiin lagi
-        </div>
         {(content as ToolCallPart[]).map((part) => {
           return (
-            <div key={`chat-${part.toolCallId}`}>
-              Memanggil {part.toolName}...
-            </div>
+            <Chat.Raw.Bubble.Assistent.Thinking
+              key={`chat-${part.toolCallId}`}
+              header="Ngutak-atik browser..."
+            >
+              <Markdown>{_map[part.toolName]}</Markdown>
+            </Chat.Raw.Bubble.Assistent.Thinking>
           );
         })}
       </Chat.Raw.Bubble.Assistent>

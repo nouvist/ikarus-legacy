@@ -96,6 +96,8 @@ function ChatContainer({ children }: PropsWithChildren) {
 
     function handleMutation(_: MutationRecord[]) {
       if (!document.body.contains(el)) return observer.disconnect();
+      if (el.scrollHeight - el.scrollTop - el.clientHeight > 50) return;
+
       el.scrollTo({
         top: el.scrollHeight + el.clientHeight,
         behavior: "smooth",
@@ -271,12 +273,14 @@ function encapsulate<T extends object>(component: T, type: ChatType) {
   });
 }
 
-export interface ChatThinkingProps extends PropsWithChildren {}
+export interface ChatThinkingProps extends PropsWithChildren {
+  header?: string;
+}
 
-function ChatThinking({ children }: ChatThinkingProps) {
+function ChatThinking({ header, children }: ChatThinkingProps) {
   return (
     <Fragment>
-      <h4>Berpikir</h4>
+      <h4>{header ?? "Berpikir..."}</h4>
       <_ChatThinking>{children}</_ChatThinking>
     </Fragment>
   );

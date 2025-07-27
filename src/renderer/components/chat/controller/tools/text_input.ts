@@ -37,6 +37,7 @@ export class FindTextInputTool extends Tool {
   }
 
   async execute({ semantics }: z.infer<typeof this._parameters>) {
+    const dom = await this._browser.managed.dom();
     await this._fetcher.fetchTextInputs();
 
     semantics = semantics.trim().toLowerCase();
@@ -50,6 +51,7 @@ export class FindTextInputTool extends Tool {
         `Label: ${input.label || "N/A"}`,
         `Placeholder: ${input.placeholder}`,
         `Selector: ${input.selector}`,
+        `Value: ${dom.querySelector<HTMLInputElement>(input.selector)?.value || ""}`,
       ].join("\n")
     );
 
