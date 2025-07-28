@@ -5,9 +5,10 @@ import { ToolRegistrar } from "~/renderer/components/chat/controller/tools/funda
 import registerHtmlTools from "~/renderer/components/chat/controller/tools/html";
 import registerTextInputTools from "~/renderer/components/chat/controller/tools/text_input";
 import registerNavigationTools from "~/renderer/components/chat/controller/tools/navigation";
+import { RefCell } from "~/shared/core";
 
 export default function createTools(
-  browser: BrowserController,
+  browser: RefCell<BrowserController>,
   fetcher: Fetcher
 ) {
   const registrar = new ToolRegistrar();

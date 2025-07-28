@@ -9,7 +9,7 @@ import {
   ToolContent,
 } from "ai";
 import { BehaviorSubject } from "rxjs";
-import { waitSubjectUntilComplete } from "~/shared/rxjs";
+import { Rxjs } from "~/shared/rxjs";
 
 type ProviderOptions = LanguageModelV1ProviderMetadata;
 
@@ -84,7 +84,7 @@ export class AssistantMessage implements CoreAssistantMessage {
   }
 
   waitUntilComplete() {
-    return waitSubjectUntilComplete(this.subject);
+    return Rxjs.waitUntilComplete(this.subject);
   }
 
   next(content: AssistantContent) {

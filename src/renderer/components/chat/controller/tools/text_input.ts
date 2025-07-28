@@ -5,11 +5,11 @@ import {
   Tool,
   ToolRegistrar,
 } from "~/renderer/components/chat/controller/tools/fundamental";
-import { inline } from "~/shared/core";
+import { inline, RefCell } from "~/shared/core";
 
 export default function registerTextInputTools(
   registrar: ToolRegistrar,
-  browser: BrowserController,
+  browser: RefCell<BrowserController>,
   fetcher: Fetcher
 ) {
   registrar.register(
@@ -23,21 +23,21 @@ export default function registerTextInputTools(
 }
 
 export class FindTextInputTool extends Tool {
-  protected _browser: BrowserController;
+  protected _browser: RefCell<BrowserController>;
   protected _fetcher: Fetcher;
   protected _description = "Get input field information from the page.";
   protected _parameters = z.object({
     semantics: z.string().describe("Description of the input to find."),
   });
 
-  constructor(browser: BrowserController, fetcher: Fetcher) {
+  constructor(browser: RefCell<BrowserController>, fetcher: Fetcher) {
     super();
     this._browser = browser;
     this._fetcher = fetcher;
   }
 
   async execute({ semantics }: z.infer<typeof this._parameters>) {
-    const dom = await this._browser.managed.dom();
+    const dom = await this._browser.value.managed.dom();
     await this._fetcher.fetchTextInputs();
 
     semantics = semantics.trim().toLowerCase();
@@ -61,7 +61,7 @@ export class FindTextInputTool extends Tool {
 }
 
 export class ChangeTextInputTool extends Tool {
-  protected _browser: BrowserController;
+  protected _browser: RefCell<BrowserController>;
   protected _description = inline(`
     Change the value of an input field on the page, given its selector. Use
     findInput if you don't know the selector.
@@ -71,13 +71,13 @@ export class ChangeTextInputTool extends Tool {
     value: z.string().describe("The new value to set in the input field"),
   });
 
-  constructor(browser: BrowserController) {
+  constructor(browser: RefCell<BrowserController>) {
     super();
     this._browser = browser;
   }
 
   execute({ selector, value }: z.infer<typeof this._parameters>) {
-    return this._browser.managed.js(
+    return this._browser.value.managed.js(
       ({ selector, value }) => {
         const element = document.querySelector(selector);
 

@@ -66,28 +66,26 @@ export class CombinedMutexes extends Mutex {
 export interface ImmutableBehaviorSubject<T>
   extends Omit<BehaviorSubject<T>, "next" | "complete"> {}
 
-export function asImmutableBehaviorSubject<T>(
-  raw: BehaviorSubject<T>
-): ImmutableBehaviorSubject<T> {
-  return raw;
-}
+export abstract class Rxjs {
+  static asImmutable<T>(raw: BehaviorSubject<T>): ImmutableBehaviorSubject<T> {
+    return raw as ImmutableBehaviorSubject<T>;
+  }
 
-export async function waitObservableUntil<T>(
-  observable: Observable<T>,
-  callback: (value: T) => boolean
-) {
-  return new Promise<void>((resolve) => {
-    const subscription = observable.subscribe((value) => {
-      if (!callback(value)) return;
-      subscription.unsubscribe();
-      resolve();
+  static waitUntil<T>(
+    observable: Observable<T>,
+    callback: (value: T) => boolean
+  ): Promise<void> {
+    return new Promise<void>((resolve) => {
+      const subscription = observable.subscribe((value) => {
+        if (!callback(value)) return;
+        subscription.unsubscribe();
+        resolve();
+      });
     });
-  });
-}
+  }
 
-export async function waitSubjectUntilComplete<T>(subject: Subject<T>) {
-  if (subject.closed) return;
-  try {
+  static waitUntilComplete<T>(subject: Subject<T>): Promise<void> {
+    if (subject.closed) return Promise.resolve();
     return new Promise<void>((resolve) => {
       const subscription = subject.subscribe({
         complete: () => {
@@ -96,7 +94,5 @@ export async function waitSubjectUntilComplete<T>(subject: Subject<T>) {
         },
       });
     });
-  } catch {
-    return;
   }
 }

@@ -5,11 +5,11 @@ import {
   Tool,
   ToolRegistrar,
 } from "~/renderer/components/chat/controller/tools/fundamental";
-import { inline } from "~/shared/core";
+import { inline, RefCell } from "~/shared/core";
 
 export default function registerButtonTools(
   registrar: ToolRegistrar,
-  browser: BrowserController,
+  browser: RefCell<BrowserController>,
   fetcher: Fetcher
 ) {
   registrar.register(
@@ -20,7 +20,7 @@ export default function registerButtonTools(
 }
 
 export class FindButtonTool extends Tool {
-  protected _browser: BrowserController;
+  protected _browser: RefCell<BrowserController>;
   protected _fetcher: Fetcher;
 
   protected _description = "Get button or anchor information from the page.";
@@ -28,7 +28,7 @@ export class FindButtonTool extends Tool {
     semantics: z.string().describe("Description of the button to find."),
   });
 
-  constructor(browser: BrowserController, memory: Fetcher) {
+  constructor(browser: RefCell<BrowserController>, memory: Fetcher) {
     super();
     this._browser = browser;
     this._fetcher = memory;
@@ -55,7 +55,7 @@ export class FindButtonTool extends Tool {
 }
 
 export class ClickBottonTool extends Tool {
-  protected _browser: BrowserController;
+  protected _browser: RefCell<BrowserController>;
   protected _description = inline(`
     Click a button or anchor on the page, given its selector. Use findButton if
     you don't know the selector.
@@ -64,13 +64,13 @@ export class ClickBottonTool extends Tool {
     selector: z.string().describe("The selector of the button to click"),
   });
 
-  constructor(browser: BrowserController) {
+  constructor(browser: RefCell<BrowserController>) {
     super();
     this._browser = browser;
   }
 
   async execute({ selector }: z.infer<typeof this._parameters>) {
-    const dom = await this._browser.managed.dom();
+    const dom = await this._browser.value.managed.dom();
     const element = dom.querySelector<HTMLButtonElement>(selector);
 
     if (!element) {

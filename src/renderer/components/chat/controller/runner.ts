@@ -13,26 +13,34 @@ import {
   Message,
   ToolMessage,
 } from "~/renderer/components/chat";
-import { RunnerInvokeOptions } from "~/renderer/components/chat/controller/facade";
+import { RunnerInvokeOptions } from "~/renderer/components/chat/controller/runner_facade";
 import { RefCell } from "~/shared/core";
 
 export default class Runner {
   protected _embedding: RefCell<EmbeddingModel<string>>;
   protected _language: RefCell<LanguageModel>;
-  protected _tools: RefCell<Record<string, Tool>>;
+  protected _tools: Record<string, Tool> = {};
 
   constructor(
     _embedding: RefCell<EmbeddingModel<string>>,
     _language: RefCell<LanguageModel>,
-    _tools: RefCell<Record<string, Tool>>
   ) {
     this._embedding = _embedding;
     this._language = _language;
-    this._tools = _tools;
 
+    this.registerTools = this.registerTools.bind(this);
     this.invoke = this.invoke.bind(this);
+    this.stream = this.stream.bind(this);
     this.embed = this.embed.bind(this);
     this.embedMany = this.embedMany.bind(this);
+  }
+
+  registerTools(tools: Record<string, Tool>, append = false) {
+    if (append) {
+      this._tools = { ...this._tools, ...tools };
+    } else {
+      this._tools = tools;
+    }
   }
 
   async invoke({
@@ -47,7 +55,7 @@ export default class Runner {
       abortSignal,
       model: this._language.value,
       messages: messages,
-      tools: this._tools.value,
+      tools: this._tools,
       maxSteps: maxSteps ?? 5,
       temperature: temperature ?? 0,
       frequencyPenalty: frequencyPenalty ?? 0.75,
@@ -99,7 +107,7 @@ export default class Runner {
       abortSignal,
       model: this._language.value,
       messages: messages,
-      tools: this._tools.value,
+      tools: this._tools,
       maxSteps: maxSteps ?? 5,
       temperature: temperature ?? 0,
       frequencyPenalty: frequencyPenalty ?? 0.75,
