@@ -96,7 +96,7 @@ function ChatContainer({ children }: PropsWithChildren) {
 
     function handleMutation(_: MutationRecord[]) {
       if (!document.body.contains(el)) return observer.disconnect();
-      if (el.scrollHeight - el.scrollTop - el.clientHeight > 50) return;
+      if (el.scrollHeight - el.scrollTop - el.clientHeight > 256) return;
 
       el.scrollTo({
         top: el.scrollHeight + el.clientHeight,
