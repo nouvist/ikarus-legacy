@@ -10,11 +10,12 @@ export default class Fetcher {
   protected _browser: RefCell<BrowserController>;
   protected _memory: InMemory;
   protected _runner: Runner;
-  protected _mutex = new Mutex(true);
+  protected _mutex = new Mutex();
 
   protected _button: ButtonFetcher;
   protected _textInput: TextInputFetcher;
 
+  // TODO: gak berguna
   readonly mutex = this._mutex.asImmutable();
 
   constructor(
@@ -44,12 +45,6 @@ export default class Fetcher {
   }
 
   async fetchAll() {
-    console.log("[Runner::fetchAll] mau ngambil data...");
-    if (this._mutex.isLocked) {
-      console.log("[Runner::fetchAll] cancel yang udah ada...");
-      this._mutex.unlock();
-    }
-
     const abort = new AbortController();
     const subscription = this._mutex.subscribe((locked) => {
       if (locked) return;
@@ -64,7 +59,6 @@ export default class Fetcher {
     ]);
 
     console.log("[Runner::fetchAll] selesai ambil data!");
-    this._mutex.next(true);
     subscription.unsubscribe();
   }
 

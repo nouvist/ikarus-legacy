@@ -8,7 +8,7 @@ import {
   UserMessage,
 } from "~/renderer/components/chat";
 import RunnerFacade from "~/renderer/components/chat/controller/runner_facade";
-import { inline } from "~/shared/core";
+import { Completer, inline } from "~/shared/core";
 import { CombinedMutexes, Mutex, Rxjs } from "~/shared/rxjs";
 
 export function useChatController(browser: BrowserController) {
@@ -31,6 +31,18 @@ export class ChatController {
   readonly mutex = this._mutex.asImmutable();
 
   protected static _defaultMessages: Message[] | undefined;
+
+  protected static _instance: ChatController | undefined;
+  protected static _completer = new Completer();
+  static get instance() {
+    if (!this._instance) throw new Error("ChatController is not initialized");
+    return this._instance;
+  }
+
+  static async waitInstance() {
+    await this._completer.wait();
+    return this.instance;
+  }
 
   protected static createDefaultMessages() {
     if (!this._defaultMessages) {
@@ -83,7 +95,8 @@ export class ChatController {
           untuk menyelesaikan tugas yang lebih kompleks.
         `)
       ),
-    ]; // promptnya rada bego
+    ];
+    // promptnya rada bego
     // return Array.from(this._defaultMessages);
   }
 
@@ -97,6 +110,12 @@ export class ChatController {
 
     (window as any)["chat"] = this;
     (window as any)["msg"] = this.messages.getValue;
+
+    if (ChatController._instance) {
+      console.warn("[ChatController] ada banyak, yang terakhir yang dipakai");
+    }
+    ChatController._instance = this;
+    ChatController._completer.resolve();
   }
 
   async ensureInitialized() {

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { styled } from "styled-components";
 import Button from "~/renderer/components/button";
 import Card from "~/renderer/components/card";
+import RunnerFacade from "~/renderer/components/chat/controller/runner_facade";
 import Flex, { JustifyContent } from "~/renderer/components/flex";
 import Input from "~/renderer/components/input";
 import { ColorType } from "~/renderer/foundations/colors";
@@ -24,6 +25,28 @@ export default function SettingsPageLlmProvider() {
     setModel("");
   }
 
+  function handleSave() {
+    const options = {
+      url,
+      key,
+      model,
+    };
+
+    RunnerFacade.instance.initializeLanguage(options, true);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== "Enter") return;
+    handleSave();
+  }
+
+  useEffect(() => {
+    const options = RunnerFacade.instance.getPersistentOptions();
+    setUrl(options.language?.url || "");
+    setKey(options.language?.key || "");
+    setModel(options.language?.model || "");
+  }, []);
+
   return (
     <Card.Scroll padding={EdgeInsets.all(32)}>
       <Card margin={new EdgeInsets({ bottom: 16 })}>
@@ -37,6 +60,7 @@ export default function SettingsPageLlmProvider() {
             <td>
               <Input
                 value={url}
+                onKeyDown={handleKeyDown}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://api.example.com/"
               />
@@ -48,6 +72,7 @@ export default function SettingsPageLlmProvider() {
             <td>
               <Input
                 value={key}
+                onKeyDown={handleKeyDown}
                 onChange={(e) => setKey(e.target.value)}
                 placeholder="sk-..."
                 type="password"
@@ -60,6 +85,7 @@ export default function SettingsPageLlmProvider() {
             <td>
               <Input
                 value={model}
+                onKeyDown={handleKeyDown}
                 onChange={(e) => setModel(e.target.value)}
                 placeholder="gpt-3.5-turbo"
               />
@@ -75,7 +101,9 @@ export default function SettingsPageLlmProvider() {
       >
         <Button onClick={handleUseGoogle}>Use Google</Button>
         <Button onClick={handleUseOllama}>Use Ollama</Button>
-        <Button color={ColorType.Primary}>Save</Button>
+        <Button color={ColorType.Primary} onClick={handleSave}>
+          Save
+        </Button>
       </Flex>
     </Card.Scroll>
   );

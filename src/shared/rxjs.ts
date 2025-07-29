@@ -1,8 +1,8 @@
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 
 export class Mutex extends BehaviorSubject<boolean> {
-  constructor(locked = false) {
-    super(locked);
+  constructor(unlocked = false) {
+    super(!unlocked);
     this.lock = this.lock.bind(this);
     this.unlock = this.unlock.bind(this);
   }

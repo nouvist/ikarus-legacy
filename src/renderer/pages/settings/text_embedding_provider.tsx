@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { styled } from "styled-components";
 import Button from "~/renderer/components/button";
 import Card from "~/renderer/components/card";
+import RunnerFacade from "~/renderer/components/chat/controller/runner_facade";
 import Flex, { JustifyContent } from "~/renderer/components/flex";
 import Input from "~/renderer/components/input";
 import { ColorType } from "~/renderer/foundations/colors";
@@ -18,6 +19,28 @@ export function SettingsPageTextEmbeddingProvider() {
     setModel("");
   }
 
+  function handleSave() {
+    const options = {
+      url,
+      key,
+      model,
+    };
+
+    RunnerFacade.instance.initializeEmbedding(options, true);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== "Enter") return;
+    handleSave();
+  }
+
+  useEffect(() => {
+    const options = RunnerFacade.instance.getPersistentOptions();
+    setUrl(options.embedding?.url || "");
+    setKey(options.embedding?.key || "");
+    setModel(options.embedding?.model || "");
+  }, []);
+
   return (
     <Card.Scroll padding={EdgeInsets.all(32)}>
       <Card margin={new EdgeInsets({ bottom: 16 })}>
@@ -31,6 +54,7 @@ export function SettingsPageTextEmbeddingProvider() {
             <td>
               <Input
                 value={url}
+                onKeyDown={handleKeyDown}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://api.example.com/"
               />
@@ -42,6 +66,7 @@ export function SettingsPageTextEmbeddingProvider() {
             <td>
               <Input
                 value={key}
+                onKeyDown={handleKeyDown}
                 onChange={(e) => setKey(e.target.value)}
                 placeholder="sk-..."
                 type="password"
@@ -54,6 +79,7 @@ export function SettingsPageTextEmbeddingProvider() {
             <td>
               <Input
                 value={model}
+                onKeyDown={handleKeyDown}
                 onChange={(e) => setModel(e.target.value)}
                 placeholder="text-embedding-ada-002"
               />
@@ -68,7 +94,9 @@ export function SettingsPageTextEmbeddingProvider() {
         gap={16}
       >
         <Button onClick={handleUseOllama}>Use Ollama</Button>
-        <Button color={ColorType.Primary}>Save</Button>
+        <Button color={ColorType.Primary} onClick={handleSave}>
+          Save
+        </Button>
       </Flex>
     </Card.Scroll>
   );
