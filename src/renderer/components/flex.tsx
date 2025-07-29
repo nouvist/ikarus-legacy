@@ -1,6 +1,7 @@
 import { motion, MotionValue } from "motion/react";
 import { ComponentProps, ForwardedRef, forwardRef } from "react";
 import styled from "styled-components";
+import EdgeInsets from "~/renderer/foundations/edge_insets";
 
 export enum FlexDirection {
   Row = "row",
@@ -29,6 +30,8 @@ export interface FlexProps extends React.ComponentProps<"div"> {
   justifyContent?: JustifyContent;
   alignItems?: AlignItems;
   fill?: boolean;
+  padding?: EdgeInsets;
+  margin?: EdgeInsets;
 }
 
 const Flex = forwardRef(function Flex(
@@ -38,6 +41,8 @@ const Flex = forwardRef(function Flex(
     justifyContent,
     alignItems,
     fill,
+    padding,
+    margin,
     children,
     ...props
   }: FlexProps,
@@ -51,6 +56,8 @@ const Flex = forwardRef(function Flex(
       $gap={gap}
       $justifyContent={justifyContent}
       $alignItems={alignItems}
+      $padding={padding}
+      $margin={margin}
       data-fill={fill}
     >
       {children}
@@ -63,6 +70,8 @@ interface _FlexProps extends React.ComponentProps<"div"> {
   $direction?: FlexDirection;
   $justifyContent?: JustifyContent;
   $alignItems?: AlignItems;
+  $padding?: EdgeInsets;
+  $margin?: EdgeInsets;
 }
 
 const _Flex = styled.div<_FlexProps>`
@@ -71,6 +80,8 @@ const _Flex = styled.div<_FlexProps>`
   flex-direction: ${(p) => p.$direction ?? FlexDirection.Row};
   justify-content: ${(p) => p.$justifyContent ?? JustifyContent.Start};
   align-items: ${(p) => p.$alignItems ?? AlignItems.Stretch};
+  margin: ${(p) => p.$margin?.toCssVariable() ?? "0px"};
+  padding: ${(p) => p.$padding?.toCssVariable() ?? "0px"};
   gap: ${(p) => p.$gap ?? 0}px;
   &[data-fill="true"] {
     width: 100%;

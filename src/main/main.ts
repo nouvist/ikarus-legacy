@@ -34,8 +34,8 @@ function createWindow() {
     roundedCorners: true,
     fullscreenable: false,
     backgroundColor: "#000000",
-    minWidth: 500,
-    minHeight: 400,
+    minWidth: 900,
+    minHeight: 600,
     frame: false,
     titleBarOverlay: {
       color: "#000000",

@@ -1,6 +1,6 @@
-import { ComponentProps } from "react";
-import styled, { css, useTheme } from "styled-components";
-import Button from "~/renderer/components/button";
+import { ComponentProps, ForwardedRef, forwardRef } from "react";
+import styled, { useTheme } from "styled-components";
+import Button, { ButtonProps } from "~/renderer/components/button";
 
 export interface TitlebarProps extends ComponentProps<"div"> {}
 
@@ -28,24 +28,40 @@ const _Container = styled.div`
   }
 `;
 
-export interface TitlebarTabProps extends ComponentProps<"button"> {
+export interface TitlebarTabProps extends ButtonProps {
   selected?: boolean;
 }
 
-const TitlebarTab = styled(Button)<TitlebarTabProps>`
+function TitlebarTab(
+  { selected, children, ...props }: TitlebarTabProps,
+  ref: ForwardedRef<HTMLButtonElement>
+) {
+  return (
+    <_TitlebarTab ref={ref} {...props} data-selected={selected}>
+      {children}
+    </_TitlebarTab>
+  );
+}
+
+const _TitlebarTab = styled(Button)`
   height: 40px;
   padding: 0px 20px;
-  border-radius: 8px;
-  ${(p) =>
-    !p.selected &&
-    css`
-      background: ${(p) => p.theme.elevation.t1};
-      &:hover {
-        background: ${(p) => p.theme.elevation.t2};
-      }
-    `}
+  background: none;
+  color: ${(p) => p.theme.foreground.e1};
+  box-shadow: none;
+  &:hover {
+    background: ${(p) => p.theme.elevation.t1};
+  }
+  &[data-selected="true"] {
+    background: ${(p) => p.theme.elevation.t1};
+    color: ${(p) => p.theme.foreground.e0};
+    font-weight: 600;
+    &:hover {
+      background: ${(p) => p.theme.elevation.t2};
+    }
+  }
 `;
 
 export default Object.assign(Titlebar, {
-  Tab: TitlebarTab,
+  Tab: forwardRef(TitlebarTab),
 });

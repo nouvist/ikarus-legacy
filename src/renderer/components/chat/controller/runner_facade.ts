@@ -1,3 +1,4 @@
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { EmbeddingModel, LanguageModel } from "ai";
 import { BrowserController } from "~/renderer/components/browser/view/raw";
@@ -58,11 +59,11 @@ export default class RunnerFacade {
     });
 
     this._embedding.value = ollama.embedding("nomic-embed-text");
-    this._language.value = ollama.languageModel("llama3.2:3b");
+    // this._language.value = ollama.languageModel("qwen3:0.6b");
 
-    // const google = createGoogleGenerativeAI({
-    //   apiKey: await managed.env.get("GEMINI_API_KEY"),
-    // });
-    // this._language.value = google.languageModel("gemini-2.0-flash-lite");
+    const google = createGoogleGenerativeAI({
+      apiKey: await managed.env.get("GEMINI_API_KEY"),
+    });
+    this._language.value = google.languageModel("gemini-2.0-flash-lite");
   }
 }

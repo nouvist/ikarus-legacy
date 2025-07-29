@@ -1,18 +1,25 @@
 import { motion, useMotionValue, useTransform } from "motion/react";
-import { ComponentProps, useRef, useState } from "react";
+import { ComponentProps, useEffect, useRef, useState } from "react";
 import { styled } from "styled-components";
 import Flex from "~/renderer/components/flex";
 import Stack from "~/renderer/components/stack";
 import { getTwo } from "~/shared/react";
 
-export interface SplitProps extends ComponentProps<"div"> {}
+export interface SplitProps extends ComponentProps<"div"> {
+  defaultFlex?: number;
+}
 
-export default function Split({ children, ...props }: SplitProps) {
+export default function Split({ children, defaultFlex, ...props }: SplitProps) {
   const container = useRef<HTMLDivElement>(null);
   const [left, right] = getTwo(children);
   const leftFlex = useMotionValue(0.5);
   const rightFlex = useTransform(() => 1 - leftFlex.get());
   const [isDrag, setIsDrag] = useState(false);
+
+  useEffect(() => {
+    if (!defaultFlex) return;
+    leftFlex.set(defaultFlex);
+  }, []);
 
   return (
     <Stack ref={container}>
