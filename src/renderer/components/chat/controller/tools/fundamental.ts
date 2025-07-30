@@ -6,6 +6,9 @@ export abstract class Tool {
   protected abstract _parameters: z.ZodTypeAny;
 
   constructor() {
+    this._execute = this._execute.bind(this);
+    this.validate = this.validate.bind(this);
+    this.execute = this.execute.bind(this);
     this.toTool = this.toTool.bind(this);
   }
 
@@ -13,8 +16,26 @@ export abstract class Tool {
     return tool({
       description: this._description,
       parameters: jsonSchema(z.toJSONSchema(this._parameters)),
-      execute: this.execute.bind(this),
+      execute: this._execute,
     });
+  }
+
+  protected _execute(args: unknown, opts: ToolExecutionOptions): Promise<any> {
+    try {
+      const parsed = this.validate(args);
+      return this.execute(parsed, opts);
+    } catch (error) {
+      if (!(error instanceof Error)) {
+        return Promise.resolve("Error: An unknown error occurred");
+      }
+      return Promise.resolve("Error: " + error.message);
+    }
+  }
+
+  validate(args: unknown): asserts args is z.infer<typeof this._parameters> {
+    const parsed = this._parameters.parse(args);
+    if (parsed === undefined) throw new Error("Invalid arguments");
+    return parsed as any;
   }
 
   abstract execute(
