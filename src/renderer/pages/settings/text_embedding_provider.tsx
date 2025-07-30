@@ -14,7 +14,7 @@ export function SettingsPageTextEmbeddingProvider() {
   const [model, setModel] = useState("");
 
   function handleUseOllama() {
-    setUrl("http://127.0.0.1:11434/v1/");
+    setUrl("http://127.0.0.1:11434/v1");
     setKey("ollama");
     setModel("");
   }
@@ -29,26 +29,30 @@ export function SettingsPageTextEmbeddingProvider() {
     RunnerFacade.instance.initializeEmbedding(options, true);
   }
 
+  function handleRevert() {
+    const options = RunnerFacade.instance.getPersistentOptions();
+    setUrl(options.embedding?.url || "");
+    setKey(options.embedding?.key || "");
+    setModel(options.embedding?.model || "");
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
     handleSave();
   }
 
   useEffect(() => {
-    const options = RunnerFacade.instance.getPersistentOptions();
-    setUrl(options.embedding?.url || "");
-    setKey(options.embedding?.key || "");
-    setModel(options.embedding?.model || "");
+    handleRevert();
   }, []);
 
   return (
     <Card.Scroll padding={EdgeInsets.all(32)}>
-      <Card margin={new EdgeInsets({ bottom: 16 })}>
-        Enter your OpenAI-compatible API key below.
-      </Card>
-
       <_Table>
         <tbody>
+          <tr>
+            <td colSpan={2}>Enter your OpenAI-compatible API key below.</td>
+          </tr>
+
           <tr>
             <td>URL</td>
             <td>
@@ -85,19 +89,30 @@ export function SettingsPageTextEmbeddingProvider() {
               />
             </td>
           </tr>
+
+          <tr>
+            <td>Templates</td>
+            <td>
+              <Flex justifyContent={JustifyContent.Start} gap={16}>
+                <Button onClick={handleUseOllama}>Ollama</Button>
+              </Flex>
+            </td>
+          </tr>
+
+          <tr>
+            <td colSpan={2}>
+              <Flex justifyContent={JustifyContent.End} gap={16}>
+                <Button color={ColorType.Danger} onClick={handleRevert}>
+                  Revert
+                </Button>
+                <Button color={ColorType.Primary} onClick={handleSave}>
+                  Save
+                </Button>
+              </Flex>
+            </td>
+          </tr>
         </tbody>
       </_Table>
-
-      <Flex
-        justifyContent={JustifyContent.End}
-        margin={new EdgeInsets({ top: 16 })}
-        gap={16}
-      >
-        <Button onClick={handleUseOllama}>Use Ollama</Button>
-        <Button color={ColorType.Primary} onClick={handleSave}>
-          Save
-        </Button>
-      </Flex>
     </Card.Scroll>
   );
 }

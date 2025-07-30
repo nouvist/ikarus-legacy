@@ -25,6 +25,7 @@ export default function App() {
             Chatbot
           </Titlebar.Tab>
           <Titlebar.Tab
+            hidden
             onClick={() => setTab(_AppTab.Database)}
             selected={tab === _AppTab.Database}
           >

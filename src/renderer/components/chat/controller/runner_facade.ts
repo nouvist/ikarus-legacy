@@ -38,6 +38,8 @@ export default class RunnerFacade {
   protected _browser = new LateRefCell<BrowserController>();
   protected _embedding = new LateRefCell<EmbeddingModel<string>>();
   protected _language = new LateRefCell<LanguageModel>();
+  protected _embeddingDomain: string | undefined;
+  protected _languageDomain: string | undefined;
 
   protected _isInitialized = false;
   protected _memory = new InMemory();
@@ -74,7 +76,7 @@ export default class RunnerFacade {
     this.initializeEmbedding = this.initializeEmbedding.bind(this);
     this.initializeLastUsed = this.initializeLastUsed.bind(this);
     this._refreshMutex = this._refreshMutex.bind(this);
-    this._initializeDebug = this._initializeDebug.bind(this);
+    this._refreshCsp = this._refreshCsp.bind(this);
 
     if (RunnerFacade._instance) {
       console.warn("[RunnerFacade] ada banyak, yang terakhir yang dipakai");
@@ -102,8 +104,6 @@ export default class RunnerFacade {
   }
 
   async ensureInitialized(browser?: BrowserController) {
-    await this._initializeDebug();
-
     await browser?.waitUntilBound();
     if (browser) this._browser.value = browser;
     this._refreshMutex();
@@ -117,6 +117,9 @@ export default class RunnerFacade {
   }
 
   async initializeLanguage(options: RunnerLanguageOptions, save = false) {
+    const url = new URL(options.url);
+    this._languageDomain = `${url.protocol}//${url.host}`;
+
     if (save) {
       this.setPersistentOptions({
         language: options,
@@ -128,6 +131,12 @@ export default class RunnerFacade {
         apiKey: options.key,
       });
       this._language.value = google.languageModel(options.model);
+    } else if (options.url.startsWith("https://api.groq.com")) {
+      const groq = createOpenAI({
+        baseURL: options.url,
+        apiKey: options.key,
+      });
+      this._language.value = groq.languageModel(options.model);
     } else {
       const ollama = createOpenAI({
         baseURL: options.url,
@@ -137,9 +146,13 @@ export default class RunnerFacade {
     }
 
     this._refreshMutex();
+    this._refreshCsp();
   }
 
   async initializeEmbedding(options: RunnerEmbeddingOptions, save = false) {
+    const url = new URL(options.url);
+    this._embeddingDomain = `${url.protocol}//${url.host}`;
+
     if (save) {
       this.setPersistentOptions({
         embedding: options,
@@ -151,7 +164,9 @@ export default class RunnerFacade {
       apiKey: options.key,
     });
     this._embedding.value = ollama.embedding(options.model);
+
     this._refreshMutex();
+    this._refreshCsp();
   }
 
   async initializeLastUsed() {
@@ -168,26 +183,48 @@ export default class RunnerFacade {
     await Promise.all(promises);
   }
 
-  protected async _initializeDebug() {
-    this.setPersistentOptions({
-      embedding: {
-        url: "http://127.0.0.1:11434/v1/",
-        key: "ollama",
-        model: "nomic-embed-text",
-      },
-      language: {
-        url: "https://generativelanguage.googleapis.com/v1beta/openai/",
-        key: (await managed.env.get("GEMINI_API_KEY"))!,
-        model: "gemini-2.0-flash-lite",
-      },
-    });
-  }
-
   protected async _refreshMutex() {
     this._mutex.next(
       this._browser.isInitialized &&
         this._embedding.isInitialized &&
         this._language.isInitialized
     );
+  }
+
+  protected async _refreshCsp() {
+    const element = document.createElement("meta");
+    const domains = ["'self'", this._embeddingDomain, this._languageDomain];
+
+    for (let i = 0; i < domains.length; i++) {
+      const cursor = domains[i];
+
+      if (!cursor) {
+        domains.splice(i, 1);
+        i--;
+        continue;
+      }
+
+      for (let j = i + 1; j < domains.length; j++) {
+        if (cursor === domains[j]) {
+          domains.splice(j, 1);
+          j--;
+        }
+      }
+    }
+
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      `connect-src ${domains.join(" ")}`,
+    ];
+
+    element.id = "__csp";
+    element.httpEquiv = "Content-Security-Policy";
+    element.content = csp.join("; ");
+
+    const existing = document.getElementById("__csp");
+    if (existing) existing.remove();
+    document.head.appendChild(element);
   }
 }

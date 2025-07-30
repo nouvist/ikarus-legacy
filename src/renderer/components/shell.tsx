@@ -26,7 +26,6 @@ const _Container = styled.div`
 `;
 
 const _GlobalStyle = createGlobalStyle`
-
   html {
     user-select: none;
     font-family: "SpaceGrotesk", sans-serif;
@@ -63,5 +62,9 @@ const _GlobalStyle = createGlobalStyle`
     &::selection {
       background: ${(p) => p.theme.accent.primary};
     }
+  }
+
+  *[hidden] {
+    display: none !important;
   }
 `;

@@ -13,14 +13,24 @@ export default function SettingsPageLlmProvider() {
   const [key, setKey] = useState("");
   const [model, setModel] = useState("");
 
-  function handleUseGoogle() {
-    setUrl("https://generativelanguage.googleapis.com/v1beta/openai/");
-    setKey("");
-    setModel("");
+  async function handleUseGroq() {
+    setUrl("https://api.groq.com/openai/v1");
+    setKey((await managed.env.get("GROQ_API_KEY")) || "");
+    setModel("llama-3.1-8b-instant");
+  }
+
+  async function handleUseGoogle() {
+    setUrl("https://generativelanguage.googleapis.com/v1beta/openai");
+    setKey(
+      (await managed.env.get("GEMINI_API_KEY")) ||
+        (await managed.env.get("GOOGLE_API_KEY")) ||
+        ""
+    );
+    setModel("gemini-2.0-flash");
   }
 
   function handleUseOllama() {
-    setUrl("http://127.0.0.1:11434/v1/");
+    setUrl("http://127.0.0.1:11434/v1");
     setKey("ollama");
     setModel("");
   }
@@ -35,26 +45,30 @@ export default function SettingsPageLlmProvider() {
     RunnerFacade.instance.initializeLanguage(options, true);
   }
 
+  function handleRevert() {
+    const options = RunnerFacade.instance.getPersistentOptions();
+    setUrl(options.language?.url || "");
+    setKey(options.language?.key || "");
+    setModel(options.language?.model || "");
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
     handleSave();
   }
 
   useEffect(() => {
-    const options = RunnerFacade.instance.getPersistentOptions();
-    setUrl(options.language?.url || "");
-    setKey(options.language?.key || "");
-    setModel(options.language?.model || "");
+    handleRevert();
   }, []);
 
   return (
     <Card.Scroll padding={EdgeInsets.all(32)}>
-      <Card margin={new EdgeInsets({ bottom: 16 })}>
-        Enter your OpenAI-compatible API key below.
-      </Card>
-
       <_Table>
         <tbody>
+          <tr>
+            <td colSpan={2}>Enter your OpenAI-compatible API key below.</td>
+          </tr>
+
           <tr>
             <td>URL</td>
             <td>
@@ -91,20 +105,32 @@ export default function SettingsPageLlmProvider() {
               />
             </td>
           </tr>
+
+          <tr>
+            <td>Templates</td>
+            <td>
+              <Flex justifyContent={JustifyContent.Start} gap={16}>
+                <Button onClick={handleUseGroq}>Groq</Button>
+                <Button onClick={handleUseGoogle}>Google</Button>
+                <Button onClick={handleUseOllama}>Ollama</Button>
+              </Flex>
+            </td>
+          </tr>
+
+          <tr>
+            <td colSpan={2}>
+              <Flex justifyContent={JustifyContent.End} gap={16}>
+                <Button color={ColorType.Danger} onClick={handleRevert}>
+                  Revert
+                </Button>
+                <Button color={ColorType.Primary} onClick={handleSave}>
+                  Save
+                </Button>
+              </Flex>
+            </td>
+          </tr>
         </tbody>
       </_Table>
-
-      <Flex
-        justifyContent={JustifyContent.End}
-        margin={new EdgeInsets({ top: 16 })}
-        gap={16}
-      >
-        <Button onClick={handleUseGoogle}>Use Google</Button>
-        <Button onClick={handleUseOllama}>Use Ollama</Button>
-        <Button color={ColorType.Primary} onClick={handleSave}>
-          Save
-        </Button>
-      </Flex>
     </Card.Scroll>
   );
 }
