@@ -6,6 +6,7 @@ import RunnerFacade from "~/renderer/components/chat/controller/runner_facade";
 import Flex, { JustifyContent } from "~/renderer/components/flex";
 import Input from "~/renderer/components/input";
 import { ColorType } from "~/renderer/foundations/colors";
+import Constraints from "~/renderer/foundations/constraints";
 import EdgeInsets from "~/renderer/foundations/edge_insets";
 
 export function SettingsPageTextEmbeddingProvider() {
@@ -13,10 +14,16 @@ export function SettingsPageTextEmbeddingProvider() {
   const [key, setKey] = useState("");
   const [model, setModel] = useState("");
 
+  async function handleUseOpenAi() {
+    setUrl("https://api.openai.com/v1");
+    setKey((await managed.env.get("OPENAI_API_KEY")) || "");
+    setModel("text-embedding-3-small");
+  }
+
   function handleUseOllama() {
     setUrl("http://127.0.0.1:11434/v1");
     setKey("ollama");
-    setModel("");
+    setModel("nomic-embed-text:v1.5");
   }
 
   function handleSave() {
@@ -85,16 +92,30 @@ export function SettingsPageTextEmbeddingProvider() {
                 value={model}
                 onKeyDown={handleKeyDown}
                 onChange={(e) => setModel(e.target.value)}
-                placeholder="text-embedding-ada-002"
+                placeholder="text-embedding-3-small"
               />
             </td>
           </tr>
 
           <tr>
-            <td>Templates</td>
-            <td>
+            <td colSpan={2}>Other providers:</td>
+          </tr>
+
+          <tr>
+            <td colSpan={2}>
               <Flex justifyContent={JustifyContent.Start} gap={16}>
-                <Button onClick={handleUseOllama}>Ollama</Button>
+                <Button
+                  onClick={handleUseOpenAi}
+                  constraints={new Constraints({ height: 40, width: Infinity })}
+                >
+                  OpenAI
+                </Button>
+                <Button
+                  onClick={handleUseOllama}
+                  constraints={new Constraints({ height: 40, width: Infinity })}
+                >
+                  Ollama
+                </Button>
               </Flex>
             </td>
           </tr>

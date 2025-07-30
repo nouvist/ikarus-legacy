@@ -125,20 +125,21 @@ export default class RunnerFacade {
       });
     }
 
+    // - OpenAI compatible buat Google gak jalan untuk `frequencyPenalty`, jadi
+    //   kita pakai provider resmi Google.
+    // - provider Ollama sama Groq agak cacat kalau streaming, jadi kita pakai
+    //   provider OpenAI aja.
+    // - yang lain pakai provider OpenAI juga biar praktis.
     if (options.url.startsWith("https://generativelanguage.googleapis.com")) {
       const google = createGoogleGenerativeAI({
         apiKey: options.key,
       });
       this._language.value = google.languageModel(options.model);
-    } else if (options.url.startsWith("https://api.groq.com")) {
-      const groq = createOpenAI({
-        baseURL: options.url,
-        apiKey: options.key,
-      });
-      this._language.value = groq.languageModel(options.model);
     } else {
       const ollama = createOpenAI({
-        baseURL: options.url,
+        baseURL: options.url.startsWith("https://api.openai.com")
+          ? undefined
+          : options.url,
         apiKey: options.key,
       });
       this._language.value = ollama.languageModel(options.model);

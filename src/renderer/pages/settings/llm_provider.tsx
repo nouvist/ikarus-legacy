@@ -3,9 +3,13 @@ import { styled } from "styled-components";
 import Button from "~/renderer/components/button";
 import Card from "~/renderer/components/card";
 import RunnerFacade from "~/renderer/components/chat/controller/runner_facade";
-import Flex, { JustifyContent } from "~/renderer/components/flex";
+import Flex, {
+  FlexDirection,
+  JustifyContent,
+} from "~/renderer/components/flex";
 import Input from "~/renderer/components/input";
 import { ColorType } from "~/renderer/foundations/colors";
+import Constraints from "~/renderer/foundations/constraints";
 import EdgeInsets from "~/renderer/foundations/edge_insets";
 
 export default function SettingsPageLlmProvider() {
@@ -13,10 +17,22 @@ export default function SettingsPageLlmProvider() {
   const [key, setKey] = useState("");
   const [model, setModel] = useState("");
 
+  async function handleUseOpenAi() {
+    setUrl("https://api.openai.com/v1");
+    setKey((await managed.env.get("OPENAI_API_KEY")) || "");
+    setModel("gpt-3.5-turbo");
+  }
+
   async function handleUseGroq() {
     setUrl("https://api.groq.com/openai/v1");
     setKey((await managed.env.get("GROQ_API_KEY")) || "");
     setModel("llama-3.1-8b-instant");
+  }
+
+  async function handleUseTogether() {
+    setUrl("https://api.together.xyz/v1");
+    setKey((await managed.env.get("TOGETHER_API_KEY")) || "");
+    setModel("");
   }
 
   async function handleUseGoogle() {
@@ -107,12 +123,64 @@ export default function SettingsPageLlmProvider() {
           </tr>
 
           <tr>
-            <td>Templates</td>
-            <td>
-              <Flex justifyContent={JustifyContent.Start} gap={16}>
-                <Button onClick={handleUseGroq}>Groq</Button>
-                <Button onClick={handleUseGoogle}>Google</Button>
-                <Button onClick={handleUseOllama}>Ollama</Button>
+            <td colSpan={2}>Other providers:</td>
+          </tr>
+
+          <tr>
+            <td colSpan={2}>
+              <Flex
+                direction={FlexDirection.Column}
+                justifyContent={JustifyContent.Start}
+                gap={16}
+              >
+                <Flex gap={16}>
+                  <Button
+                    onClick={handleUseOpenAi}
+                    constraints={
+                      new Constraints({ height: 40, width: Infinity })
+                    }
+                  >
+                    OpenAI
+                  </Button>
+                  <Button
+                    onClick={handleUseGroq}
+                    constraints={
+                      new Constraints({ height: 40, width: Infinity })
+                    }
+                  >
+                    Groq
+                  </Button>
+                </Flex>
+
+                <Flex gap={16}>
+                  <Button
+                    onClick={handleUseTogether}
+                    constraints={
+                      new Constraints({ height: 40, width: Infinity })
+                    }
+                  >
+                    Together
+                  </Button>
+                  <Button
+                    onClick={handleUseGoogle}
+                    constraints={
+                      new Constraints({ height: 40, width: Infinity })
+                    }
+                  >
+                    Google
+                  </Button>
+                </Flex>
+
+                <Flex gap={16}>
+                  <Button
+                    onClick={handleUseOllama}
+                    constraints={
+                      new Constraints({ height: 40, width: Infinity })
+                    }
+                  >
+                    Ollama
+                  </Button>
+                </Flex>
               </Flex>
             </td>
           </tr>
