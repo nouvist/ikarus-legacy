@@ -1,4 +1,5 @@
 import { ToolCallPart } from "ai";
+import { useRef } from "react";
 import Markdown from "react-markdown";
 import { useObservable } from "react-rx";
 import Chat, {
@@ -26,12 +27,33 @@ export default function ChatManaged({ controller }: ChatManagedProps) {
 }
 
 function _ChatInput({ controller }: _ChatManagedSharedProps) {
+  const abort = useRef<AbortController>(null);
   const readiness = useObservable(controller.mutex);
-  async function handleSubmit(value: string) {
-    await controller.invoke(value);
+  const emptiness = useObservable(controller.emptiness);
+
+  function handleClear() {
+    controller.clear();
   }
 
-  return <Chat.Raw.Input enabled={readiness} onSubmit={handleSubmit} />;
+  async function handleSubmit(value: string) {
+    abort.current?.abort();
+    abort.current = new AbortController();
+    await controller.invoke(value, abort.current);
+  }
+
+  function handleCancel() {
+    abort.current?.abort();
+  }
+
+  return (
+    <Chat.Raw.Input
+      enabled={readiness}
+      clearable={!emptiness}
+      onClear={handleClear}
+      onSubmit={handleSubmit}
+      onCancel={handleCancel}
+    />
+  );
 }
 
 function _ChatLoop({ controller }: _ChatManagedSharedProps) {

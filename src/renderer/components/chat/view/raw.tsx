@@ -1,4 +1,8 @@
-import { ChevronRight24Regular } from "@fluentui/react-icons";
+import {
+  ChevronRight24Regular,
+  Delete24Regular,
+  Dismiss24Regular,
+} from "@fluentui/react-icons";
 import { ToolContent } from "ai";
 import {
   Children,
@@ -33,15 +37,34 @@ function Chat({ children }: ChatProps) {
 
 interface ChatInputProps {
   enabled?: boolean;
+  clearable?: boolean;
+  onClear?: () => void;
   onSubmit?: (value: string) => Promise<void>;
+  onCancel?: () => void;
 }
 
-function ChatInput({ enabled = true, onSubmit }: ChatInputProps) {
+function ChatInput({
+  enabled = true,
+  clearable = false,
+  onClear,
+  onSubmit,
+  onCancel,
+}: ChatInputProps) {
   const input = useRef<HTMLInputElement>(null);
   async function handleSubmit() {
     const text = input.current!.value.trim();
     await onSubmit?.(text);
     input.current!.value = "";
+  }
+
+  function handleCancel() {
+    input.current!.value = "";
+    onCancel?.();
+  }
+
+  function handleClear() {
+    input.current!.value = "";
+    onClear?.();
   }
 
   return (
@@ -54,6 +77,17 @@ function ChatInput({ enabled = true, onSubmit }: ChatInputProps) {
       })}
     >
       <Flex fill gap={8}>
+        {clearable && (
+          <Button
+            color={ColorType.Danger}
+            padding={EdgeInsets.zero}
+            constraints={Constraints.all(40)}
+            disabled={!enabled}
+            onClick={handleClear}
+          >
+            <Delete24Regular />
+          </Button>
+        )}
         <Flex.Fill>
           <Input
             ref={input}
@@ -65,15 +99,25 @@ function ChatInput({ enabled = true, onSubmit }: ChatInputProps) {
             }}
           />
         </Flex.Fill>
-        <Button
-          disabled={!enabled}
-          color={ColorType.Primary}
-          padding={EdgeInsets.zero}
-          constraints={Constraints.all(40)}
-          onClick={handleSubmit}
-        >
-          <ChevronRight24Regular />
-        </Button>
+        {enabled ? (
+          <Button
+            color={ColorType.Primary}
+            padding={EdgeInsets.zero}
+            constraints={Constraints.all(40)}
+            onClick={handleSubmit}
+          >
+            <ChevronRight24Regular />
+          </Button>
+        ) : (
+          <Button
+            color={ColorType.Danger}
+            padding={EdgeInsets.zero}
+            constraints={Constraints.all(40)}
+            onClick={handleCancel}
+          >
+            <Dismiss24Regular />
+          </Button>
+        )}
       </Flex>
     </Card.Constrained>
   );

@@ -76,7 +76,6 @@ export default class RunnerFacade {
     this.initializeEmbedding = this.initializeEmbedding.bind(this);
     this.initializeLastUsed = this.initializeLastUsed.bind(this);
     this._refreshMutex = this._refreshMutex.bind(this);
-    this._refreshCsp = this._refreshCsp.bind(this);
 
     if (RunnerFacade._instance) {
       console.warn("[RunnerFacade] ada banyak, yang terakhir yang dipakai");
@@ -146,7 +145,6 @@ export default class RunnerFacade {
     }
 
     this._refreshMutex();
-    this._refreshCsp();
   }
 
   async initializeEmbedding(options: RunnerEmbeddingOptions, save = false) {
@@ -166,7 +164,6 @@ export default class RunnerFacade {
     this._embedding.value = ollama.embedding(options.model);
 
     this._refreshMutex();
-    this._refreshCsp();
   }
 
   async initializeLastUsed() {
@@ -189,42 +186,5 @@ export default class RunnerFacade {
         this._embedding.isInitialized &&
         this._language.isInitialized
     );
-  }
-
-  protected async _refreshCsp() {
-    const element = document.createElement("meta");
-    const domains = ["'self'", this._embeddingDomain, this._languageDomain];
-
-    for (let i = 0; i < domains.length; i++) {
-      const cursor = domains[i];
-
-      if (!cursor) {
-        domains.splice(i, 1);
-        i--;
-        continue;
-      }
-
-      for (let j = i + 1; j < domains.length; j++) {
-        if (cursor === domains[j]) {
-          domains.splice(j, 1);
-          j--;
-        }
-      }
-    }
-
-    const csp = [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-eval'",
-      "style-src 'self' 'unsafe-inline'",
-      `connect-src ${domains.join(" ")}`,
-    ];
-
-    element.id = "__csp";
-    element.httpEquiv = "Content-Security-Policy";
-    element.content = csp.join("; ");
-
-    const existing = document.getElementById("__csp");
-    if (existing) existing.remove();
-    document.head.appendChild(element);
   }
 }

@@ -26,8 +26,10 @@ export class ChatController {
     this._messagesMutex,
     this._runner.mutex
   );
+  protected _emptiness = new BehaviorSubject<boolean>(true);
 
   readonly messages = Rxjs.asImmutable(this._messages);
+  readonly emptiness = Rxjs.asImmutable(this._emptiness);
   readonly mutex = this._mutex.asImmutable();
 
   protected static _defaultMessages: Message[] | undefined;
@@ -105,8 +107,10 @@ export class ChatController {
 
     this.ensureInitialized = this.ensureInitialized.bind(this);
     this.waitUntilReady = this.waitUntilReady.bind(this);
+    this.clear = this.clear.bind(this);
     this.invoke = this.invoke.bind(this);
     this.concat = this.concat.bind(this);
+    this._refreshEmptiness = this._refreshEmptiness.bind(this);
 
     (window as any)["chat"] = this;
     (window as any)["msg"] = this.messages.getValue;
@@ -122,8 +126,8 @@ export class ChatController {
     if (this._isInitialized) return;
     this._isInitialized = true;
 
+    this.clear();
     await this._runner.ensureInitialized(this._browser);
-    this._messages.next(ChatController.createDefaultMessages());
     this._messagesMutex.next(true);
   }
 
@@ -134,6 +138,11 @@ export class ChatController {
     ]);
   }
 
+  clear() {
+    this._messages.next(ChatController.createDefaultMessages());
+    this._emptiness.next(true);
+  }
+
   concat(next: Message[] | Message) {
     const currentMessages = this.messages.value;
     if (Array.isArray(next)) {
@@ -141,21 +150,34 @@ export class ChatController {
     } else {
       this._messages.next([...currentMessages, next]);
     }
+    this._refreshEmptiness();
   }
 
-  async invoke(message: string) {
+  async invoke(message: string, abort?: AbortController) {
     try {
       this._messagesMutex.next(false);
       this.concat(new UserMessage(message));
-      const abort = new AbortController();
-      (window as any)["cancel"] = abort.abort.bind(abort);
+      (window as any)["cancel"] = abort?.abort.bind(abort);
       await this._runner.stream({
         messages: this.messages.value,
         callback: this.concat,
-        abortSignal: abort.signal,
+        abortSignal: abort?.signal,
       });
     } finally {
       this._messagesMutex.next(true);
     }
+  }
+
+  protected _refreshEmptiness() {
+    for (const message of this.messages.value) {
+      if (
+        message instanceof UserMessage ||
+        message instanceof AssistantMessage
+      ) {
+        this._emptiness.next(false);
+        return;
+      }
+    }
+    this._emptiness.next(true);
   }
 }

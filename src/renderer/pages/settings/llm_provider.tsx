@@ -32,7 +32,7 @@ export default function SettingsPageLlmProvider() {
   function handleUseOllama() {
     setUrl("http://127.0.0.1:11434/v1");
     setKey("ollama");
-    setModel("");
+    setModel("llama3.2:1b");
   }
 
   function handleSave() {
