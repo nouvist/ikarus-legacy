@@ -1,21 +1,11 @@
-import BrowserBridge from "~/renderer/components/browser/controller/bridge";
-import { LateRefCell } from "~/shared/core";
+import BrowserController from "~/renderer/components/browser/controller/controller";
 import { HtmlUtils } from "~/shared/html";
 
-export default class BrowserManaged {
-  protected _ref: LateRefCell<Electron.WebviewTag>;
-  protected _bridge: BrowserBridge;
-  protected _waitUntilBound: () => Promise<void>;
-
-  constructor(
-    ref: LateRefCell<Electron.WebviewTag>,
-    bridge: BrowserBridge,
-    wait: () => Promise<void>
-  ) {
-    this._ref = ref;
-    this._bridge = bridge;
-    this._waitUntilBound = wait;
-
+export default class BrowserControllerImpl extends BrowserController {
+  constructor() {
+    super();
+    this.location = this.location.bind(this);
+    this.title = this.title.bind(this);
     this.debug = this.debug.bind(this);
     this.go = this.go.bind(this);
     this.goBack = this.goBack.bind(this);
@@ -25,6 +15,14 @@ export default class BrowserManaged {
     this.js = this.js.bind(this);
     this.dom = this.dom.bind(this);
     this.waitUntilReady = this.waitUntilReady.bind(this);
+  }
+
+  location() {
+    return this._ref.value.src;
+  }
+
+  title() {
+    return this.js(() => document.title);
   }
 
   debug() {
@@ -37,7 +35,7 @@ export default class BrowserManaged {
       src = `https://${src}`;
     }
 
-    await this._waitUntilBound();
+    await this.waitUntilBound();
     this._ref.value.src = src;
 
     await this.waitUntilReady();
@@ -108,7 +106,7 @@ export default class BrowserManaged {
   }
 
   async waitUntilReady() {
-    await this._waitUntilBound();
+    await this.waitUntilBound();
 
     try {
       this._ref.value.getWebContentsId();

@@ -38,17 +38,19 @@ function Chat({ children }: ChatProps) {
 interface ChatInputProps {
   enabled?: boolean;
   clearable?: boolean;
+  abortable?: boolean;
   onClear?: () => void;
   onSubmit?: (value: string) => Promise<void>;
-  onCancel?: () => void;
+  onAbort?: () => void;
 }
 
 function ChatInput({
   enabled = true,
   clearable = false,
+  abortable = false,
   onClear,
   onSubmit,
-  onCancel,
+  onAbort,
 }: ChatInputProps) {
   const input = useRef<HTMLInputElement>(null);
   async function handleSubmit() {
@@ -57,9 +59,9 @@ function ChatInput({
     input.current!.value = "";
   }
 
-  function handleCancel() {
+  function handleAbort() {
     input.current!.value = "";
-    onCancel?.();
+    onAbort?.();
   }
 
   function handleClear() {
@@ -99,8 +101,9 @@ function ChatInput({
             }}
           />
         </Flex.Fill>
-        {enabled ? (
+        {!abortable ? (
           <Button
+            disabled={!enabled}
             color={ColorType.Primary}
             padding={EdgeInsets.zero}
             constraints={Constraints.all(40)}
@@ -113,7 +116,7 @@ function ChatInput({
             color={ColorType.Danger}
             padding={EdgeInsets.zero}
             constraints={Constraints.all(40)}
-            onClick={handleCancel}
+            onClick={handleAbort}
           >
             <Dismiss24Regular />
           </Button>
@@ -138,16 +141,21 @@ function ChatContainer({ children }: PropsWithChildren) {
 
     const observer = new MutationObserver(handleMutation);
 
-    function handleMutation(_: MutationRecord[]) {
-      if (!document.body.contains(el)) return observer.disconnect();
-      if (el.scrollHeight - el.scrollTop - el.clientHeight > 256) return;
-
+    function scrollToBottom() {
+      if (!el) return;
       el.scrollTo({
         top: el.scrollHeight + el.clientHeight,
         behavior: "smooth",
       });
     }
 
+    function handleMutation(_: MutationRecord[]) {
+      if (!document.body.contains(el)) return observer.disconnect();
+      if (el.scrollHeight - el.scrollTop - el.clientHeight > 256) return;
+      scrollToBottom();
+    }
+
+    setImmediate(scrollToBottom);
     observer.observe(el, {
       childList: true,
       subtree: true,
@@ -208,7 +216,7 @@ interface ChatTitleProps {
 }
 
 function ChatTitle({ type }: ChatTitleProps) {
-  const text = type === ChatType.User ? "Kamu" : "Asisten";
+  const text = type === ChatType.User ? "You" : "Assistant";
   return (
     <_ChatTitle data-from-right={type === ChatType.User}>{text}</_ChatTitle>
   );

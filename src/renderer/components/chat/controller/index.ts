@@ -8,8 +8,9 @@ import {
   UserMessage,
 } from "~/renderer/components/chat";
 import RunnerFacade from "~/renderer/components/chat/controller/runner_facade";
-import { Completer, inline } from "~/shared/core";
+import { Completer } from "~/shared/core";
 import { CombinedMutexes, Mutex, Rxjs } from "~/shared/rxjs";
+import prompt from "./prompt_short.txt?raw";
 
 export function useChatController(browser: BrowserController) {
   const ref = useRef<ChatController>(null);
@@ -22,15 +23,11 @@ export class ChatController {
   protected _runner = new RunnerFacade();
   protected _messages = new BehaviorSubject<Message[]>([]);
   protected _messagesMutex = new Mutex();
-  protected _mutex = new CombinedMutexes(
-    this._messagesMutex,
-    this._runner.mutex
-  );
-  protected _emptiness = new BehaviorSubject<boolean>(true);
+  protected _contentful = new BehaviorSubject<boolean>(false);
 
   readonly messages = Rxjs.asImmutable(this._messages);
-  readonly emptiness = Rxjs.asImmutable(this._emptiness);
-  readonly mutex = this._mutex.asImmutable();
+  readonly contentful = Rxjs.asImmutable(this._contentful);
+  readonly mutex = new CombinedMutexes(this._messagesMutex, this._runner.mutex);
 
   protected static _defaultMessages: Message[] | undefined;
 
@@ -48,39 +45,7 @@ export class ChatController {
 
   protected static createDefaultMessages() {
     if (!this._defaultMessages) {
-      this._defaultMessages = [
-        new SystemMessage(
-          inline(`
-            Kamu adalah Babon, asisten browser yang cerdas dan siap sedia
-            bantuin kamu menjelajah internet. Biasanya yang bakal jadi pengguna
-            itu orangnya santai banget, jadi kalau ngobrol sama dia, pakai
-            bahasa sehari-hari aja ya, kayak lagi ngobrol sama teman. Kecuali,
-            kalau dia agak beda dan lebih formal atau menuntut, kamu harus bisa
-            menyesuaikan juga. Tapi, kamu enggak usah pakai bahasa yang
-            ribet-ribet atau teknis. Pengguna ngerti kamu punya berbagai cara
-            buat bantuin dia, jadi kamu enggak perlu nyebutin spesifik alat apa
-            yang kamu pakai. Pokoknya, kalau pengguna minta tolong apa pun, kamu
-            langsung pikirin gimana caranya biar pengguna bisa dapetin apa yang
-            pengguna mau.
-            
-            Kalau pengguna minta kamu nyari sesuatu, ngisi form, atau ngeklik
-            tombol, kamu yang mutusin sendiri langkah-langkahnya. Misalnya,
-            kalau pengguna minta klik tombol, kamu enggak perlu nunggu pengguna
-            bilang "cari tombolnya dulu, ya", kamu langsung aja cari dan klik
-            tombolnya. Pokoknya, kalau pakai tool buat ambil data, gak perlu
-            nanya. Bahkan, hal-hal umum kamu bisa klik atau ubah tanpa nanya
-            juga. Intinya, kamu itu mandiri banget.
-
-            Yang paling penting, kalau pengguna nyuruh sesuatu, kamu jangan
-            pernah bilang "enggak bisa" atau "aku enggak punya alatnya" kalau
-            sebetulnya itu bisa kamu kerjakan pakai kombinasi dari semua cara
-            yang kamu punya. Pikirin aja gimana caranya sampai tujuanku
-            tercapai. Kamu itu solusi buat semua masalahku di internet, jadi
-            jangan nyerah ya! Pengguna percaya kamu bisa mikirin sendiri langkah
-            terbaik buat aku.
-          `)
-        ),
-      ];
+      this._defaultMessages = [new SystemMessage(prompt)];
 
       for (const message of this._defaultMessages) {
         if (!(message instanceof AssistantMessage)) continue;
@@ -88,18 +53,7 @@ export class ChatController {
       }
     }
 
-    return [
-      new SystemMessage(
-        inline(`
-          Anda adalah AI browser yang membantu pengguna berinteraksi dengan
-          halaman web. Fokus pada navigasi, ekstraksi informasi, dan tindakan
-          dasar. Anda mampu membangun dan mengeksekusi perintah secara berurutan
-          untuk menyelesaikan tugas yang lebih kompleks.
-        `)
-      ),
-    ];
-    // promptnya rada bego
-    // return Array.from(this._defaultMessages);
+    return Array.from(this._defaultMessages);
   }
 
   constructor(browser: BrowserController) {
@@ -140,7 +94,7 @@ export class ChatController {
 
   clear() {
     this._messages.next(ChatController.createDefaultMessages());
-    this._emptiness.next(true);
+    this._contentful.next(false);
   }
 
   concat(next: Message[] | Message) {
@@ -174,10 +128,10 @@ export class ChatController {
         message instanceof UserMessage ||
         message instanceof AssistantMessage
       ) {
-        this._emptiness.next(false);
+        this._contentful.next(true);
         return;
       }
     }
-    this._emptiness.next(true);
+    this._contentful.next(false);
   }
 }

@@ -26,7 +26,7 @@ export default function SettingsPageLlmProvider() {
   async function handleUseGroq() {
     setUrl("https://api.groq.com/openai/v1");
     setKey((await managed.env.get("GROQ_API_KEY")) || "");
-    setModel("llama-3.1-8b-instant");
+    setModel("qwen/qwen3-32b");
   }
 
   async function handleUseTogether() {

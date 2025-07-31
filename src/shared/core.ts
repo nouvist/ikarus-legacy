@@ -110,3 +110,9 @@ export function raw(str: string) {
     .join("\n")
     .trim();
 }
+
+export function immediate<T = undefined>(value: T) {
+  return new Promise<T>((resolve) => {
+    setImmediate(() => resolve(value));
+  });
+}

@@ -1,5 +1,5 @@
 import { ToolCallPart } from "ai";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Markdown from "react-markdown";
 import { useObservable } from "react-rx";
 import Chat, {
@@ -29,16 +29,19 @@ export default function ChatManaged({ controller }: ChatManagedProps) {
 function _ChatInput({ controller }: _ChatManagedSharedProps) {
   const abort = useRef<AbortController>(null);
   const readiness = useObservable(controller.mutex);
-  const emptiness = useObservable(controller.emptiness);
+  const contentful = useObservable(controller.contentful);
+  const [abortable, setAbortable] = useState(false);
 
   function handleClear() {
     controller.clear();
   }
 
   async function handleSubmit(value: string) {
+    setAbortable(true);
     abort.current?.abort();
     abort.current = new AbortController();
     await controller.invoke(value, abort.current);
+    setAbortable(false);
   }
 
   function handleCancel() {
@@ -48,10 +51,11 @@ function _ChatInput({ controller }: _ChatManagedSharedProps) {
   return (
     <Chat.Raw.Input
       enabled={readiness}
-      clearable={!emptiness}
+      abortable={abortable}
+      clearable={contentful}
       onClear={handleClear}
       onSubmit={handleSubmit}
-      onCancel={handleCancel}
+      onAbort={handleCancel}
     />
   );
 }

@@ -16,9 +16,9 @@ export default function registerNavigationTools(
   registrar.register("Navigation.goForward", new GoForwardTool(browser));
 }
 
-export class GoBackTool extends Tool {
+export class GetTitleTool extends Tool {
   protected _browser: RefCell<BrowserController>;
-  protected _description = "Navigate the browser back to the previous page";
+  protected _description = "Get the current title of the browser";
   protected _parameters = z.object({});
 
   constructor(browser: RefCell<BrowserController>) {
@@ -27,32 +27,8 @@ export class GoBackTool extends Tool {
   }
 
   async execute() {
-    if (!this._browser.value.managed.canGoBack()) {
-      return "Cannot go back, no previous page available";
-    }
-
-    await this._browser.value.managed.goForward();
-    return "Navigated back to the previous page";
-  }
-}
-
-export class GoForwardTool extends Tool {
-  protected _browser: RefCell<BrowserController>;
-  protected _description = "Navigate the browser forward to the next page";
-  protected _parameters = z.object({});
-
-  constructor(browser: RefCell<BrowserController>) {
-    super();
-    this._browser = browser;
-  }
-
-  async execute() {
-    if (!this._browser.value.managed.canGoForward()) {
-      return "Cannot go forward, no next page available";
-    }
-
-    await this._browser.value.managed.goForward();
-    return "Navigated forward to the next page";
+    const title = await this._browser.value.managed.title();
+    return "The current title is: " + title;
   }
 }
 
@@ -67,7 +43,7 @@ export class GetUrlTool extends Tool {
   }
 
   async execute() {
-    const url = await this._browser.value.managed.js(() => location.href);
+    const url = this._browser.value.managed.location();
     return "The current URL is: " + url;
   }
 }
@@ -89,5 +65,45 @@ export class GoToUrlTool extends Tool {
   async execute({ url }: z.infer<typeof this._parameters>) {
     await this._browser.value.managed.go(url);
     return `Navigated to ${url}`;
+  }
+}
+
+export class GoBackTool extends Tool {
+  protected _browser: RefCell<BrowserController>;
+  protected _description = "Navigate the browser back to the previous page";
+  protected _parameters = z.object({});
+
+  constructor(browser: RefCell<BrowserController>) {
+    super();
+    this._browser = browser;
+  }
+
+  async execute() {
+    if (!this._browser.value.managed.canGoBack()) {
+      return "Cannot go back, no previous page available";
+    }
+
+    await this._browser.value.managed.goBack();
+    return "Navigated back to the previous page";
+  }
+}
+
+export class GoForwardTool extends Tool {
+  protected _browser: RefCell<BrowserController>;
+  protected _description = "Navigate the browser forward to the next page";
+  protected _parameters = z.object({});
+
+  constructor(browser: RefCell<BrowserController>) {
+    super();
+    this._browser = browser;
+  }
+
+  async execute() {
+    if (!this._browser.value.managed.canGoForward()) {
+      return "Cannot go forward, no next page available";
+    }
+
+    await this._browser.value.managed.goForward();
+    return "Navigated forward to the next page";
   }
 }
