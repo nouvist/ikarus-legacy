@@ -8,6 +8,7 @@ import {
   Tool,
   ToolResultPart,
 } from "ai";
+import fnv from "fnv-plus";
 import {
   AssistantMessage,
   Message,
@@ -16,14 +17,23 @@ import {
 import { RunnerInvokeOptions } from "~/renderer/components/chat/controller/runner_facade";
 import { RefCell } from "~/shared/core";
 
+type _CacheId = `${number}::${string}`;
+
 export default class Runner {
   protected _embedding: RefCell<EmbeddingModel<string>>;
   protected _language: RefCell<LanguageModel>;
   protected _tools: Record<string, Tool> = {};
+  protected _cache = new Map<_CacheId, any>();
+  protected _cacheTimeout?: NodeJS.Timeout;
+
+  protected static _cacheTimeoutLength = 1000 * 5;
+  protected static _getCacheId(value: string): _CacheId {
+    return `${value.length}::${fnv.fast1a64(value)}` as const;
+  }
 
   constructor(
     _embedding: RefCell<EmbeddingModel<string>>,
-    _language: RefCell<LanguageModel>,
+    _language: RefCell<LanguageModel>
   ) {
     this._embedding = _embedding;
     this._language = _language;
@@ -155,18 +165,55 @@ export default class Runner {
   }
 
   async embed(value: string, abortSignal?: AbortSignal) {
-    return embed({
+    this._startCacheTimeout();
+
+    const id = Runner._getCacheId(value) as _CacheId;
+    if (this._cache.has(id)) return this._cache.get(id) as number[];
+
+    const result = await embed({
       model: this._embedding.value,
       value: value,
       abortSignal: abortSignal,
     });
+
+    this._cache.set(id, result.embedding);
+    return result.embedding;
   }
 
   async embedMany(values: string[], abortSignal?: AbortSignal) {
-    return embedMany({
+    this._startCacheTimeout();
+    const ids = values.map(Runner._getCacheId);
+    const cached = ids.map((id) => this._cache.get(id) as number[] | undefined);
+    const uncachedIndexes = [] as number[];
+    const uncachedValues = [] as string[];
+
+    for (let i = 0; i < cached.length; i++) {
+      if (cached[i] !== undefined) continue;
+      uncachedIndexes.push(i);
+      uncachedValues.push(values[i]);
+    }
+
+    const { embeddings } = await embedMany({
       model: this._embedding.value,
-      values: values,
+      values: uncachedValues,
       abortSignal: abortSignal,
     });
+
+    for (let i = 0; i < uncachedIndexes.length; i++) {
+      const index = uncachedIndexes[i];
+      const embedding = embeddings[i];
+      this._cache.set(ids[index], embedding);
+      cached[index] = embedding;
+    }
+
+    return cached as number[][];
+  }
+
+  _startCacheTimeout() {
+    clearTimeout(this._cacheTimeout);
+    this._cacheTimeout = setTimeout(
+      this._cache.clear,
+      Runner._cacheTimeoutLength
+    );
   }
 }
