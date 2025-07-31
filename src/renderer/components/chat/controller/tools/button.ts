@@ -1,5 +1,5 @@
 import z from "zod";
-import { BrowserController } from "~/renderer/components/browser/view/raw";
+import { BrowserController } from "~/renderer/components/browser";
 import Fetcher from "~/renderer/components/chat/controller/fetcher";
 import {
   Tool,
@@ -70,7 +70,7 @@ export class ClickBottonTool extends Tool {
   }
 
   async execute({ selector }: z.infer<typeof this._parameters>) {
-    const dom = await this._browser.value.managed.dom();
+    const dom = await this._browser.value.dom();
     const element = dom.querySelector<HTMLButtonElement>(selector);
 
     if (!element) {

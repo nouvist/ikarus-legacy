@@ -1,5 +1,5 @@
 import z from "zod";
-import { BrowserController } from "~/renderer/components/browser/view/raw";
+import { BrowserController } from "~/renderer/components/browser";
 import Fetcher from "~/renderer/components/chat/controller/fetcher";
 import {
   Tool,
@@ -37,7 +37,7 @@ export class FindTextInputTool extends Tool {
   }
 
   async execute({ semantics }: z.infer<typeof this._parameters>) {
-    const dom = await this._browser.value.managed.dom();
+    const dom = await this._browser.value.dom();
     await this._fetcher.fetchTextInputs();
 
     semantics = semantics.trim().toLowerCase();
@@ -77,7 +77,7 @@ export class ChangeTextInputTool extends Tool {
   }
 
   execute({ selector, value }: z.infer<typeof this._parameters>) {
-    return this._browser.value.managed.js(
+    return this._browser.value.js(
       ({ selector, value }) => {
         const element = document.querySelector(selector);
 

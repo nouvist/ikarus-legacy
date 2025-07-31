@@ -80,7 +80,7 @@ export default class BrowserControllerImpl extends BrowserController {
     for (const eventType of ["click", "input", "change", "keydown", "keyup"]) {
       dom.addEventListener(eventType, async (event) => {
         const el = event.target as HTMLElement;
-        const id = HtmlUtils.getSelectorFromElement(el);
+        const id = HtmlUtils.getElementSelector(el);
         let value: any = undefined;
         if (eventType === "input" || eventType === "change") {
           value = (el as HTMLInputElement).value;
@@ -103,6 +103,22 @@ export default class BrowserControllerImpl extends BrowserController {
     }
 
     return dom;
+  }
+
+  async isElementVisible(element: Element | string) {
+    if (typeof element !== "string") {
+      element = HtmlUtils.getElementSelector(element);
+    }
+
+    return this.js((selector: string) => {
+      const element = document.querySelector(selector);
+      if (!(element instanceof HTMLElement)) return false;
+      if (element.tagName === "SCRIPT") return false;
+      if (element.tagName === "STYLE") return false;
+      if (element.style.visibility === "hidden") return false;
+      if (element.style.display === "none") return false;
+      return true;
+    }, element);
   }
 
   async waitUntilReady() {

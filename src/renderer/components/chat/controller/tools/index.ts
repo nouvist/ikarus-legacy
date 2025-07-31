@@ -1,4 +1,4 @@
-import { BrowserController } from "~/renderer/components/browser/view/raw";
+import { BrowserController } from "~/renderer/components/browser";
 import Fetcher from "~/renderer/components/chat/controller/fetcher";
 import registerButtonTools from "~/renderer/components/chat/controller/tools/button";
 import { ToolRegistrar } from "~/renderer/components/chat/controller/tools/fundamental";

@@ -1,7 +1,7 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { EmbeddingModel, LanguageModel } from "ai";
-import { BrowserController } from "~/renderer/components/browser/view/raw";
+import { BrowserController } from "~/renderer/components/browser";
 import Fetcher from "~/renderer/components/chat/controller/fetcher";
 import Runner from "~/renderer/components/chat/controller/runner";
 import { Message } from "~/renderer/components/chat/controller/structs";
@@ -55,7 +55,6 @@ export default class RunnerFacade {
   readonly mutex = new CombinedMutexes(
     this._mutex,
     this._memoryMutex,
-    this._fetcher.mutex
   );
 
   protected static _instance: RunnerFacade | undefined;

@@ -47,11 +47,11 @@ export default class TextInputTable extends InMemoryTable<TextInputData> {
   }
 
   async getAll() {
-    return (await this._table.query().toArray()) as TextInputData[];
+    return (await this.raw.query().toArray()) as TextInputData[];
   }
 
   async findNearestTo(embedding: TextInputData["embedding"], limit = 10) {
-    return (await this._table
+    return (await this.raw
       .query()
       .nearestTo(embedding)
       .limit(limit)
@@ -59,6 +59,6 @@ export default class TextInputTable extends InMemoryTable<TextInputData> {
   }
 
   async remove(hash: TextInputData["hash"]) {
-    await this._table.delete(`hash == ${hash}`);
+    await this.raw.delete(`hash == ${hash}`);
   }
 }

@@ -58,7 +58,6 @@ function _Blank({ controller }: { controller: BrowserController }) {
     if (!wv) return;
 
     function handleDidNavigate() {
-      console.log("did-navigate", controller.location());
       const next = controller.location() === "";
       last.current = next;
       setIsBlank(next);

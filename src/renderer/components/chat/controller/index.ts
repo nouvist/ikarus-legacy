@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { BehaviorSubject } from "rxjs";
-import { BrowserController } from "~/renderer/components/browser/view/raw";
+import { BrowserController } from "~/renderer/components/browser";
 import {
   AssistantMessage,
   Message,

@@ -57,6 +57,7 @@ const _Splitter = styled(motion.div)<_SplitterProps>`
   position: relative;
   background: ${(p) => p.theme.elevation.solid};
   cursor: ew-resize;
+  z-index: 10000;
   &::after {
     content: "";
     position: absolute;

@@ -1,5 +1,5 @@
 import z from "zod";
-import { BrowserController } from "~/renderer/components/browser/view/raw";
+import { BrowserController } from "~/renderer/components/browser";
 import {
   Tool,
   ToolRegistrar,
@@ -24,7 +24,7 @@ export class GetAllHtmlTool extends Tool {
   }
 
   async execute() {
-    const dom = await this._browser.value.managed.dom();
+    const dom = await this._browser.value.dom();
     return dom.documentElement.outerHTML;
   }
 }

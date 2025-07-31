@@ -46,11 +46,11 @@ export default class ButtonTable extends InMemoryTable<ButtonData> {
   }
 
   async getAll() {
-    return (await this._table.query().toArray()) as ButtonData[];
+    return (await this.raw.query().toArray()) as ButtonData[];
   }
 
   async findNearestTo(embedding: ButtonData["embedding"], limit = 10) {
-    return (await this._table
+    return (await this.raw
       .query()
       .nearestTo(embedding)
       .limit(limit)
@@ -58,6 +58,6 @@ export default class ButtonTable extends InMemoryTable<ButtonData> {
   }
 
   async remove(hash: ButtonData["hash"]) {
-    await this._table.delete(`hash == ${hash}`);
+    await this.raw.delete(`hash == ${hash}`);
   }
 }

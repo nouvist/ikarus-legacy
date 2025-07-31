@@ -8,6 +8,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "~": path.resolve(__dirname, "src"),
+      "@nodejs/natural": path.resolve(__dirname, "node_modules/natural/index.js"),
+      "natural": path.resolve(__dirname, "src/renderer/node/natural.ts"),
     },
   },
   build: {
@@ -22,10 +24,11 @@ export default defineConfig({
         "@lancedb/lancedb-linux-x64-musl",
         "@lancedb/lancedb-win32-arm64-msvc",
         "@lancedb/lancedb-win32-x64-msvc",
+        "natural",
       ],
     },
   },
   optimizeDeps: {
-    exclude: ["@lancedb/lancedb"],
+    exclude: ["@lancedb/lancedb", "natural"],
   },
 });

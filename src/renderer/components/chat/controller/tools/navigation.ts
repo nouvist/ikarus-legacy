@@ -1,5 +1,5 @@
 import z from "zod";
-import { BrowserController } from "~/renderer/components/browser/view/raw";
+import { BrowserController } from "~/renderer/components/browser";
 import {
   Tool,
   ToolRegistrar,
@@ -27,7 +27,7 @@ export class GetTitleTool extends Tool {
   }
 
   async execute() {
-    const title = await this._browser.value.managed.title();
+    const title = await this._browser.value.title();
     return "The current title is: " + title;
   }
 }
@@ -43,7 +43,7 @@ export class GetUrlTool extends Tool {
   }
 
   async execute() {
-    const url = this._browser.value.managed.location();
+    const url = this._browser.value.location();
     return "The current URL is: " + url;
   }
 }
@@ -63,7 +63,7 @@ export class GoToUrlTool extends Tool {
   }
 
   async execute({ url }: z.infer<typeof this._parameters>) {
-    await this._browser.value.managed.go(url);
+    await this._browser.value.go(url);
     return `Navigated to ${url}`;
   }
 }
@@ -79,11 +79,11 @@ export class GoBackTool extends Tool {
   }
 
   async execute() {
-    if (!this._browser.value.managed.canGoBack()) {
+    if (!this._browser.value.canGoBack()) {
       return "Cannot go back, no previous page available";
     }
 
-    await this._browser.value.managed.goBack();
+    await this._browser.value.goBack();
     return "Navigated back to the previous page";
   }
 }
@@ -99,11 +99,11 @@ export class GoForwardTool extends Tool {
   }
 
   async execute() {
-    if (!this._browser.value.managed.canGoForward()) {
+    if (!this._browser.value.canGoForward()) {
       return "Cannot go forward, no next page available";
     }
 
-    await this._browser.value.managed.goForward();
+    await this._browser.value.goForward();
     return "Navigated forward to the next page";
   }
 }

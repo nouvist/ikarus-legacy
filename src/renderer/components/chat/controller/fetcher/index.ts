@@ -1,22 +1,19 @@
 import { BrowserController } from "~/renderer/components/browser";
 import ButtonFetcher from "~/renderer/components/chat/controller/fetcher/button";
+import HtmlFetcher from "~/renderer/components/chat/controller/fetcher/html";
 import TextInputFetcher from "~/renderer/components/chat/controller/fetcher/text_input";
 import Runner from "~/renderer/components/chat/controller/runner";
 import InMemory from "~/renderer/memory";
 import { RefCell } from "~/shared/core";
-import { Mutex } from "~/shared/rxjs";
 
 export default class Fetcher {
   protected _browser: RefCell<BrowserController>;
   protected _memory: InMemory;
   protected _runner: Runner;
-  protected _mutex = new Mutex();
 
+  protected _html: HtmlFetcher;
   protected _button: ButtonFetcher;
   protected _textInput: TextInputFetcher;
-
-  // TODO: gak berguna
-  readonly mutex = this._mutex.asImmutable();
 
   constructor(
     browser: RefCell<BrowserController>,
@@ -27,39 +24,18 @@ export default class Fetcher {
     this._memory = memory;
     this._runner = runner;
 
-    this._button = new ButtonFetcher(
-      this._browser,
-      this._memory,
-      this._runner,
-      this._mutex
-    );
-
-    this._textInput = new TextInputFetcher(
-      this._browser,
-      this._memory,
-      this._runner,
-      this._mutex
-    );
-
-    this.fetchAll = this.fetchAll.bind(this);
+    const args = [this._browser, this._memory, this._runner] as const;
+    this._html = new HtmlFetcher(...args);
+    this._button = new ButtonFetcher(...args);
+    this._textInput = new TextInputFetcher(...args);
   }
 
-  async fetchAll() {
-    const abort = new AbortController();
-    const subscription = this._mutex.subscribe((locked) => {
-      if (locked) return;
-      console.log("[Runner::fetchAll] cancel diterima...");
-      abort.abort();
-    });
+  get findHtml() {
+    return this._html.findHtml;
+  }
 
-    console.log("[Runner::fetchAll] mulai ambil data...");
-    await Promise.all([
-      this.fetchButtons(abort.signal),
-      this.fetchTextInputs(abort.signal),
-    ]);
-
-    console.log("[Runner::fetchAll] selesai ambil data!");
-    subscription.unsubscribe();
+  get fetchHtmls() {
+    return this._html.fetchHtmls;
   }
 
   get findButton() {

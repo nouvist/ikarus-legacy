@@ -4,13 +4,11 @@ import InMemory from "~/renderer/memory";
 import { TextInputDataType } from "~/renderer/memory/tables/text_input";
 import { RefCell } from "~/shared/core";
 import { HtmlUtils } from "~/shared/html";
-import { Mutex } from "~/shared/rxjs";
 
 export default class TextInputFetcher {
   protected _browser: RefCell<BrowserController>;
   protected _memory: InMemory;
   protected _runner: Runner;
-  protected _mutex: Mutex;
 
   static _validTypes = [
     "text",
@@ -30,25 +28,23 @@ export default class TextInputFetcher {
   constructor(
     browser: RefCell<BrowserController>,
     memory: InMemory,
-    runner: Runner,
-    mutex: Mutex
+    runner: Runner
   ) {
     this._browser = browser;
     this._memory = memory;
     this._runner = runner;
-    this._mutex = mutex;
 
     this.findTextInput = this.findTextInput.bind(this);
     this.fetchTextInputs = this.fetchTextInputs.bind(this);
   }
 
   async findTextInput(semantics: string, limit = 10) {
-    const { embedding } = await this._runner.embed(semantics);
+    const embedding = await this._runner.embed(semantics);
     return this._memory.textInputs.findNearestTo(embedding, limit);
   }
 
   async fetchTextInputs(abortSignal?: AbortSignal) {
-    const dom = await this._browser.value.managed.dom();
+    const dom = await this._browser.value.dom();
     const inputs = Array.from(dom.querySelectorAll("input, textarea"))
       .filter((el) => {
         const value = el.getAttribute("hidden");
@@ -61,7 +57,7 @@ export default class TextInputFetcher {
         return TextInputFetcher._validTypes.includes(type.toLowerCase());
       })
       .map((element) => {
-        const selector = HtmlUtils.getSelectorFromElement(element);
+        const selector = HtmlUtils.getElementSelector(element);
         const hash = HtmlUtils.getHashFromElement(element);
         const placeholder = element.getAttribute("placeholder") || "";
         let label = element.getAttribute("aria-label") || undefined;
@@ -125,7 +121,7 @@ export default class TextInputFetcher {
     }
 
     console.log(`[Fetcher::fetchTextInputs] embedding...`);
-    const { embeddings } = await this._runner.embedMany(
+    const embeddings = await this._runner.embedMany(
       inputs.map((input) =>
         [
           input.label,

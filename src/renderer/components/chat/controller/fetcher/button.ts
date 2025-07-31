@@ -4,36 +4,32 @@ import InMemory from "~/renderer/memory";
 import { ButtonDataType } from "~/renderer/memory/tables/button";
 import { RefCell } from "~/shared/core";
 import { HtmlUtils } from "~/shared/html";
-import { Mutex } from "~/shared/rxjs";
 
 export default class ButtonFetcher {
   protected _browser: RefCell<BrowserController>;
   protected _memory: InMemory;
   protected _runner: Runner;
-  protected _mutex: Mutex;
 
   constructor(
     browser: RefCell<BrowserController>,
     memory: InMemory,
     runner: Runner,
-    mutex: Mutex
   ) {
     this._browser = browser;
     this._memory = memory;
     this._runner = runner;
-    this._mutex = mutex;
 
     this.findButton = this.findButton.bind(this);
     this.fetchButtons = this.fetchButtons.bind(this);
   }
 
   async findButton(semantics: string, limit = 10) {
-    const { embedding } = await this._runner.embed(semantics);
+    const embedding = await this._runner.embed(semantics);
     return this._memory.buttons.findNearestTo(embedding, limit);
   }
 
   async fetchButtons(abortSignal?: AbortSignal) {
-    const dom = await this._browser.value.managed.dom();
+    const dom = await this._browser.value.dom();
     const buttons = Array.from(
       dom.querySelectorAll("button, a, input[type='submit']")
     )
@@ -42,7 +38,7 @@ export default class ButtonFetcher {
         return value === "false" || !value;
       })
       .map((element) => {
-        const selector = HtmlUtils.getSelectorFromElement(element);
+        const selector = HtmlUtils.getElementSelector(element);
         const hash = HtmlUtils.getHashFromElement(element);
         let text = element.textContent?.trim() || "";
         while (text.includes("\n")) text = text.replace("\n", " ");
@@ -100,7 +96,7 @@ export default class ButtonFetcher {
     }
 
     console.log(`[Fetcher::fetchButtons] embedding...`);
-    const { embeddings } = await this._runner.embedMany(
+    const  embeddings  = await this._runner.embedMany(
       buttons.map(({ text }) => text),
       abortSignal
     );
