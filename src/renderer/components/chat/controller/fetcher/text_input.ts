@@ -142,5 +142,7 @@ export default class TextInputFetcher {
         embedding: embeddings[index],
       }))
     );
+
+    return inputs;
   }
 }

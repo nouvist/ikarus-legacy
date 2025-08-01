@@ -15,7 +15,7 @@ export default function createTools(
   registerNavigationTools(registrar, browser);
   registerButtonTools(registrar, browser, fetcher);
   registerTextInputTools(registrar, browser, fetcher);
-  registerHtmlTools(registrar, browser);
+  registerHtmlTools(registrar, browser, fetcher);
 
   return registrar.finalize();
 }

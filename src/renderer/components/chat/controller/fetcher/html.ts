@@ -2,31 +2,37 @@ import fnv from "fnv-plus";
 import { BrowserController } from "~/renderer/components/browser";
 import Runner from "~/renderer/components/chat/controller/runner";
 import InMemory from "~/renderer/memory";
+import natural from "~/renderer/node/natural";
 import { RefCell } from "~/shared/core";
 import { HtmlUtils } from "~/shared/html";
 
 interface _Element {
-  raw: Element;
-  text: string;
+  hash: number;
   signature: string;
   selector: string;
-  hash: number;
+  raw: Element;
+  text: string;
+}
+
+interface _ElementWithEmbedding extends _Element {
+  embedding: number[];
 }
 
 interface _Cluster {
   hash: number;
   signature: string;
-  elements: _Element[];
+  elements: _ElementWithEmbedding[];
 }
 
-interface _ClusterWithSemantic extends _Cluster {
-  label: string;
+interface _ClusterWithKeywords extends _Cluster {
+  keywords: string[];
 }
 
 export default class HtmlFetcher {
   protected _browser: RefCell<BrowserController>;
   protected _memory: InMemory;
   protected _runner: Runner;
+  protected _last?: string;
 
   constructor(
     browser: RefCell<BrowserController>,
@@ -37,23 +43,76 @@ export default class HtmlFetcher {
     this._memory = memory;
     this._runner = runner;
 
+    this.findHtmlBySemantic = this.findHtmlBySemantic.bind(this);
+    this.findHtmlsByCluster = this.findHtmlsByCluster.bind(this);
+    this.findHtmlByClusterAndIndex = this.findHtmlByClusterAndIndex.bind(this);
+
     this.fetchHtmls = this.fetchHtmls.bind(this);
+    this._store = this._store.bind(this);
     this._collectElements = this._collectElements.bind(this);
+    this._applyEmbeddings = this._applyEmbeddings.bind(this);
     this._clusterElements = this._clusterElements.bind(this);
     this._mergeClusters = this._mergeClusters.bind(this);
-    this._applySemantic = this._applySemantic.bind(this);
+    this._applyKeywords = this._applyKeywords.bind(this);
   }
 
-  async fetchHtmls() {
+  async findHtmlBySemantic(semantics: string, limit = 10) {
+    await this.fetchHtmlsIfNeeded();
+    const embedding = await this._runner.embed(semantics);
+    return this._memory.html.findHtmlBySemantic(embedding, limit);
+  }
+
+  async findHtmlsByCluster(clusterHash: number) {
+    await this.fetchHtmlsIfNeeded();
+    return this._memory.html.findHtmlsByCluster(clusterHash);
+  }
+
+  async findHtmlByClusterAndIndex(clusterHash: number, index: number) {
+    await this.fetchHtmlsIfNeeded();
+    return this._memory.html.findHtmlByClusterAndIndex(clusterHash, index);
+  }
+
+  async fetchHtmlsIfNeeded() {
     const dom = await this._browser.value.dom();
+    const hash = fnv.fast1a64utf(dom.body.outerHTML);
+    if (this._last === hash) return;
+    this._last = hash;
+    return this.fetchHtmls(dom);
+  }
+
+  async fetchHtmls(dom?: Document) {
+    dom ??= await this._browser.value.dom();
     const elements = this._collectElements(dom.body);
     console.log(`[HtmlFetcher] ada ${elements.length} elemen jir wkwkwk`);
-    const clustered = this._clusterElements(elements);
+    const elementsWithEmbedding = await this._applyEmbeddings(elements);
+
+    const clustered = this._clusterElements(elementsWithEmbedding);
     console.log(`[HtmlFetcher] ada ${clustered.length} kluwuster`);
     const merged = this._mergeClusters(clustered);
     console.log(`[HtmlFetcher] ada ${merged.length} wlee`);
-    const _applied = this._applySemantic(merged);
-    return _applied;
+    const clusterWithKeywords = this._applyKeywords(merged);
+
+    await this._store(clusterWithKeywords);
+    return clusterWithKeywords;
+  }
+
+  async _store(clusters: _ClusterWithKeywords[]) {
+    this._memory.html.clear();
+    for (const cluster of clusters) {
+      await this._memory.html.add(
+        cluster.elements.map((element, index) => ({
+          hash: element.hash,
+          signature: element.signature,
+          selector: element.selector,
+          html: element.raw.outerHTML,
+          text: element.text,
+          clusterHash: cluster.hash,
+          clusterKeywords: cluster.keywords,
+          clusterIndex: index,
+          embedding: element.embedding,
+        }))
+      );
+    }
   }
 
   private _collectElements(root: HTMLElement): _Element[] {
@@ -73,11 +132,11 @@ export default class HtmlFetcher {
         const hash = HtmlUtils.getHashFromElement(element);
 
         elements.push({
-          raw,
-          text,
+          hash,
           signature,
           selector,
-          hash,
+          raw,
+          text,
         });
       }
 
@@ -90,8 +149,21 @@ export default class HtmlFetcher {
     return elements;
   }
 
-  private _clusterElements(elements: _Element[]): _Cluster[] {
-    const map = new Map<string, _Element[]>();
+  private async _applyEmbeddings(
+    elements: _Element[]
+  ): Promise<_ElementWithEmbedding[]> {
+    const embeddings = await this._runner.embedMany(
+      elements.map((el) => el.text)
+    );
+
+    return elements.map((rest, index) => ({
+      ...rest,
+      embedding: embeddings[index],
+    }));
+  }
+
+  private _clusterElements(elements: _ElementWithEmbedding[]): _Cluster[] {
+    const map = new Map<string, _ElementWithEmbedding[]>();
     for (const element of elements) {
       if (!map.has(element.signature)) map.set(element.signature, []);
       map.get(element.signature)!.push(element);
@@ -146,9 +218,42 @@ export default class HtmlFetcher {
     return merged;
   }
 
-  private _applySemantic(clusters: _Cluster[]): _ClusterWithSemantic[] {
-    const applied = [] as _ClusterWithSemantic[];
-    // TODO: bentar capek
-    return clusters as _ClusterWithSemantic[];
+  private _applyKeywords(
+    clusters: _Cluster[]
+  ): _ClusterWithKeywords[] {
+    const applied = [] as _ClusterWithKeywords[];
+    const tokenizer = new natural.WordTokenizer();
+
+    for (const cluster of clusters) {
+      const texts = cluster.elements.map((el) => el.text);
+      const allText = texts.join(" ");
+      const tokens = tokenizer.tokenize(allText);
+      const signature = cluster.signature;
+      const hash = cluster.hash;
+
+      const label = natural.NGrams.ngrams(tokens, 1)
+        .map((n) => n.join(" "))
+        .reduce(
+          (acc, word) => {
+            acc[word] = (acc[word] || 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>
+        );
+
+      const keywords = Object.entries(label)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map((entry) => entry[0]);
+
+      applied.push({
+        hash,
+        signature,
+        elements: cluster.elements,
+        keywords,
+      });
+    }
+
+    return applied;
   }
 }

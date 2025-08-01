@@ -13,7 +13,7 @@ export default class ButtonFetcher {
   constructor(
     browser: RefCell<BrowserController>,
     memory: InMemory,
-    runner: Runner,
+    runner: Runner
   ) {
     this._browser = browser;
     this._memory = memory;
@@ -96,7 +96,7 @@ export default class ButtonFetcher {
     }
 
     console.log(`[Fetcher::fetchButtons] embedding...`);
-    const  embeddings  = await this._runner.embedMany(
+    const embeddings = await this._runner.embedMany(
       buttons.map(({ text }) => text),
       abortSignal
     );
@@ -115,5 +115,7 @@ export default class ButtonFetcher {
         embedding: embeddings[index],
       }))
     );
+
+    return buttons;
   }
 }

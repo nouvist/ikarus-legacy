@@ -12,6 +12,7 @@ import fnv from "fnv-plus";
 import {
   AssistantMessage,
   Message,
+  SystemMessage,
   ToolMessage,
 } from "~/renderer/components/chat";
 import { RunnerInvokeOptions } from "~/renderer/components/chat/controller/runner_facade";
@@ -51,6 +52,18 @@ export default class Runner {
     } else {
       this._tools = tools;
     }
+  }
+
+  async simpleInvoke(system: string, user: string) {
+    const result = await generateText({
+      model: this._language.value,
+      tools: this._tools,
+      maxSteps: 1,
+      temperature: 0,
+      messages: [new SystemMessage(system), new AssistantMessage(user)],
+    });
+
+    return result.text;
   }
 
   async invoke({
