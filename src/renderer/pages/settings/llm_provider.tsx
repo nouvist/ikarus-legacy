@@ -56,7 +56,7 @@ export default function SettingsPageLlmProvider() {
   }
 
   async function handleUseGroq() {
-    const env = (await managed.env.get("OPENAI_API_KEY")) || "";
+    const env = (await managed.env.get("GROQ_API_KEY")) || "";
     setState(() => ({
       changed: true,
       url: "https://api.groq.com/openai/v1",

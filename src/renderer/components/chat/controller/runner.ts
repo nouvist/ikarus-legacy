@@ -14,20 +14,28 @@ import {
   Message,
   SystemMessage,
   ToolMessage,
+  UserMessage,
 } from "~/renderer/components/chat";
 import { RunnerInvokeOptions } from "~/renderer/components/chat/controller/runner_facade";
 import { RefCell } from "~/shared/core";
 
 type _CacheId = `${number}::${string}`;
 
+interface _Cached<T> {
+  value: T;
+  timeout: number;
+}
+
 export default class Runner {
   protected _embedding: RefCell<EmbeddingModel<string>>;
   protected _language: RefCell<LanguageModel>;
   protected _tools: Record<string, Tool> = {};
-  protected _cache = new Map<_CacheId, any>();
-  protected _cacheTimeout?: NodeJS.Timeout;
+  protected _embeddingCache = new Map<_CacheId, _Cached<number[]>>();
+  protected _embeddingCacheTimeout?: NodeJS.Timeout;
+  protected _languageCache = new Map<string, _Cached<string>>();
+  protected _languageCacheTimeout?: NodeJS.Timeout;
 
-  protected static _cacheTimeoutLength = 1000 * 5;
+  protected static _cacheTimeoutLength = 1000 * 60 * 10;
   protected static _getCacheId(value: string): _CacheId {
     const hash = fnv.hash(value, 64).hex();
     return `${value.length}::${hash}` as const;
@@ -41,10 +49,19 @@ export default class Runner {
     this._language = _language;
 
     this.registerTools = this.registerTools.bind(this);
+    this.simpleInvoke = this.simpleInvoke.bind(this);
     this.invoke = this.invoke.bind(this);
     this.stream = this.stream.bind(this);
     this.embed = this.embed.bind(this);
     this.embedMany = this.embedMany.bind(this);
+    this._handleEmbeddingCacheTimeout =
+      this._handleEmbeddingCacheTimeout.bind(this);
+    this._handleLanguageCacheTimeout =
+      this._handleLanguageCacheTimeout.bind(this);
+    this._startEmbeddingCacheTimeout =
+      this._startEmbeddingCacheTimeout.bind(this);
+    this._startLanguageCacheTimeout =
+      this._startLanguageCacheTimeout.bind(this);
   }
 
   registerTools(tools: Record<string, Tool>, append = false) {
@@ -55,16 +72,42 @@ export default class Runner {
     }
   }
 
-  async simpleInvoke(system: string, user: string) {
-    const result = await generateText({
-      model: this._language.value,
-      tools: this._tools,
-      maxSteps: 1,
-      temperature: 0,
-      messages: [new SystemMessage(system), new AssistantMessage(user)],
-    });
+  async simpleInvoke(system: string, user: string, verbose = false) {
+    this._startLanguageCacheTimeout();
 
-    return result.text;
+    const cacheId = fnv.hash(`${system}::${user}`, 64).hex();
+    let cached = this._languageCache.get(cacheId);
+    if (cached) {
+      this._languageCache.set(
+        cacheId,
+        (cached = {
+          value: cached.value,
+          timeout: Date.now() + Runner._cacheTimeoutLength,
+        })
+      );
+    } else {
+      const result = await generateText({
+        model: this._language.value,
+        messages: [new SystemMessage(system), new UserMessage(user)],
+        temperature: 0,
+        maxSteps: 1,
+      });
+      this._languageCache.set(
+        cacheId,
+        (cached = {
+          value: result.text,
+          timeout: Date.now() + Runner._cacheTimeoutLength,
+        })
+      );
+    }
+
+    let text = cached.value;
+    if (!verbose) {
+      const index = text.indexOf("</think>");
+      if (index !== -1) text = text.substring(index + 8).trim();
+    }
+
+    return text;
   }
 
   async invoke({
@@ -179,30 +222,52 @@ export default class Runner {
   }
 
   async embed(value: string, abortSignal?: AbortSignal) {
-    this._startCacheTimeout();
+    this._startEmbeddingCacheTimeout();
 
     const id = Runner._getCacheId(value) as _CacheId;
-    if (this._cache.has(id)) return this._cache.get(id) as number[];
+    let cached = this._embeddingCache.get(id);
+    if (cached) {
+      this._embeddingCache.set(
+        id,
+        (cached = {
+          value: cached.value,
+          timeout: Date.now() + Runner._cacheTimeoutLength,
+        })
+      );
+    } else {
+      const result = await embed({
+        model: this._embedding.value,
+        value: value,
+        abortSignal: abortSignal,
+      });
 
-    const result = await embed({
-      model: this._embedding.value,
-      value: value,
-      abortSignal: abortSignal,
-    });
+      this._embeddingCache.set(
+        id,
+        (cached = {
+          value: result.embedding,
+          timeout: Date.now() + Runner._cacheTimeoutLength,
+        })
+      );
+    }
 
-    this._cache.set(id, result.embedding);
-    return result.embedding;
+    return cached.value;
   }
 
   async embedMany(values: string[], abortSignal?: AbortSignal) {
-    this._startCacheTimeout();
+    this._startEmbeddingCacheTimeout();
     const ids = values.map(Runner._getCacheId);
-    const cached = ids.map((id) => this._cache.get(id) as number[] | undefined);
+    const cached = ids.map((id) => this._embeddingCache.get(id));
     const uncachedIndexes = [] as number[];
     const uncachedValues = [] as string[];
 
     for (let i = 0; i < cached.length; i++) {
-      if (cached[i] !== undefined) continue;
+      if (cached[i] !== undefined) {
+        cached[i] = {
+          value: cached[i]!.value,
+          timeout: Date.now() + Runner._cacheTimeoutLength,
+        };
+        continue;
+      }
       uncachedIndexes.push(i);
       uncachedValues.push(values[i]);
     }
@@ -213,20 +278,49 @@ export default class Runner {
       abortSignal: abortSignal,
     });
 
+    const timeout = Date.now() + Runner._cacheTimeoutLength;
     for (let i = 0; i < uncachedIndexes.length; i++) {
       const index = uncachedIndexes[i];
       const embedding = embeddings[i];
-      this._cache.set(ids[index], embedding);
-      cached[index] = embedding;
+      this._embeddingCache.set(ids[index], {
+        value: embedding,
+        timeout,
+      });
+      cached[index] = {
+        value: embedding,
+        timeout,
+      };
     }
 
-    return cached as number[][];
+    return cached.map((it) => it!.value);
   }
 
-  _startCacheTimeout() {
-    clearTimeout(this._cacheTimeout);
-    this._cacheTimeout = setTimeout(
-      () => this._cache.clear(),
+  _handleEmbeddingCacheTimeout() {
+    const now = Date.now();
+    for (const [key, cached] of this._embeddingCache.entries()) {
+      if (cached.timeout <= now) this._embeddingCache.delete(key);
+    }
+  }
+
+  _handleLanguageCacheTimeout() {
+    const now = Date.now();
+    for (const [key, cached] of this._languageCache.entries()) {
+      if (cached.timeout <= now) this._languageCache.delete(key);
+    }
+  }
+
+  _startEmbeddingCacheTimeout() {
+    clearTimeout(this._embeddingCacheTimeout);
+    this._embeddingCacheTimeout = setTimeout(
+      this._handleEmbeddingCacheTimeout,
+      Runner._cacheTimeoutLength
+    );
+  }
+
+  _startLanguageCacheTimeout() {
+    clearTimeout(this._languageCacheTimeout);
+    this._languageCacheTimeout = setTimeout(
+      this._handleLanguageCacheTimeout,
       Runner._cacheTimeoutLength
     );
   }
