@@ -28,21 +28,17 @@ export interface ChatManagedProps extends _ChatManagedSharedProps {}
 
 export default function ChatManaged({ controller }: ChatManagedProps) {
   return (
-    <Chat.Raw>
-      <Stack>
+    <Stack>
+      <Chat.Raw>
         <_ChatLoop controller={controller} />
-        <_ChatSettingssRequired controller={controller} />
-      </Stack>
-      <_ChatInput controller={controller} />
-    </Chat.Raw>
+        <_ChatInput controller={controller} />
+      </Chat.Raw>
+      <_ChatSettingsRequired controller={controller} />
+    </Stack>
   );
 }
 
-function _ChatSettingssRequired({
-  controller,
-}: {
-  controller: ChatController;
-}) {
+function _ChatSettingsRequired({ controller }: { controller: ChatController }) {
   const mutex = useObservable(controller.runnerMutex);
   return (
     <Stack.Fill hidden={mutex}>
@@ -109,7 +105,11 @@ function _ChatLoop({ controller }: _ChatManagedSharedProps) {
   return (
     <Chat.Raw.Container>
       {chats
-        ?.filter((chat) => chat)
+        ?.filter((chat) => {
+          if (!chat) return false;
+          if (!chat.visible) return false;
+          return true;
+        })
         .map((chat) => {
           switch (chat.role) {
             case MessageRole.User:
@@ -124,8 +124,6 @@ function _ChatLoop({ controller }: _ChatManagedSharedProps) {
                   <_ChatAssistent chat={chat} />
                 </Chat.Raw.Bubble.Encapsulate.Assistent>
               );
-            // case MessageRole.Tool:
-            //   return <Chat.Raw.Bubble.Tool results={chat.content} />;
           }
         })}
     </Chat.Raw.Container>
@@ -145,19 +143,21 @@ function _ChatUser({ chat }: _ChatProps<UserMessage>) {
 }
 
 const _map = {
-  "Navigation.getUrl": "Bentar ya, lagi aku cek alamat halamannya...",
-  "Navigation.goToUrl":
-    "Oke, aku coba buka halaman yang kamu mau. Sabar, ya...",
-  "Navigation.goBack":
-    "Siap, balik ke halaman sebelumnya nih. Tunggu sebentar...",
-  "Navigation.goForward": "Lanjut ke halaman selanjutnya ya. Mohon bersabar...",
-  "Button.findBySemantics": "Lagi aku cariin tombolnya nih. Sabar, ya...",
-  "Button.clickBySelector": "Ini aku coba klik tombolnya. Tunggu sebentar...",
-  "TextInput.findBySemantics":
-    "Aku lagi nyari kotak buat nulis teksnya. Mohon tunggu...",
-  "TextInput.changeBySelector": "Aku ubah dulu ya isi teksnya. Sabar, ya...",
-  "Html.getAllRawHtml":
-    "Lagi aku ambil semua 'isi' halaman ini. Tunggu sebentar...",
+  "Navigation.getUrl": "Checking the current URL...",
+  "Navigation.goToUrl": "Navigating to the specified URL...",
+  "Navigation.goBack": "Going back to the previous page...",
+  "Navigation.goForward": "Moving forward in browsing history...",
+
+  "Button.findBySemantics": "Looking for a button by its meaning...",
+  "Button.clickBySelector": "Clicking button via CSS selector...",
+
+  "TextInput.findBySemantics": "Searching for a text input by its purpose...",
+  "TextInput.changeBySelector": "Filling in input via CSS selector...",
+
+  "Html.findBySemantic": "Scanning HTML elements by semantic meaning...",
+  "Html.findByCluster": "Identifying similar content blocks...",
+  "Html.findByClusterAndIndex":
+    "Selecting a specific item from similar content blocks...",
 } as Record<string, string>;
 
 function _ChatAssistent({ chat }: _ChatProps<AssistantMessage>) {
@@ -209,7 +209,8 @@ function _ChatAssistent({ chat }: _ChatProps<AssistantMessage>) {
           return (
             <Chat.Raw.Bubble.Assistent.Thinking
               key={`chat-${part.toolCallId}`}
-              header="Ngutak-atik browser..."
+              header="Processing..."
+              alwaysExpanded
             >
               <Markdown>{_map[part.toolName]}</Markdown>
             </Chat.Raw.Bubble.Assistent.Thinking>

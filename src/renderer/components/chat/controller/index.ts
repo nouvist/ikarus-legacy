@@ -7,10 +7,10 @@ import {
   SystemMessage,
   UserMessage,
 } from "~/renderer/components/chat";
+import Prompts from "~/renderer/components/chat/controller/prompts";
 import RunnerFacade from "~/renderer/components/chat/controller/runner_facade";
 import { Completer } from "~/shared/core";
 import { CombinedMutexes, Mutex, Rxjs } from "~/shared/rxjs";
-import prompt from "./prompt_short.txt?raw";
 
 export function useChatController(browser: BrowserController) {
   const ref = useRef<ChatController>(null);
@@ -46,7 +46,7 @@ export class ChatController {
 
   protected static createDefaultMessages() {
     if (!this._defaultMessages) {
-      this._defaultMessages = [new SystemMessage(prompt)];
+      this._defaultMessages = [new SystemMessage(Prompts.getSystemPropmt())];
 
       for (const message of this._defaultMessages) {
         if (!(message instanceof AssistantMessage)) continue;

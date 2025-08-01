@@ -5,7 +5,7 @@ import {
   Tool,
   ToolRegistrar,
 } from "~/renderer/components/chat/controller/tools/fundamental";
-import { HtmlData } from "~/renderer/memory/tables/html";
+import { ElementData } from "~/renderer/memory/tables/html";
 import { RefCell } from "~/shared/core";
 
 export default function registerHtmlTools(
@@ -33,7 +33,7 @@ abstract class _HtmlTool extends Tool {
     this._formatElement = this._formatElement.bind(this);
   }
 
-  protected _formatElement(element: HtmlData): string {
+  protected _formatElement(element: ElementData): string {
     return [
       `Cluster Hash: ${element.clusterHash}`,
       `Cluster Keywords: ${element.clusterKeywords}`,

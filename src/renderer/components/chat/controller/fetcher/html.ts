@@ -2,7 +2,7 @@ import fnv from "fnv-plus";
 import { BrowserController } from "~/renderer/components/browser";
 import Runner from "~/renderer/components/chat/controller/runner";
 import InMemory from "~/renderer/memory";
-import { HtmlData } from "~/renderer/memory/tables/html";
+import { ElementData } from "~/renderer/memory/tables/html";
 import natural from "~/renderer/node/natural";
 import { RefCell } from "~/shared/core";
 import { HtmlUtils } from "~/shared/html";
@@ -29,6 +29,10 @@ interface _ClusterWithKeywords extends _Cluster {
   keywords: string[];
 }
 
+interface _ClusterWithSemantic extends _ClusterWithKeywords {
+  embedding: number[];
+}
+
 export default class HtmlFetcher {
   protected _browser: RefCell<BrowserController>;
   protected _memory: InMemory;
@@ -49,31 +53,36 @@ export default class HtmlFetcher {
     this.findHtmlByClusterAndIndex = this.findHtmlByClusterAndIndex.bind(this);
 
     this.fetchHtmls = this.fetchHtmls.bind(this);
-    this._store = this._store.bind(this);
+    this._storeElements = this._storeElements.bind(this);
+    this._storeClusters = this._storeClusters.bind(this);
     this._collectElements = this._collectElements.bind(this);
-    this._applyEmbeddings = this._applyEmbeddings.bind(this);
+    this._applyEmbeddingToElements = this._applyEmbeddingToElements.bind(this);
     this._clusterElements = this._clusterElements.bind(this);
     this._mergeClusters = this._mergeClusters.bind(this);
-    this._applyKeywords = this._applyKeywords.bind(this);
+    this._applyKeywordToClusters = this._applyKeywordToClusters.bind(this);
+    this._applySemanticToClusters = this._applySemanticToClusters.bind(this);
   }
 
   async findHtmlBySemantic(semantics: string, limit = 10) {
     await this.fetchHtmlsIfNeeded();
     const embedding = await this._runner.embed(semantics);
-    return this._memory.html.findHtmlBySemantic(embedding, limit);
+    return this._memory.htmlElement.findHtmlBySemantic(embedding, limit);
   }
 
-  async findHtmlsByCluster(clusterHash: HtmlData["clusterHash"]) {
+  async findHtmlsByCluster(clusterHash: ElementData["clusterHash"]) {
     await this.fetchHtmlsIfNeeded();
-    return this._memory.html.findHtmlsByCluster(clusterHash);
+    return this._memory.htmlElement.findHtmlsByCluster(clusterHash);
   }
 
   async findHtmlByClusterAndIndex(
-    clusterHash: HtmlData["clusterHash"],
+    clusterHash: ElementData["clusterHash"],
     index: number
   ) {
     await this.fetchHtmlsIfNeeded();
-    return this._memory.html.findHtmlByClusterAndIndex(clusterHash, index);
+    return this._memory.htmlElement.findHtmlByClusterAndIndex(
+      clusterHash,
+      index
+    );
   }
 
   async fetchHtmlsIfNeeded() {
@@ -88,22 +97,27 @@ export default class HtmlFetcher {
     dom ??= await this._browser.value.dom();
     const elements = this._collectElements(dom.body);
     console.log(`[HtmlFetcher] ada ${elements.length} elemen jir wkwkwk`);
-    const elementsWithEmbedding = await this._applyEmbeddings(elements);
+    const elementsWithEmbedding =
+      await this._applyEmbeddingToElements(elements);
 
     const clustered = this._clusterElements(elementsWithEmbedding);
     console.log(`[HtmlFetcher] ada ${clustered.length} kluwuster`);
     const merged = this._mergeClusters(clustered);
     console.log(`[HtmlFetcher] ada ${merged.length} wlee`);
-    const clusterWithKeywords = this._applyKeywords(merged);
+    const clusterWithKeywords = this._applyKeywordToClusters(merged);
+    console.log(`[HtmlFetcher] nyoba llm`);
+    const clusterWithSemantic =
+      await this._applySemanticToClusters(clusterWithKeywords);
 
-    await this._store(clusterWithKeywords);
-    return clusterWithKeywords;
+    await this._storeElements(clusterWithSemantic);
+    await this._storeClusters(clusterWithSemantic);
+    return clusterWithSemantic;
   }
 
-  async _store(clusters: _ClusterWithKeywords[]) {
-    this._memory.html.clear();
+  async _storeElements(clusters: _Cluster[]) {
+    this._memory.htmlElement.clear();
     for (const cluster of clusters) {
-      await this._memory.html.add(
+      await this._memory.htmlElement.add(
         cluster.elements.map((element, index) => ({
           hash: element.hash,
           signature: element.signature,
@@ -111,12 +125,24 @@ export default class HtmlFetcher {
           html: element.raw.outerHTML,
           text: element.text,
           clusterHash: cluster.hash,
-          clusterKeywords: cluster.keywords,
           clusterIndex: index,
           embedding: element.embedding,
         }))
       );
     }
+  }
+
+  async _storeClusters(clusters: _ClusterWithSemantic[]) {
+    this._memory.htmlCluster.clear();
+    await this._memory.htmlCluster.add(
+      clusters.map((cluster) => ({
+        hash: cluster.hash,
+        signature: cluster.signature,
+        elements: cluster.elements.length,
+        keywords: cluster.keywords,
+        embedding: cluster.embedding,
+      }))
+    );
   }
 
   private _collectElements(root: HTMLElement): _Element[] {
@@ -153,7 +179,7 @@ export default class HtmlFetcher {
     return elements;
   }
 
-  private async _applyEmbeddings(
+  private async _applyEmbeddingToElements(
     elements: _Element[]
   ): Promise<_ElementWithEmbedding[]> {
     const embeddings = await this._runner.embedMany(
@@ -222,7 +248,9 @@ export default class HtmlFetcher {
     return merged;
   }
 
-  private _applyKeywords(clusters: _Cluster[]): _ClusterWithKeywords[] {
+  private _applyKeywordToClusters(
+    clusters: _Cluster[]
+  ): _ClusterWithKeywords[] {
     const applied = [] as _ClusterWithKeywords[];
     const tokenizer = new natural.WordTokenizer();
 
@@ -253,6 +281,26 @@ export default class HtmlFetcher {
         signature,
         elements: cluster.elements,
         keywords,
+      });
+    }
+
+    return applied;
+  }
+
+  private async _applySemanticToClusters(
+    clusters: _ClusterWithKeywords[]
+  ): Promise<_ClusterWithSemantic[]> {
+    const applied = [] as _ClusterWithSemantic[];
+    for (const cluster of clusters) {
+      const representatives = [
+        cluster.keywords.join(" "),
+        ...cluster.elements.slice(0, 5).map((el) => el.text),
+      ].join("\n");
+      const embedding = await this._runner.embed(representatives);
+
+      applied.push({
+        ...cluster,
+        embedding,
       });
     }
 

@@ -1,13 +1,17 @@
 import type { Connection } from "@lancedb/lancedb";
 import ButtonTable from "~/renderer/memory/tables/button";
-import HtmlTable from "~/renderer/memory/tables/html";
+import {
+  HtmlClusterTable,
+  HtmlElementTable,
+} from "~/renderer/memory/tables/html";
 import TextInputTable from "~/renderer/memory/tables/text_input";
 import lancedb from "~/renderer/node/lancedb";
 
 export default class InMemory {
   protected _isInitialized = false;
   protected _connection?: Connection;
-  protected _html?: HtmlTable;
+  protected _htmlElement?: HtmlElementTable;
+  protected _htmlCluster?: HtmlClusterTable;
   protected _buttons?: ButtonTable;
   protected _textInputs?: TextInputTable;
 
@@ -18,11 +22,13 @@ export default class InMemory {
   async ensureInitialized() {
     if (this._isInitialized) return;
     this._connection = await lancedb.connect("memory://");
-    this._html = new HtmlTable(this._connection);
+    this._htmlElement = new HtmlElementTable(this._connection);
+    this._htmlCluster = new HtmlClusterTable(this._connection);
     this._buttons = new ButtonTable(this._connection);
     this._textInputs = new TextInputTable(this._connection);
     await Promise.all([
-      this._html.ensureInitialized(),
+      this._htmlElement.ensureInitialized(),
+      this._htmlCluster.ensureInitialized(),
       this._buttons.ensureInitialized(),
       this._textInputs.ensureInitialized(),
     ]);
@@ -35,9 +41,14 @@ export default class InMemory {
     );
   }
 
-  get html() {
-    if (!this._html) throw this._throwNotInitializedError();
-    return this._html;
+  get htmlElement() {
+    if (!this._htmlElement) throw this._throwNotInitializedError();
+    return this._htmlElement;
+  }
+
+  get htmlCluster() {
+    if (!this._htmlCluster) throw this._throwNotInitializedError();
+    return this._htmlCluster;
   }
 
   get buttons() {

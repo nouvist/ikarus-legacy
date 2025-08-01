@@ -38,6 +38,7 @@ export default forwardRef(function Browser(
       <Stack>
         <Stack.Fill>
           <webview
+            src="https://www.tokopedia.com/search?st=&q=axioo%20pongo"
             ref={bindRefs(ref, controller?.bind)}
             style={{ width: "100%", height: "100%" }}
             preload={managed.webview.preload}

@@ -30,6 +30,7 @@ export class AssistantMessage implements CoreAssistantMessage {
   readonly role = MessageRole.Assistant as const;
   readonly providerOptions?: ProviderOptions;
   readonly subject = new BehaviorSubject<AssistantContent>("");
+  visible = true;
 
   constructor(content?: AssistantContent, providerOptions?: ProviderOptions) {
     this.providerOptions = providerOptions;
@@ -103,6 +104,7 @@ export class SystemMessage implements CoreSystemMessage {
   readonly role = MessageRole.System as const;
   readonly content: string;
   readonly providerOptions?: ProviderOptions;
+  visible = true;
 
   constructor(content: string, providerOptions?: ProviderOptions) {
     this.content = content;
@@ -119,6 +121,7 @@ export class ToolMessage implements CoreToolMessage {
   readonly role = MessageRole.Tool as const;
   readonly content: ToolContent;
   readonly providerOptions?: ProviderOptions;
+  visible = true;
 
   constructor(content: ToolContent, providerOptions?: ProviderOptions) {
     this.content = content;
@@ -135,6 +138,7 @@ export class UserMessage implements CoreUserMessage {
   readonly role = MessageRole.User as const;
   readonly content: string;
   readonly providerOptions?: ProviderOptions;
+  visible = true;
 
   constructor(content: string, providerOptions?: ProviderOptions) {
     this.content = content;

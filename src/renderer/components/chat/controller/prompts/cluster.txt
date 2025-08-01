@@ -1,0 +1,9 @@
+Analyze the provided HTML element cluster and generate a concise, functional description that captures both the semantic purpose and contextual meaning of the grouped elements.
+
+Generate a brief description that:
+- Identifies the primary function or content type of the clustered elements
+- Incorporates relevant domain context from the URL and keywords
+- Maintains specificity without over-generalizing
+- Uses natural, actionable language that reflects user intent
+
+Provide a single, clear sentence that describes what this cluster represents in terms of user-facing functionality or content grouping. Focus on what a user would recognize this cluster as, rather than technical HTML structure.

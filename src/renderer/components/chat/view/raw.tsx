@@ -3,7 +3,6 @@ import {
   Delete24Regular,
   Dismiss24Regular,
 } from "@fluentui/react-icons";
-import { ToolContent } from "ai";
 import {
   Children,
   FragmentProps,
@@ -277,24 +276,16 @@ const _ChatShared = styled.div`
   &,
   & * {
     overflow-wrap: break-word;
-    white-space: pre-wrap;
   }
 
-  > * {
-    margin-block-start: 0.5em;
-    margin-block-end: 0.5em;
-  }
-
-  > *:nth-child(1) {
+  > *:first-child {
     margin-top: 0;
+    padding-top: 0;
   }
 
-  > *:nth-last-child(1) {
+  > *:last-child {
     margin-bottom: 0;
-  }
-
-  > ul {
-    padding-inline-start: 2em;
+    padding-bottom: 0;
   }
 
   a {
@@ -302,22 +293,6 @@ const _ChatShared = styled.div`
     text-decoration: none;
   }
 `;
-
-interface ChatToolProps {
-  results: ToolContent;
-}
-
-function ChatTool({ results }: ChatToolProps) {
-  return (
-    <_ChatShared data-left>
-      {results.map((result, index) => (
-        <div key={index}>
-          <h3>{result.toolName}</h3>
-        </div>
-      ))}
-    </_ChatShared>
-  );
-}
 
 function encapsulate<T extends object>(component: T, type: ChatType) {
   return Object.assign(component, {
@@ -327,31 +302,47 @@ function encapsulate<T extends object>(component: T, type: ChatType) {
 
 export interface ChatThinkingProps extends PropsWithChildren {
   header?: string;
+  alwaysExpanded?: boolean;
 }
 
-function ChatThinking({ header, children }: ChatThinkingProps) {
+function ChatThinking({ header, alwaysExpanded, children }: ChatThinkingProps) {
+  const [expanded, setExpanded] = useState(false);
   return (
     <Fragment>
-      <h4>{header ?? "Berpikir..."}</h4>
-      <_ChatThinking>{children}</_ChatThinking>
+      <_ChatThingkingHeader
+        onClick={
+          alwaysExpanded ? undefined : () => setExpanded((prev) => !prev)
+        }
+      >
+        {header ?? "Thinking..."}
+      </_ChatThingkingHeader>
+      <_ChatThinking hidden={!expanded && !alwaysExpanded}>
+        {children}
+      </_ChatThinking>
+      <_ChatThinkingMarker />
     </Fragment>
   );
 }
+
+const _ChatThingkingHeader = styled.h4`
+  margin: 0;
+`;
 
 const _ChatThinking = styled.div`
   color: ${(p) => p.theme.foreground.e1};
   user-select: text;
   margin: 0;
+`;
 
-  &,
-  & * {
-    overflow-wrap: break-word;
-    white-space: pre-wrap;
-  }
-
+const _ChatThinkingMarker = styled.div`
+  display: none;
+  background-color: ${(p) => p.theme.elevation.t3};
+  width: 100%;
+  height: 1px;
+  margin-top: 12px;
+  margin-bottom: 16px;
   &:has(+ *) {
-    border-bottom: 1px solid ${(p) => p.theme.elevation.t3};
-    margin-bottom: 0.5em;
+    display: block;
   }
 `;
 
@@ -378,7 +369,6 @@ export default Object.assign(Chat, {
     Assistent: Object.assign(encapsulate(ChatAssistent, ChatType.Assistent), {
       Thinking: ChatThinking,
     }),
-    Tool: encapsulate(ChatTool, ChatType.Assistent),
     Loading: encapsulate(ChatLoading, ChatType.Assistent),
   },
 });
