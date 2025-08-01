@@ -8,7 +8,7 @@ import { Message } from "~/renderer/components/chat/controller/structs";
 import createTools from "~/renderer/components/chat/controller/tools";
 import InMemory from "~/renderer/memory";
 import { Completer, LateRefCell } from "~/shared/core";
-import { CombinedMutexes, Mutex } from "~/shared/rxjs";
+import { Mutex, Rxjs } from "~/shared/rxjs";
 
 export interface RunnerInvokeOptions {
   messages: Message[];
@@ -43,7 +43,6 @@ export default class RunnerFacade {
 
   protected _isInitialized = false;
   protected _memory = new InMemory();
-  protected _memoryMutex = new Mutex();
 
   protected _runner = new Runner(this._embedding, this._language);
   protected _fetcher = new Fetcher(this._browser, this._memory, this._runner);
@@ -52,10 +51,7 @@ export default class RunnerFacade {
   readonly stream = this._runner.stream;
   readonly embed = this._runner.embed;
   readonly embedMany = this._runner.embedMany;
-  readonly mutex = new CombinedMutexes(
-    this._mutex,
-    this._memoryMutex,
-  );
+  readonly mutex = Rxjs.asImmutable(this._mutex);
 
   protected static _instance: RunnerFacade | undefined;
   protected static _completer = new Completer();

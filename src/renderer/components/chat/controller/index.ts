@@ -28,6 +28,7 @@ export class ChatController {
   readonly messages = Rxjs.asImmutable(this._messages);
   readonly contentful = Rxjs.asImmutable(this._contentful);
   readonly mutex = new CombinedMutexes(this._messagesMutex, this._runner.mutex);
+  readonly runnerMutex = this._runner.mutex;
 
   protected static _defaultMessages: Message[] | undefined;
 

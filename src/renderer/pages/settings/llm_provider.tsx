@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { styled } from "styled-components";
 import Button from "~/renderer/components/button";
 import Card from "~/renderer/components/card";
@@ -12,60 +12,104 @@ import { ColorType } from "~/renderer/foundations/colors";
 import Constraints from "~/renderer/foundations/constraints";
 import EdgeInsets from "~/renderer/foundations/edge_insets";
 
+interface _State {
+  changed: boolean;
+  url: string;
+  key: string;
+  model: string;
+}
+
 export default function SettingsPageLlmProvider() {
-  const [url, setUrl] = useState("");
-  const [key, setKey] = useState("");
-  const [model, setModel] = useState("");
+  const [state, setState] = useState<_State>({
+    changed: false,
+    url: "",
+    key: "",
+    model: "",
+  });
+
+  function handleUrl(e: ChangeEvent<HTMLInputElement>) {
+    const url = e.target.value;
+    if (state.url === url) return;
+    setState((prev) => ({ ...prev, url, changed: true }));
+  }
+
+  function handleKey(e: ChangeEvent<HTMLInputElement>) {
+    const key = e.target.value;
+    if (state.key === key) return;
+    setState((prev) => ({ ...prev, key, changed: true }));
+  }
+
+  function handleModel(e: ChangeEvent<HTMLInputElement>) {
+    const model = e.target.value;
+    if (state.model === model) return;
+    setState((prev) => ({ ...prev, model, changed: true }));
+  }
 
   async function handleUseOpenAi() {
-    setUrl("https://api.openai.com/v1");
-    setKey((await managed.env.get("OPENAI_API_KEY")) || "");
-    setModel("gpt-3.5-turbo");
+    const env = (await managed.env.get("OPENAI_API_KEY")) || "";
+    setState(() => ({
+      changed: true,
+      url: "https://api.openai.com/v1",
+      model: "gpt-3.5-turbo",
+      key: env,
+    }));
   }
 
   async function handleUseGroq() {
-    setUrl("https://api.groq.com/openai/v1");
-    setKey((await managed.env.get("GROQ_API_KEY")) || "");
-    setModel("qwen/qwen3-32b");
+    const env = (await managed.env.get("OPENAI_API_KEY")) || "";
+    setState(() => ({
+      changed: true,
+      url: "https://api.groq.com/openai/v1",
+      model: "qwen/qwen3-32b",
+      key: env,
+    }));
   }
 
   async function handleUseTogether() {
-    setUrl("https://api.together.xyz/v1");
-    setKey((await managed.env.get("TOGETHER_API_KEY")) || "");
-    setModel("");
+    const env = (await managed.env.get("TOGETHER_API_KEY")) || "";
+    setState(() => ({
+      changed: true,
+      url: "https://api.together.xyz/v1",
+      model: "llama3.2:1b",
+      key: env,
+    }));
   }
 
   async function handleUseGoogle() {
-    setUrl("https://generativelanguage.googleapis.com/v1beta/openai");
-    setKey(
+    const key =
       (await managed.env.get("GEMINI_API_KEY")) ||
-        (await managed.env.get("GOOGLE_API_KEY")) ||
-        ""
-    );
-    setModel("gemini-2.0-flash");
+      (await managed.env.get("GOOGLE_API_KEY")) ||
+      "";
+    setState(() => ({
+      changed: true,
+      url: "https://generativelanguage.googleapis.com/v1beta/openai",
+      model: "gemini-2.0-flash",
+      key,
+    }));
   }
 
   function handleUseOllama() {
-    setUrl("http://127.0.0.1:11434/v1");
-    setKey("ollama");
-    setModel("llama3.2:1b");
+    setState(() => ({
+      changed: true,
+      url: "http://127.0.0.1:11434/v1",
+      model: "llama3.2:1b",
+      key: "ollama",
+    }));
   }
 
-  function handleSave() {
-    const options = {
-      url,
-      key,
-      model,
-    };
-
-    RunnerFacade.instance.initializeLanguage(options, true);
+  async function handleSave() {
+    await RunnerFacade.instance.initializeLanguage(state, true);
+    setState((prev) => ({ ...prev, changed: false }));
   }
 
   function handleRevert() {
     const options = RunnerFacade.instance.getPersistentOptions();
-    setUrl(options.language?.url || "");
-    setKey(options.language?.key || "");
-    setModel(options.language?.model || "");
+    setState({
+      changed: false,
+      url: options.language?.url || "",
+      key: options.language?.key || "",
+      model: options.language?.model || "",
+    });
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -89,9 +133,9 @@ export default function SettingsPageLlmProvider() {
             <td>URL</td>
             <td>
               <Input
-                value={url}
+                value={state.url}
                 onKeyDown={handleKeyDown}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={handleUrl}
                 placeholder="https://api.example.com/"
               />
             </td>
@@ -101,9 +145,9 @@ export default function SettingsPageLlmProvider() {
             <td>API Key</td>
             <td>
               <Input
-                value={key}
+                value={state.key}
                 onKeyDown={handleKeyDown}
-                onChange={(e) => setKey(e.target.value)}
+                onChange={handleKey}
                 placeholder="sk-..."
                 type="password"
               />
@@ -114,9 +158,9 @@ export default function SettingsPageLlmProvider() {
             <td>Model</td>
             <td>
               <Input
-                value={model}
+                value={state.model}
                 onKeyDown={handleKeyDown}
-                onChange={(e) => setModel(e.target.value)}
+                onChange={handleModel}
                 placeholder="gpt-3.5-turbo"
               />
             </td>
@@ -188,10 +232,18 @@ export default function SettingsPageLlmProvider() {
           <tr>
             <td colSpan={2}>
               <Flex justifyContent={JustifyContent.End} gap={16}>
-                <Button color={ColorType.Danger} onClick={handleRevert}>
+                <Button
+                  disabled={!state.changed}
+                  color={ColorType.Danger}
+                  onClick={handleRevert}
+                >
                   Revert
                 </Button>
-                <Button color={ColorType.Primary} onClick={handleSave}>
+                <Button
+                  disabled={!state.changed}
+                  color={ColorType.Primary}
+                  onClick={handleSave}
+                >
                   Save
                 </Button>
               </Flex>

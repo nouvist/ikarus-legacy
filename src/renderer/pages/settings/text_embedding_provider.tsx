@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { styled } from "styled-components";
 import Button from "~/renderer/components/button";
 import Card from "~/renderer/components/card";
@@ -9,38 +9,71 @@ import { ColorType } from "~/renderer/foundations/colors";
 import Constraints from "~/renderer/foundations/constraints";
 import EdgeInsets from "~/renderer/foundations/edge_insets";
 
+interface _State {
+  changed: boolean;
+  url: string;
+  key: string;
+  model: string;
+}
+
 export function SettingsPageTextEmbeddingProvider() {
-  const [url, setUrl] = useState("");
-  const [key, setKey] = useState("");
-  const [model, setModel] = useState("");
+  const [state, setState] = useState<_State>({
+    changed: false,
+    url: "",
+    key: "",
+    model: "",
+  });
+
+  function handleUrl(e: ChangeEvent<HTMLInputElement>) {
+    const url = e.target.value;
+    if (state.url === url) return;
+    setState((prev) => ({ ...prev, url, changed: true }));
+  }
+
+  function handleKey(e: ChangeEvent<HTMLInputElement>) {
+    const key = e.target.value;
+    if (state.key === key) return;
+    setState((prev) => ({ ...prev, key, changed: true }));
+  }
+
+  function handleModel(e: ChangeEvent<HTMLInputElement>) {
+    const model = e.target.value;
+    if (state.model === model) return;
+    setState((prev) => ({ ...prev, model, changed: true }));
+  }
 
   async function handleUseOpenAi() {
-    setUrl("https://api.openai.com/v1");
-    setKey((await managed.env.get("OPENAI_API_KEY")) || "");
-    setModel("text-embedding-3-small");
+    const env = (await managed.env.get("OPENAI_API_KEY")) || "";
+    setState(() => ({
+      changed: true,
+      url: "https://api.openai.com/v1",
+      model: "text-embedding-3-small",
+      key: env,
+    }));
   }
 
   function handleUseOllama() {
-    setUrl("http://127.0.0.1:11434/v1");
-    setKey("ollama");
-    setModel("nomic-embed-text:v1.5");
+    setState(() => ({
+      changed: true,
+      url: "http://127.0.0.1:11434/v1",
+      model: "nomic-embed-text:v1.5",
+      key: "ollama",
+    }));
   }
 
-  function handleSave() {
-    const options = {
-      url,
-      key,
-      model,
-    };
-
-    RunnerFacade.instance.initializeEmbedding(options, true);
+  async function handleSave() {
+    await RunnerFacade.instance.initializeEmbedding(state, true);
+    setState((prev) => ({ ...prev, changed: false }));
   }
 
   function handleRevert() {
     const options = RunnerFacade.instance.getPersistentOptions();
-    setUrl(options.embedding?.url || "");
-    setKey(options.embedding?.key || "");
-    setModel(options.embedding?.model || "");
+    setState(() => ({
+      changed: false,
+      url: options.embedding?.url || "",
+      key: options.embedding?.key || "",
+      model: options.embedding?.model || "",
+    }));
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -64,9 +97,9 @@ export function SettingsPageTextEmbeddingProvider() {
             <td>URL</td>
             <td>
               <Input
-                value={url}
+                value={state.url}
                 onKeyDown={handleKeyDown}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={handleUrl}
                 placeholder="https://api.example.com/"
               />
             </td>
@@ -76,9 +109,9 @@ export function SettingsPageTextEmbeddingProvider() {
             <td>API Key</td>
             <td>
               <Input
-                value={key}
+                value={state.key}
                 onKeyDown={handleKeyDown}
-                onChange={(e) => setKey(e.target.value)}
+                onChange={handleKey}
                 placeholder="sk-..."
                 type="password"
               />
@@ -89,9 +122,9 @@ export function SettingsPageTextEmbeddingProvider() {
             <td>Model</td>
             <td>
               <Input
-                value={model}
+                value={state.model}
                 onKeyDown={handleKeyDown}
-                onChange={(e) => setModel(e.target.value)}
+                onChange={handleModel}
                 placeholder="text-embedding-3-small"
               />
             </td>
@@ -123,10 +156,18 @@ export function SettingsPageTextEmbeddingProvider() {
           <tr>
             <td colSpan={2}>
               <Flex justifyContent={JustifyContent.End} gap={16}>
-                <Button color={ColorType.Danger} onClick={handleRevert}>
+                <Button
+                  disabled={!state.changed}
+                  color={ColorType.Danger}
+                  onClick={handleRevert}
+                >
                   Revert
                 </Button>
-                <Button color={ColorType.Primary} onClick={handleSave}>
+                <Button
+                  disabled={!state.changed}
+                  color={ColorType.Primary}
+                  onClick={handleSave}
+                >
                   Save
                 </Button>
               </Flex>

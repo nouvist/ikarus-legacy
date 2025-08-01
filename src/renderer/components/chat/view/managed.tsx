@@ -2,6 +2,7 @@ import { ToolCallPart } from "ai";
 import { useRef, useState } from "react";
 import Markdown from "react-markdown";
 import { useObservable } from "react-rx";
+import Card from "~/renderer/components/card";
 import Chat, {
   AssistantMessage,
   ChatController,
@@ -9,6 +10,14 @@ import Chat, {
   MessageRole,
   UserMessage,
 } from "~/renderer/components/chat";
+import Flex, {
+  AlignItems,
+  FlexDirection,
+  JustifyContent,
+} from "~/renderer/components/flex";
+import Stack from "~/renderer/components/stack";
+import Constraints from "~/renderer/foundations/constraints";
+import EdgeInsets from "~/renderer/foundations/edge_insets";
 import { useObservableWithValue } from "~/shared/react";
 
 interface _ChatManagedSharedProps {
@@ -20,9 +29,43 @@ export interface ChatManagedProps extends _ChatManagedSharedProps {}
 export default function ChatManaged({ controller }: ChatManagedProps) {
   return (
     <Chat.Raw>
-      <_ChatLoop controller={controller} />
+      <Stack>
+        <_ChatLoop controller={controller} />
+        <_ChatSettingssRequired controller={controller} />
+      </Stack>
       <_ChatInput controller={controller} />
     </Chat.Raw>
+  );
+}
+
+function _ChatSettingssRequired({
+  controller,
+}: {
+  controller: ChatController;
+}) {
+  const mutex = useObservable(controller.runnerMutex);
+  return (
+    <Stack.Fill hidden={mutex}>
+      <Card.Full>
+        <Flex
+          fill
+          direction={FlexDirection.Column}
+          justifyContent={JustifyContent.Center}
+          alignItems={AlignItems.Center}
+        >
+          <Card.Constrained
+            margin={EdgeInsets.all(16)}
+            constraints={new Constraints({ maxWidth: 320 })}
+          >
+            <h2>Settings Required</h2>
+            <p>
+              Configure the settings for the language model and embedding
+              provider to continue.
+            </p>
+          </Card.Constrained>
+        </Flex>
+      </Card.Full>
+    </Stack.Fill>
   );
 }
 
