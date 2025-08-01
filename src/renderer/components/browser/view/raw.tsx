@@ -111,9 +111,6 @@ function _Controls({ controller }: { controller: BrowserController }) {
       const wv = controller.raw!;
       wv.addEventListener("did-navigate", handleNavigate);
       wv.addEventListener("did-navigate-in-page", handleNavigate);
-      Object.defineProperty(window, "wv", {
-        value: controller,
-      });
     })();
 
     return () => {

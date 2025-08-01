@@ -2,7 +2,6 @@ import { useState } from "react";
 import Flex from "~/renderer/components/flex";
 import KeyedStack from "~/renderer/components/keyed_stack";
 import Tabs from "~/renderer/components/tabs";
-import { SettingsPageDebuggingTools } from "~/renderer/pages/settings/debugging_tools";
 import SettingsPageLlmProvider from "~/renderer/pages/settings/llm_provider";
 import { SettingsPageTextEmbeddingProvider } from "~/renderer/pages/settings/text_embedding_provider";
 
@@ -24,12 +23,6 @@ export default function SettingsPage() {
           >
             Text Embedding Provider
           </Tabs.Item>
-          <Tabs.Item
-            selected={tab === _SettingsTab.DebuggingTools}
-            onClick={() => setTab(_SettingsTab.DebuggingTools)}
-          >
-            Debugging Tools
-          </Tabs.Item>
         </Tabs>
       </Flex.Fill>
       <KeyedStack activeKey={tab}>
@@ -37,7 +30,6 @@ export default function SettingsPage() {
         <SettingsPageTextEmbeddingProvider
           key={_SettingsTab.TextEmbeddingProvider}
         />
-        <SettingsPageDebuggingTools key={_SettingsTab.DebuggingTools} />
       </KeyedStack>
     </Flex>
   );
@@ -46,5 +38,4 @@ export default function SettingsPage() {
 enum _SettingsTab {
   LlmProvider = "llm-provider",
   TextEmbeddingProvider = "text-embedding-provider",
-  DebuggingTools = "debugging-tools",
 }

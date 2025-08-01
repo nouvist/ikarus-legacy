@@ -11,12 +11,12 @@ import {
 import InMemoryTable from "~/renderer/memory/tables/abstract";
 
 export interface HtmlData {
-  hash: number;
+  hash: string;
   signature: string;
   selector: string;
   html: string;
   text: string;
-  clusterHash: number;
+  clusterHash: string;
   clusterKeywords: string[];
   clusterIndex: number;
   embedding: number[];
@@ -25,12 +25,12 @@ export interface HtmlData {
 export default class HtmlTable extends InMemoryTable<HtmlData> {
   protected _name = "html";
   protected _schema = new Schema([
-    new Field("hash", new Uint32()),
+    new Field("hash", new Utf8()),
     new Field("signature", new Utf8()),
     new Field("selector", new Utf8()),
     new Field("html", new Utf8()),
     new Field("text", new Utf8()),
-    new Field("clusterHash", new Uint32()),
+    new Field("clusterHash", new Utf8()),
     new Field("clusterKeywords", new List(new Field("item", new Utf8()))),
     new Field("clusterIndex", new Uint32()),
     new Field(
@@ -56,14 +56,17 @@ export default class HtmlTable extends InMemoryTable<HtmlData> {
     return (await query.toArray()) as HtmlData[];
   }
 
-  async findHtmlsByCluster(clusterHash: number) {
+  async findHtmlsByCluster(clusterHash: HtmlData["clusterHash"]) {
     return (await this.raw
       .query()
       .where(`clusterHash == ${clusterHash}`)
       .toArray()) as HtmlData[];
   }
 
-  async findHtmlByClusterAndIndex(clusterHash: number, index: number) {
+  async findHtmlByClusterAndIndex(
+    clusterHash: HtmlData["clusterHash"],
+    index: HtmlData["clusterIndex"]
+  ) {
     const result = await this.raw
       .query()
       .where(`clusterHash == ${clusterHash} && clusterIndex == ${index}`)

@@ -29,7 +29,8 @@ export default class Runner {
 
   protected static _cacheTimeoutLength = 1000 * 5;
   protected static _getCacheId(value: string): _CacheId {
-    return `${value.length}::${fnv.fast1a64(value)}` as const;
+    const hash = fnv.hash(value, 64).hex();
+    return `${value.length}::${hash}` as const;
   }
 
   constructor(
@@ -225,7 +226,7 @@ export default class Runner {
   _startCacheTimeout() {
     clearTimeout(this._cacheTimeout);
     this._cacheTimeout = setTimeout(
-      this._cache.clear,
+      () => this._cache.clear(),
       Runner._cacheTimeoutLength
     );
   }

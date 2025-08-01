@@ -65,15 +65,23 @@ export class ChatController {
     this.invoke = this.invoke.bind(this);
     this.concat = this.concat.bind(this);
     this._refreshEmptiness = this._refreshEmptiness.bind(this);
-
-    (window as any)["chat"] = this;
-    (window as any)["msg"] = this.messages.getValue;
+    this._exposeDebug = this._exposeDebug.bind(this);
 
     if (ChatController._instance) {
       console.warn("[ChatController] ada banyak, yang terakhir yang dipakai");
     }
+
     ChatController._instance = this;
     ChatController._completer.resolve();
+    this._exposeDebug();
+  }
+
+  protected async _exposeDebug() {
+    if (!(await managed.env.isDebug())) return;
+    Object.assign(window, {
+      ChatController: ChatController,
+      chat: this,
+    });
   }
 
   async ensureInitialized() {
@@ -111,7 +119,6 @@ export class ChatController {
     try {
       this._messagesMutex.next(false);
       this.concat(new UserMessage(message));
-      (window as any)["cancel"] = abort?.abort.bind(abort);
       await this._runner.stream({
         messages: this.messages.value,
         callback: this.concat,

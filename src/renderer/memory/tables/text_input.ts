@@ -3,8 +3,7 @@ import {
   FixedSizeList,
   Float32,
   Schema,
-  Uint32,
-  Utf8,
+  Utf8
 } from "apache-arrow";
 import InMemoryTable from "~/renderer/memory/tables/abstract";
 
@@ -14,13 +13,13 @@ export enum TextInputDataType {
 }
 
 export interface TextInputData {
+  hash: string;
   tag: TextInputDataType;
   type?: string;
   label?: string;
   id?: string;
   name?: string;
   placeholder?: string;
-  hash: number;
   selector: string;
   embedding: number[];
 }
@@ -28,13 +27,13 @@ export interface TextInputData {
 export default class TextInputTable extends InMemoryTable<TextInputData> {
   protected _name = "text_inputs";
   protected _schema = new Schema([
+    new Field("hash", new Utf8()),
     new Field("tag", new Utf8()),
     new Field("type", new Utf8(), true),
     new Field("label", new Utf8(), true),
     new Field("id", new Utf8(), true),
     new Field("name", new Utf8(), true),
     new Field("placeholder", new Utf8(), true),
-    new Field("hash", new Uint32()),
     new Field("selector", new Utf8()),
     new Field(
       "embedding",

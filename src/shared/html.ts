@@ -31,9 +31,9 @@ export abstract class HtmlUtils {
     return HtmlUtils.isParentOf(child.parentElement, parent);
   }
 
-  static getHashFromElement(element: Element | string): number {
-    if (typeof element === "string") return fnv.fast1a32(element);
-    return fnv.fast1a32(element.outerHTML);
+  static getHashFromElement(element: Element | string): string {
+    if (typeof element === "string") return fnv.hash(element, 64).hex();
+    return this.getHashFromElement(element.outerHTML);
   }
 
   static calculateSignatureSimilarity(a: string, b: string): number {

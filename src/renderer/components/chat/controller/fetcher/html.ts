@@ -2,12 +2,13 @@ import fnv from "fnv-plus";
 import { BrowserController } from "~/renderer/components/browser";
 import Runner from "~/renderer/components/chat/controller/runner";
 import InMemory from "~/renderer/memory";
+import { HtmlData } from "~/renderer/memory/tables/html";
 import natural from "~/renderer/node/natural";
 import { RefCell } from "~/shared/core";
 import { HtmlUtils } from "~/shared/html";
 
 interface _Element {
-  hash: number;
+  hash: string;
   signature: string;
   selector: string;
   raw: Element;
@@ -19,7 +20,7 @@ interface _ElementWithEmbedding extends _Element {
 }
 
 interface _Cluster {
-  hash: number;
+  hash: string;
   signature: string;
   elements: _ElementWithEmbedding[];
 }
@@ -62,19 +63,22 @@ export default class HtmlFetcher {
     return this._memory.html.findHtmlBySemantic(embedding, limit);
   }
 
-  async findHtmlsByCluster(clusterHash: number) {
+  async findHtmlsByCluster(clusterHash: HtmlData["clusterHash"]) {
     await this.fetchHtmlsIfNeeded();
     return this._memory.html.findHtmlsByCluster(clusterHash);
   }
 
-  async findHtmlByClusterAndIndex(clusterHash: number, index: number) {
+  async findHtmlByClusterAndIndex(
+    clusterHash: HtmlData["clusterHash"],
+    index: number
+  ) {
     await this.fetchHtmlsIfNeeded();
     return this._memory.html.findHtmlByClusterAndIndex(clusterHash, index);
   }
 
   async fetchHtmlsIfNeeded() {
     const dom = await this._browser.value.dom();
-    const hash = fnv.fast1a64utf(dom.body.outerHTML);
+    const hash = fnv.hash(dom.body.outerHTML, 64).hex();
     if (this._last === hash) return;
     this._last = hash;
     return this.fetchHtmls(dom);
@@ -172,7 +176,7 @@ export default class HtmlFetcher {
     const clusters = [] as _Cluster[];
     for (const [signature, elements] of map.entries()) {
       clusters.push({
-        hash: fnv.fast1a32(signature),
+        hash: fnv.hash(signature, 64).hex(),
         signature,
         elements,
       });
@@ -218,9 +222,7 @@ export default class HtmlFetcher {
     return merged;
   }
 
-  private _applyKeywords(
-    clusters: _Cluster[]
-  ): _ClusterWithKeywords[] {
+  private _applyKeywords(clusters: _Cluster[]): _ClusterWithKeywords[] {
     const applied = [] as _ClusterWithKeywords[];
     const tokenizer = new natural.WordTokenizer();
 

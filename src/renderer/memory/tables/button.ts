@@ -3,7 +3,6 @@ import {
   FixedSizeList,
   Float32,
   Schema,
-  Uint32,
   Utf8
 } from "apache-arrow";
 import InMemoryTable from "~/renderer/memory/tables/abstract";
@@ -14,10 +13,10 @@ export enum ButtonDataType {
 }
 
 export interface ButtonData {
+  hash: string;
   tag: ButtonDataType;
   text: string;
   href?: string;
-  hash: number;
   selector: string;
   embedding: number[];
 }
@@ -25,11 +24,11 @@ export interface ButtonData {
 export default class ButtonTable extends InMemoryTable<ButtonData> {
   protected _name = "buttons";
   protected _schema = new Schema([
+    new Field("hash", new Utf8()),
     new Field("tag", new Utf8()),
     new Field("text", new Utf8()),
     new Field("href", new Utf8(), true),
     new Field("selector", new Utf8()),
-    new Field("hash", new Uint32()),
     new Field(
       "embedding",
       new FixedSizeList(768, new Field("item", new Float32()))
@@ -38,11 +37,6 @@ export default class ButtonTable extends InMemoryTable<ButtonData> {
 
   async ensureInitialized() {
     await super.ensureInitialized();
-    // this._table.createIndex("embedding", {
-    //   config: lancedb.Index.ivfFlat({
-    //     distanceType: "cosine",
-    //   }),
-    // });
   }
 
   async getAll() {

@@ -29,7 +29,7 @@ export default class RendererBridge {
 
   invoke<Key extends EventKey, Type extends EventMap[Key]>(
     key: Key,
-    args: Type["fromRenderer"]
+    args: Type["fromRenderer"] = undefined
   ): Promise<Type["fromMain"]> {
     return ipcRenderer.invoke(key, args);
   }
