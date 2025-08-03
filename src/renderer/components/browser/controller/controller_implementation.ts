@@ -4,7 +4,7 @@ import { HtmlUtils } from "~/shared/html";
 export default class BrowserControllerImpl extends BrowserController {
   constructor() {
     super();
-    this.location = this.location.bind(this);
+    this.url = this.url.bind(this);
     this.title = this.title.bind(this);
     this.debug = this.debug.bind(this);
     this.go = this.go.bind(this);
@@ -17,16 +17,19 @@ export default class BrowserControllerImpl extends BrowserController {
     this.waitUntilReady = this.waitUntilReady.bind(this);
   }
 
-  location() {
+  url() {
+    if (this.isNotBound) return "";
     return this._ref.value.src;
   }
 
   title() {
+    if (this.isNotBound) return undefined;
+    if (this.url() === "") return undefined;
     return this.js(() => document.title);
   }
 
   debug() {
-    if (this._ref.isUninitialized) return;
+    if (this.isNotBound) return "";
     this._ref.value.openDevTools();
   }
 
@@ -42,26 +45,26 @@ export default class BrowserControllerImpl extends BrowserController {
   }
 
   goBack() {
-    if (this._ref.isUninitialized) return;
+    if (this.isNotBound) return;
     if (!this._ref.value.canGoBack()) return;
     this._ref.value.goBack();
     return this.waitUntilReady();
   }
 
   goForward() {
-    if (this._ref.isUninitialized) return;
+    if (this.isNotBound) return;
     if (!this._ref.value.canGoForward()) return;
     this._ref.value.goForward();
     return this.waitUntilReady();
   }
 
   canGoBack() {
-    if (this._ref.isUninitialized) return false;
+    if (this.isNotBound) return false;
     return this._ref.value.canGoBack();
   }
 
   canGoForward() {
-    if (this._ref.isUninitialized) return false;
+    if (this.isNotBound) return false;
     return this._ref.value.canGoForward();
   }
 
@@ -88,14 +91,18 @@ export default class BrowserControllerImpl extends BrowserController {
         await this.js(
           ({ id, eventType, value }) => {
             const element = document.querySelector(id);
-            if (element) {
-              if (eventType === "click") (element as HTMLElement).click();
-              if (
-                (eventType === "input" || eventType === "change") &&
-                "value" in element
-              )
-                (element as HTMLInputElement).value = value;
-            }
+            if (!element) return;
+            if (eventType === "click") (element as HTMLElement).click();
+            if (
+              (eventType === "input" || eventType === "change") &&
+              "value" in element
+            )
+              (element as HTMLInputElement).value = value;
+            const event = new Event(eventType, {
+              bubbles: true,
+              cancelable: true,
+            });
+            element?.dispatchEvent(event);
           },
           { id, eventType, value }
         );

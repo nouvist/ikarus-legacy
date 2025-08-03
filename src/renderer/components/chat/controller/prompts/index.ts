@@ -1,6 +1,7 @@
 import systemLong from "./system_long.txt?raw";
 import systemShort from "./system_short.txt?raw";
-// import retrieve from "./retrieve.txt?raw";
+import retrieve from "./retrieve.txt?raw";
+import augment from "./augment.txt?raw";
 import cluster from "./cluster.txt?raw";
 
 export default abstract class Prompts {
@@ -13,6 +14,10 @@ export default abstract class Prompts {
   }
 
   static getRetrievePrompt() {
-    // return retrieve;
+    return retrieve;
+  }
+
+  static getAugmentPrompt() {
+    return augment;
   }
 }

@@ -1,5 +1,5 @@
 import { ToolCallPart } from "ai";
-import { useRef, useState } from "react";
+import { PropsWithChildren, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import { useObservable } from "react-rx";
 import Card from "~/renderer/components/card";
@@ -24,12 +24,15 @@ interface _ChatManagedSharedProps {
   controller: ChatController;
 }
 
-export interface ChatManagedProps extends _ChatManagedSharedProps {}
+export interface ChatManagedProps
+  extends _ChatManagedSharedProps,
+    PropsWithChildren {}
 
-export default function ChatManaged({ controller }: ChatManagedProps) {
+export default function ChatManaged({ controller, children }: ChatManagedProps) {
   return (
     <Stack>
       <Chat.Raw>
+        {children}
         <_ChatLoop controller={controller} />
         <_ChatInput controller={controller} />
       </Chat.Raw>
@@ -143,21 +146,19 @@ function _ChatUser({ chat }: _ChatProps<UserMessage>) {
 }
 
 const _map = {
-  "Navigation.getUrl": "Checking the current URL...",
-  "Navigation.goToUrl": "Navigating to the specified URL...",
+  "Navigation.getUrl": "Getting current URL...",
+  "Navigation.goToUrl": "Navigating to specified URL...",
   "Navigation.goBack": "Going back to the previous page...",
-  "Navigation.goForward": "Moving forward in browsing history...",
-
-  "Button.findBySemantics": "Looking for a button by its meaning...",
-  "Button.clickBySelector": "Clicking button via CSS selector...",
-
-  "TextInput.findBySemantics": "Searching for a text input by its purpose...",
-  "TextInput.changeBySelector": "Filling in input via CSS selector...",
-
-  "Html.findBySemantic": "Scanning HTML elements by semantic meaning...",
-  "Html.findByCluster": "Identifying similar content blocks...",
-  "Html.findByClusterAndIndex":
-    "Selecting a specific item from similar content blocks...",
+  "Navigation.goForward": "Moving forward to the next page...",
+  "Button.findBySemantics": "Searching for a button by its meaning...",
+  "Button.clickBySelector": "Clicking button using selector...",
+  "TextInput.findBySemantics": "Locating input field by semantics...",
+  "TextInput.changeBySelector": "Filling in input using selector...",
+  "TextInput.submitBySelector": "Submitting form via selector...",
+  "Html.findElementBySemantic": "Finding element by semantic meaning...",
+  "Html.findElementsByCluster": "Clustering and locating similar elements...",
+  "Html.findElementsByClusterAndIndex":
+    "Targeting clustered element by index...",
 } as Record<string, string>;
 
 function _ChatAssistent({ chat }: _ChatProps<AssistantMessage>) {

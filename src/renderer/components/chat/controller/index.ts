@@ -9,16 +9,21 @@ import {
 } from "~/renderer/components/chat";
 import Prompts from "~/renderer/components/chat/controller/prompts";
 import RunnerFacade from "~/renderer/components/chat/controller/runner_facade";
+import { CsvController } from "~/renderer/components/csv";
 import { Completer } from "~/shared/core";
 import { CombinedMutexes, Mutex, Rxjs } from "~/shared/rxjs";
 
-export function useChatController(browser: BrowserController) {
+export function useChatController(
+  csv: CsvController,
+  browser: BrowserController
+) {
   const ref = useRef<ChatController>(null);
-  return (ref.current ??= new ChatController(browser));
+  return (ref.current ??= new ChatController(csv, browser));
 }
 
 export class ChatController {
   protected _isInitialized = false;
+  protected _csv: CsvController;
   protected _browser: BrowserController;
   protected _runner = new RunnerFacade();
   protected _messages = new BehaviorSubject<Message[]>([]);
@@ -29,6 +34,7 @@ export class ChatController {
   readonly contentful = Rxjs.asImmutable(this._contentful);
   readonly mutex = new CombinedMutexes(this._messagesMutex, this._runner.mutex);
   readonly runnerMutex = this._runner.mutex;
+  readonly tooManyRequests = this._runner.tooManyRequests;
 
   protected static _defaultMessages: Message[] | undefined;
 
@@ -57,7 +63,8 @@ export class ChatController {
     return Array.from(this._defaultMessages);
   }
 
-  constructor(browser: BrowserController) {
+  constructor(csv: CsvController, browser: BrowserController) {
+    this._csv = csv;
     this._browser = browser;
 
     this.ensureInitialized = this.ensureInitialized.bind(this);
@@ -90,7 +97,11 @@ export class ChatController {
     this._isInitialized = true;
 
     this.clear();
-    await this._runner.ensureInitialized(this._browser);
+    await this._runner.ensureInitialized({
+      csv: this._csv,
+      browser: this._browser,
+    });
+
     this._messagesMutex.next(true);
   }
 
@@ -120,7 +131,7 @@ export class ChatController {
     try {
       this._messagesMutex.next(false);
       this.concat(new UserMessage(message));
-      await this._runner.stream({
+      await this._runner.execute({
         messages: this.messages.value,
         callback: this.concat,
         abortSignal: abort?.signal,

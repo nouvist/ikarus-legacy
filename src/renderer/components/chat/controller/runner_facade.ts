@@ -4,8 +4,13 @@ import { EmbeddingModel, LanguageModel } from "ai";
 import { BrowserController } from "~/renderer/components/browser";
 import Fetcher from "~/renderer/components/chat/controller/fetcher";
 import Runner from "~/renderer/components/chat/controller/runner";
-import { Message } from "~/renderer/components/chat/controller/structs";
+import {
+  Message,
+  UserMessage,
+} from "~/renderer/components/chat/controller/structs";
+import TooManyRequestsController from "~/renderer/components/chat/controller/too_many_requests_controller";
 import createTools from "~/renderer/components/chat/controller/tools";
+import { CsvController } from "~/renderer/components/csv";
 import InMemory from "~/renderer/memory";
 import { Completer, LateRefCell } from "~/shared/core";
 import { Mutex, Rxjs } from "~/shared/rxjs";
@@ -38,13 +43,19 @@ export default class RunnerFacade {
   protected _browser = new LateRefCell<BrowserController>();
   protected _embedding = new LateRefCell<EmbeddingModel<string>>();
   protected _language = new LateRefCell<LanguageModel>();
+  protected _csv = new LateRefCell<CsvController>();
   protected _embeddingDomain: string | undefined;
   protected _languageDomain: string | undefined;
+  readonly tooManyRequests = new TooManyRequestsController();
 
   protected _isInitialized = false;
   protected _memory = new InMemory();
 
-  protected _runner = new Runner(this._embedding, this._language);
+  protected _runner = new Runner(
+    this._embedding,
+    this._language,
+    this.tooManyRequests
+  );
   protected _fetcher = new Fetcher(this._browser, this._memory, this._runner);
 
   readonly invoke = this._runner.invoke;
@@ -66,10 +77,14 @@ export default class RunnerFacade {
   }
 
   constructor() {
+    this.execute = this.execute.bind(this);
     this.ensureInitialized = this.ensureInitialized.bind(this);
+    this.getPersistentOptions = this.getPersistentOptions.bind(this);
+    this.setPersistentOptions = this.setPersistentOptions.bind(this);
     this.initializeLanguage = this.initializeLanguage.bind(this);
     this.initializeEmbedding = this.initializeEmbedding.bind(this);
     this.initializeLastUsed = this.initializeLastUsed.bind(this);
+    this._createContext = this._createContext.bind(this);
     this._refreshMutex = this._refreshMutex.bind(this);
 
     if (RunnerFacade._instance) {
@@ -77,6 +92,41 @@ export default class RunnerFacade {
     }
     RunnerFacade._instance = this;
     RunnerFacade._completer.resolve();
+  }
+
+  async execute({ messages, abortSignal, ...options }: RunnerInvokeOptions) {
+    messages.push(await this._createContext());
+    await this.stream({
+      ...options,
+      abortSignal,
+      messages,
+    });
+  }
+
+  async ensureInitialized({
+    csv,
+    browser,
+  }: {
+    csv?: CsvController;
+    browser?: BrowserController;
+  }) {
+    await browser?.waitUntilBound();
+    if (browser) this._browser.value = browser;
+    if (csv) this._csv.value = csv;
+    this._refreshMutex();
+
+    if (this._isInitialized) return;
+    this._isInitialized = true;
+
+    const tools = createTools(
+      this._browser.value,
+      this._csv.value,
+      this._fetcher
+    );
+
+    this._runner.registerTools(tools);
+    await this._memory.ensureInitialized();
+    await this.initializeLastUsed();
   }
 
   getPersistentOptions(): RunnerPersistentOptions {
@@ -95,19 +145,6 @@ export default class RunnerFacade {
     }
 
     localStorage.setItem("RunnerFacade::options", JSON.stringify(options));
-  }
-
-  async ensureInitialized(browser?: BrowserController) {
-    await browser?.waitUntilBound();
-    if (browser) this._browser.value = browser;
-    this._refreshMutex();
-
-    if (this._isInitialized) return;
-    this._isInitialized = true;
-
-    this._runner.registerTools(createTools(this._browser, this._fetcher));
-    await this._memory.ensureInitialized();
-    await this.initializeLastUsed();
   }
 
   async initializeLanguage(options: RunnerLanguageOptions, save = false) {
@@ -174,6 +211,49 @@ export default class RunnerFacade {
     }
 
     await Promise.all(promises);
+  }
+
+  protected async _createContext(extra?: string[]) {
+    const context = [] as string[];
+    const csv = await this._csv.value.parse();
+
+    const date = new Date();
+    const formattedDate = new Intl.DateTimeFormat("en-US", {
+      dateStyle: "full",
+    }).format(date);
+    context.push(`Current time: ${formattedDate}`);
+
+    const url = this._browser.value.url();
+    if (this._browser.value.url().length > 0) {
+      const title = await this._browser.value.title();
+      context.push("Current URL: " + url);
+      if (title) context.push("Current Title: " + title);
+    } else {
+      context.push("No URL is loaded in the browser.");
+    }
+
+    if (csv && csv.data.length > 0) {
+      context.push(`CSV rows: ${csv.data.length}`);
+      context.push(
+        `CSV headers: ${Object.keys(csv.data[0])
+          .map((key) => JSON.stringify(key))
+          .join(", ")}`
+      );
+    } else {
+      context.push("No CSV file is loaded.");
+      context.push("CSV rows: 0");
+      context.push("CSV headers: [user has not selected a CSV file]");
+    }
+
+    if (extra) context.push(...extra);
+
+    context.push(
+      "Use tools to interact with the browser and read the CSV data."
+    );
+    context.unshift("<system>");
+    context.push("</system>");
+
+    return new UserMessage(context.join("\n"), { visible: false });
   }
 
   protected async _refreshMutex() {

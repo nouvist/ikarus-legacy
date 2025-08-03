@@ -175,9 +175,43 @@ const _CardConstrained = styled(_Card)<_CardConstrainedProps>`
   ${(p) => p.$constraints?.toCss()}
 `;
 
-const CardScroll = styled(CardFull)<CardProps>`
+
+const CardScroll = forwardRef(function CardScroll(
+  {
+    background,
+    foreground,
+    radius,
+    border,
+    borderColor,
+    margin,
+    padding,
+    children,
+    ...props
+  }: CardProps,
+  ref: ForwardedRef<HTMLDivElement>
+) {
+  return (
+    <_CardScroll
+      ref={ref}
+      $background={background}
+      $foreground={foreground}
+      $radius={radius}
+      $border={border}
+      $borderColor={borderColor}
+      $margin={margin}
+      $padding={padding}
+      {...props}
+    >
+      {children}
+    </_CardScroll>
+  );
+});
+
+const _CardScroll = styled(_Card)<CardProps>`
   overflow-y: scroll;
   padding-right: ${(p) => Math.max(p.padding?.right ?? 0, 32)}px;
+  flex: 1;
+  height: 100%;
 
   &::-webkit-scrollbar {
     display: none;
@@ -195,7 +229,7 @@ const CardScroll = styled(CardFull)<CardProps>`
     background-color: ${(p) => p.theme.elevation.t2};
     border-radius: 10px;
     box-shadow: inset 0 0 0 6px ${(p) => p.theme.background.e0};
-     &:hover {
+    &:hover {
       background-color: ${(p) => p.theme.elevation.t3};
     }
   }

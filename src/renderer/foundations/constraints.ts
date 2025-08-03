@@ -59,6 +59,30 @@ export default class Constraints {
     });
   }
 
+  static maxWidth(value: number) {
+    return new Constraints({
+      maxWidth: value,
+    });
+  }
+
+  static maxHeight(value: number) {
+    return new Constraints({
+      maxHeight: value,
+    });
+  }
+
+  static minWidth(value: number) {
+    return new Constraints({
+      minWidth: value,
+    });
+  }
+
+  static minHeight(value: number) {
+    return new Constraints({
+      minHeight: value,
+    });
+  }
+
   copyWith({
     minWidth,
     maxWidth,

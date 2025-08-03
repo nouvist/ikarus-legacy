@@ -273,11 +273,6 @@ const _ChatShared = styled.div`
     margin-right: min(120px, 20%);
   }
 
-  &,
-  & * {
-    overflow-wrap: break-word;
-  }
-
   > *:first-child {
     margin-top: 0;
     padding-top: 0;

@@ -5,39 +5,43 @@ import {
   Tool,
   ToolRegistrar,
 } from "~/renderer/components/chat/controller/tools/fundamental";
-import { inline, RefCell } from "~/shared/core";
+import { inline } from "~/shared/core";
 
 export default function registerTextInputTools(
   registrar: ToolRegistrar,
-  browser: RefCell<BrowserController>,
+  browser: BrowserController,
   fetcher: Fetcher
 ) {
   registrar.register(
     "TextInput.findBySemantics",
-    new FindTextInputTool(browser, fetcher)
+    new FindBySemanticTool(browser, fetcher)
   );
   registrar.register(
     "TextInput.changeBySelector",
-    new ChangeTextInputTool(browser)
+    new ChangeBySelectorTool(browser)
+  );
+  registrar.register(
+    "TextInput.submitBySelector",
+    new SubmitBySelectorTool(browser, fetcher)
   );
 }
 
-export class FindTextInputTool extends Tool {
-  protected _browser: RefCell<BrowserController>;
+export class FindBySemanticTool extends Tool {
+  protected _browser: BrowserController;
   protected _fetcher: Fetcher;
   protected _description = "Get input field information from the page.";
   protected _parameters = z.object({
     semantics: z.string().describe("Description of the input to find."),
   });
 
-  constructor(browser: RefCell<BrowserController>, fetcher: Fetcher) {
+  constructor(browser: BrowserController, fetcher: Fetcher) {
     super();
     this._browser = browser;
     this._fetcher = fetcher;
   }
 
   async execute({ semantics }: z.infer<typeof this._parameters>) {
-    const dom = await this._browser.value.dom();
+    const dom = await this._browser.dom();
     await this._fetcher.fetchTextInputs();
 
     semantics = semantics.trim().toLowerCase();
@@ -60,8 +64,8 @@ export class FindTextInputTool extends Tool {
   }
 }
 
-export class ChangeTextInputTool extends Tool {
-  protected _browser: RefCell<BrowserController>;
+export class ChangeBySelectorTool extends Tool {
+  protected _browser: BrowserController;
   protected _description = inline(`
     Change the value of an input field on the page, given its selector. Use
     findInput if you don't know the selector.
@@ -71,13 +75,13 @@ export class ChangeTextInputTool extends Tool {
     value: z.string().describe("The new value to set in the input field"),
   });
 
-  constructor(browser: RefCell<BrowserController>) {
+  constructor(browser: BrowserController) {
     super();
     this._browser = browser;
   }
 
   execute({ selector, value }: z.infer<typeof this._parameters>) {
-    return this._browser.value.js(
+    return this._browser.js(
       ({ selector, value }) => {
         const element = document.querySelector(selector);
 
@@ -101,5 +105,40 @@ export class ChangeTextInputTool extends Tool {
       },
       { selector, value }
     );
+  }
+}
+
+export class SubmitBySelectorTool extends Tool {
+  protected _browser: BrowserController;
+  protected _fetcher: Fetcher;
+  protected _description = inline(`
+    Submit an input field on the page, given its selector. Use findInput if you
+    don't know the selector.
+  `);
+  protected _parameters = z.object({
+    selector: z.string().describe("The selector of the input field to submit"),
+  });
+
+  constructor(browser: BrowserController, fetcher: Fetcher) {
+    super();
+    this._browser = browser;
+    this._fetcher = fetcher;
+  }
+
+  execute({ selector }: z.infer<typeof this._parameters>) {
+    return this._browser.js((selector) => {
+      const input = document.querySelector(selector);
+      if (!input) return "Error: Element not found";
+      const event = new KeyboardEvent("keydown", {
+        bubbles: true,
+        cancelable: true,
+        key: "Enter",
+        code: "Enter",
+        which: 13,
+        keyCode: 13,
+      });
+      input.dispatchEvent(event);
+      return "Enter key pressed on the specified input.";
+    }, selector);
   }
 }

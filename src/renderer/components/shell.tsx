@@ -59,6 +59,7 @@ const _GlobalStyle = createGlobalStyle`
 
   * {
     box-sizing: border-box;
+    overflow-wrap: break-word;
     &::selection {
       background: ${(p) => p.theme.accent.primary};
     }

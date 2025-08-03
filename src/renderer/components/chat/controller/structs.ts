@@ -7,11 +7,22 @@ import {
   CoreUserMessage,
   ToolCallPart,
   ToolContent,
+  ToolResultPart,
 } from "ai";
 import { BehaviorSubject } from "rxjs";
+import { getRandom } from "~/shared/core";
 import { Rxjs } from "~/shared/rxjs";
 
 type ProviderOptions = LanguageModelV1ProviderMetadata;
+
+export interface MessageOptions {
+  provider?: ProviderOptions;
+  visible?: boolean;
+}
+
+export interface StreamMessageOptions extends MessageOptions {
+  completed?: boolean;
+}
 
 export type Message =
   | AssistantMessage
@@ -26,19 +37,55 @@ export enum MessageRole {
   User = "user",
 }
 
+export abstract class ToolEmulator {
+  static emulateToolCall(name: string, args: object) {
+    const id = "emulated::" + getRandom();
+    return [
+      { id, name },
+      new AssistantMessage(
+        [
+          {
+            type: "tool-call",
+            toolCallId: id,
+            toolName: name,
+            args: args,
+          } satisfies ToolCallPart,
+        ],
+        { visible: false }
+      ),
+    ] as const;
+  }
+
+  static emulateToolResult(meta: { id: string; name: string }, result: string) {
+    return new ToolMessage(
+      [
+        {
+          type: "tool-result",
+          toolCallId: meta.id,
+          toolName: meta.name,
+          result: result,
+        } satisfies ToolResultPart,
+      ],
+      { visible: false }
+    );
+  }
+}
+
 export class AssistantMessage implements CoreAssistantMessage {
   readonly role = MessageRole.Assistant as const;
   readonly providerOptions?: ProviderOptions;
   readonly subject = new BehaviorSubject<AssistantContent>("");
-  visible = true;
+  visible: boolean;
 
-  constructor(content?: AssistantContent, providerOptions?: ProviderOptions) {
-    this.providerOptions = providerOptions;
+  constructor(content?: AssistantContent, options?: StreamMessageOptions) {
+    this.providerOptions = options?.provider;
+    this.visible = options?.visible ?? true;
     this.next = this.next.bind(this);
     this.concat = this.concat.bind(this);
     this.complete = this.complete.bind(this);
     this.waitUntilComplete = this.waitUntilComplete.bind(this);
     if (content) this.next(content);
+    if (options?.completed) this.complete();
   }
 
   static fromCoreMessage(message: CoreAssistantMessage) {
@@ -104,11 +151,12 @@ export class SystemMessage implements CoreSystemMessage {
   readonly role = MessageRole.System as const;
   readonly content: string;
   readonly providerOptions?: ProviderOptions;
-  visible = true;
+  visible: boolean;
 
-  constructor(content: string, providerOptions?: ProviderOptions) {
+  constructor(content: string, options?: MessageOptions) {
+    this.visible = options?.visible ?? true;
     this.content = content;
-    this.providerOptions = providerOptions;
+    this.providerOptions = options?.provider;
   }
 
   static fromCoreMessage(message: CoreSystemMessage) {
@@ -121,11 +169,12 @@ export class ToolMessage implements CoreToolMessage {
   readonly role = MessageRole.Tool as const;
   readonly content: ToolContent;
   readonly providerOptions?: ProviderOptions;
-  visible = true;
+  visible: boolean;
 
-  constructor(content: ToolContent, providerOptions?: ProviderOptions) {
+  constructor(content: ToolContent, options?: MessageOptions) {
+    this.visible = options?.visible ?? true;
     this.content = content;
-    this.providerOptions = providerOptions;
+    this.providerOptions = options?.provider;
   }
 
   static fromCoreMessage(message: CoreToolMessage) {
@@ -138,11 +187,12 @@ export class UserMessage implements CoreUserMessage {
   readonly role = MessageRole.User as const;
   readonly content: string;
   readonly providerOptions?: ProviderOptions;
-  visible = true;
+  visible: boolean;
 
-  constructor(content: string, providerOptions?: ProviderOptions) {
+  constructor(content: string, options?: MessageOptions) {
+    this.visible = options?.visible ?? true;
     this.content = content;
-    this.providerOptions = providerOptions;
+    this.providerOptions = options?.provider;
   }
 
   static fromCoreMessage(message: CoreUserMessage) {

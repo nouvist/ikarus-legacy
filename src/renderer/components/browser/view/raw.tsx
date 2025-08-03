@@ -6,7 +6,7 @@ import {
 } from "@fluentui/react-icons";
 import { DidNavigateEvent, DidNavigateInPageEvent, WebviewTag } from "electron";
 import { ForwardedRef, forwardRef, useEffect, useRef, useState } from "react";
-import { useTheme } from "styled-components";
+import styled, { useTheme } from "styled-components";
 import { BrowserController } from "~/renderer/components/browser";
 import Button from "~/renderer/components/button";
 import Card from "~/renderer/components/card";
@@ -36,14 +36,13 @@ export default forwardRef(function Browser(
     <Flex fill direction={FlexDirection.Column}>
       <_Controls controller={controller} />
       <Stack>
-        <Stack.Fill>
+        <_Container>
           <webview
-            src="https://www.tokopedia.com/search?st=&q=axioo%20pongo"
             ref={bindRefs(ref, controller?.bind)}
             style={{ width: "100%", height: "100%" }}
             preload={managed.webview.preload}
           />
-        </Stack.Fill>
+        </_Container>
         <_Blank controller={controller} />
       </Stack>
     </Flex>
@@ -51,7 +50,7 @@ export default forwardRef(function Browser(
 });
 
 function _Blank({ controller }: { controller: BrowserController }) {
-  const last = useRef(true);
+  const last = useRef(controller.url() === "");
   const [isBlank, setIsBlank] = useState(last.current);
 
   useEffect(() => {
@@ -59,7 +58,7 @@ function _Blank({ controller }: { controller: BrowserController }) {
     if (!wv) return;
 
     function handleDidNavigate() {
-      const next = controller.location() === "";
+      const next = controller.url() === "";
       last.current = next;
       setIsBlank(next);
     }
@@ -75,28 +74,30 @@ function _Blank({ controller }: { controller: BrowserController }) {
 
   return (
     <Stack.Fill hidden={!isBlank}>
-      <Flex
-        fill
-        direction={FlexDirection.Column}
-        justifyContent={JustifyContent.Center}
-        alignItems={AlignItems.Center}
-      >
-        <Card.Constrained
-          margin={EdgeInsets.all(16)}
-          constraints={new Constraints({ maxWidth: 320 })}
+      <Card.Full>
+        <Flex
+          fill
+          direction={FlexDirection.Column}
+          justifyContent={JustifyContent.Center}
+          alignItems={AlignItems.Center}
         >
-          <h2>Start Browsing</h2>
-          <p>Enter a URL or ask in the chat to start browsing the web.</p>
-        </Card.Constrained>
-      </Flex>
+          <Card.Constrained
+            margin={EdgeInsets.all(16)}
+            constraints={new Constraints({ maxWidth: 320 })}
+          >
+            <h2>Start Browsing</h2>
+            <p>Enter a URL or ask in the chat to start browsing the web.</p>
+          </Card.Constrained>
+        </Flex>
+      </Card.Full>
     </Stack.Fill>
   );
 }
 
 function _Controls({ controller }: { controller: BrowserController }) {
   const theme = useTheme();
-  const currentUrl = useRef("");
-  const [url, setUrl] = useState("");
+  const currentUrl = useRef(controller.url() || "");
+  const [url, setUrl] = useState(currentUrl.current);
   const [canGoBack, setCanGoBack] = useState(true);
   const [canGoForward, setCanGoForward] = useState(true);
 
@@ -165,3 +166,7 @@ function _Controls({ controller }: { controller: BrowserController }) {
     </Card>
   );
 }
+
+const _Container = styled(Stack.Fill)`
+  background-color: #ffffff;
+`;

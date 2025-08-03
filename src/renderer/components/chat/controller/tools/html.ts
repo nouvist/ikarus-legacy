@@ -6,24 +6,23 @@ import {
   ToolRegistrar,
 } from "~/renderer/components/chat/controller/tools/fundamental";
 import { ElementData } from "~/renderer/memory/tables/html";
-import { RefCell } from "~/shared/core";
 
 export default function registerHtmlTools(
   registrar: ToolRegistrar,
-  browser: RefCell<BrowserController>,
+  browser: BrowserController,
   fetcher: Fetcher
 ) {
   registrar.register(
-    "Html.findBySemantic",
-    new GetBySemanticHtmlTool(browser, fetcher)
+    "Html.findElementBySemantic",
+    new FindElementBySemanticTool(browser, fetcher)
   );
   registrar.register(
-    "Html.findByCluster",
-    new GetHtmlsByCluster(browser, fetcher)
+    "Html.findElementsByCluster",
+    new FindElementsByClusterTool(browser, fetcher)
   );
   registrar.register(
-    "Html.findByClusterAndIndex",
-    new GetHtmlByClusterAndIndexTool(browser, fetcher)
+    "Html.findElementByClusterAndIndex",
+    new FindElementByClusterAndIndexTool(browser, fetcher)
   );
 }
 
@@ -36,7 +35,6 @@ abstract class _HtmlTool extends Tool {
   protected _formatElement(element: ElementData): string {
     return [
       `Cluster Hash: ${element.clusterHash}`,
-      `Cluster Keywords: ${element.clusterKeywords}`,
       `Selector: ${element.selector}`,
       `HTML: ${element.html}`,
       `Text: ${element.text}`,
@@ -44,8 +42,8 @@ abstract class _HtmlTool extends Tool {
   }
 }
 
-export class GetBySemanticHtmlTool extends _HtmlTool {
-  protected _browser: RefCell<BrowserController>;
+export class FindElementBySemanticTool extends _HtmlTool {
+  protected _browser: BrowserController;
   protected _fetcher: Fetcher;
   protected _description = "Get HTML content by semantic similarity";
   protected _parameters = z.object({
@@ -54,7 +52,7 @@ export class GetBySemanticHtmlTool extends _HtmlTool {
       .describe("The semantic query to search for HTML content"),
   });
 
-  constructor(browser: RefCell<BrowserController>, fetcher: Fetcher) {
+  constructor(browser: BrowserController, fetcher: Fetcher) {
     super();
     this._browser = browser;
     this._fetcher = fetcher;
@@ -67,15 +65,15 @@ export class GetBySemanticHtmlTool extends _HtmlTool {
   }
 }
 
-export class GetHtmlsByCluster extends _HtmlTool {
-  protected _browser: RefCell<BrowserController>;
+export class FindElementsByClusterTool extends _HtmlTool {
+  protected _browser: BrowserController;
   protected _fetcher: Fetcher;
   protected _description = "Get HTML content by cluster hash";
   protected _parameters = z.object({
     clusterHash: z.string().describe("The hash of the cluster"),
   });
 
-  constructor(browser: RefCell<BrowserController>, fetcher: Fetcher) {
+  constructor(browser: BrowserController, fetcher: Fetcher) {
     super();
     this._browser = browser;
     this._fetcher = fetcher;
@@ -87,8 +85,8 @@ export class GetHtmlsByCluster extends _HtmlTool {
   }
 }
 
-export class GetHtmlByClusterAndIndexTool extends _HtmlTool {
-  protected _browser: RefCell<BrowserController>;
+export class FindElementByClusterAndIndexTool extends _HtmlTool {
+  protected _browser: BrowserController;
   protected _fetcher: Fetcher;
   protected _description = "Get HTML content by cluster hash and index";
   protected _parameters = z.object({
@@ -96,7 +94,7 @@ export class GetHtmlByClusterAndIndexTool extends _HtmlTool {
     index: z.number().describe("The index of the HTML in the cluster"),
   });
 
-  constructor(browser: RefCell<BrowserController>, fetcher: Fetcher) {
+  constructor(browser: BrowserController, fetcher: Fetcher) {
     super();
     this._browser = browser;
     this._fetcher = fetcher;

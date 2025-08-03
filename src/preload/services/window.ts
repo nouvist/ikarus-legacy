@@ -2,6 +2,7 @@ import RendererBridge from "~/preload/services/bridge";
 
 export default class WindowManaged {
   protected _bridge: RendererBridge;
+  protected _lastControlColor?: string;
 
   constructor(bridge: RendererBridge) {
     this._bridge = bridge;
@@ -38,7 +39,12 @@ export default class WindowManaged {
     await this._bridge.invoke("Window::debug", undefined);
   }
 
+  getControlColors() {
+    return this._lastControlColor;
+  }
+
   async setControlColors(color: string) {
+    this._lastControlColor = color;
     await this._bridge.invoke("Window::setTitleBarColor", color);
   }
 }

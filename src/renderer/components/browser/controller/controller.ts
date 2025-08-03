@@ -49,6 +49,15 @@ export default class BrowserController {
     return this._ref.value;
   }
 
+  get isBound() {
+    if (this._ref.isUninitialized) return false;
+    return this._completer.isResolved;
+  }
+
+  get isNotBound() {
+    return !this.isBound;
+  }
+
   bind(wv: WebviewTag) {
     this._ref.value = wv;
     this._completer.resolve();
