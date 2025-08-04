@@ -49,7 +49,7 @@ export class HtmlElementTable extends InMemoryTable<ElementData> {
   constructor(connection: Connection) {
     super(connection);
     this.findByCluster = this.findByCluster.bind(this);
-    this.findBySemantic = this.findBySemantic.bind(this);
+    this.findBySemantics = this.findBySemantics.bind(this);
     this.findByClusterAndIndex = this.findByClusterAndIndex.bind(this);
   }
 
@@ -57,7 +57,7 @@ export class HtmlElementTable extends InMemoryTable<ElementData> {
     await super.ensureInitialized();
   }
 
-  async findBySemantic(embedding: ElementData["embedding"], limit?: number) {
+  async findBySemantics(embedding: ElementData["embedding"], limit?: number) {
     let query = this.raw.query().nearestTo(embedding);
     if (limit) query = query.limit(limit);
     return (await query.toArray()) as ElementData[];
@@ -112,7 +112,7 @@ export class HtmlClusterTable extends InMemoryTable<ClusterData> {
     return (await this.raw.query().toArray()) as ClusterData[];
   }
 
-  async findBySemantic(embedding: ClusterData["embedding"], limit?: number) {
+  async findBySemantics(embedding: ClusterData["embedding"], limit?: number) {
     let query = this.raw.query().nearestTo(embedding);
     if (limit) query = query.limit(limit);
     return (await query.toArray()) as ClusterData[];

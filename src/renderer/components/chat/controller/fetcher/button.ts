@@ -31,7 +31,9 @@ export default class ButtonFetcher {
   async fetchButtons(abortSignal?: AbortSignal) {
     const dom = await this._browser.value.dom();
     const buttons = Array.from(
-      dom.querySelectorAll("button, a, input[type='submit']")
+      dom.querySelectorAll(
+        "button, a, input[type='submit'], input[type='button'], input[type='reset']"
+      )
     )
       .filter((el) => {
         const value = el.getAttribute("hidden");

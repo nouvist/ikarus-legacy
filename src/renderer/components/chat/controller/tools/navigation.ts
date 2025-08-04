@@ -69,7 +69,9 @@ export class GoToUrlTool extends Tool {
     await this._browser.go(url);
     return [
       `Navigated to ${url}`,
-      "Use `Html` tools to get the web content.",
+      "Use `Html` tools to read the web content.",
+      "Use `Input` tools to interact with text inputs and text area.",
+      "Use `Button` tools to interact with buttons and links.",
     ].join("\n");
   }
 }
@@ -92,7 +94,9 @@ export class GoBackTool extends Tool {
     await this._browser.goBack();
     return [
       "Navigated back to the previous page.",
-      "Use `Html` tools to get the web content.",
+      "Use `Html` tools to read the web content.",
+      "Use `Input` tools to interact with text inputs and text area.",
+      "Use `Button` tools to interact with buttons and links.",
     ].join("\n");
   }
 }
@@ -115,7 +119,9 @@ export class GoForwardTool extends Tool {
     await this._browser.goForward();
     return [
       "Navigated forward to the next page.",
-      "Use `Html` tools to get the web content.",
+      "Use `Html` tools to read the web content.",
+      "Use `Input` tools to interact with text inputs and text area.",
+      "Use `Button` tools to interact with buttons and links.",
     ].join("\n");
   }
 }

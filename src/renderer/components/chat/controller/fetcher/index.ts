@@ -30,8 +30,8 @@ export default class Fetcher {
     this._textInput = new TextInputFetcher(...args);
   }
 
-  get findElementsBySemantic() {
-    return this._html.findElementsBySemantic;
+  get findElementsBySemantics() {
+    return this._html.findElementsBySemantics;
   }
 
   get findElementsByCluster() {
@@ -46,8 +46,8 @@ export default class Fetcher {
     return this._html.findClusters;
   }
 
-  get findClustersBySemantic() {
-    return this._html.findClustersBySemantic;
+  get findClustersBySemantics() {
+    return this._html.findClustersBySemantics;
   }
 
   get fetchHtmls() {

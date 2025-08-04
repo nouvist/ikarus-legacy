@@ -13,8 +13,8 @@ export default function registerHtmlTools(
   fetcher: Fetcher
 ) {
   registrar.register(
-    "Html.findElementsBySemantic",
-    new FindElementsBySemanticTool(browser, fetcher)
+    "Html.findElementsBySemantics",
+    new FindElementsBySemanticsTool(browser, fetcher)
   );
   registrar.register(
     "Html.findElementsByCluster",
@@ -25,15 +25,15 @@ export default function registerHtmlTools(
     new FindClustersTool(browser, fetcher)
   );
   registrar.register(
-    "Html.findClustersBySemantic",
-    new FindClustersBySemanticTool(browser, fetcher)
+    "Html.findClustersBySemantics",
+    new FindClustersBySemanticsTool(browser, fetcher)
   );
 }
 
-export class FindElementsBySemanticTool extends Tool {
+export class FindElementsBySemanticsTool extends Tool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
-  protected _description = "Find HTML elements by semantic description.";
+  protected _description = "Find HTML elements by semantics description.";
   protected _parameters = z.object({
     semantics: z.string().describe("Description of the elements to find."),
   });
@@ -45,7 +45,7 @@ export class FindElementsBySemanticTool extends Tool {
   }
 
   async execute({ semantics }: z.infer<typeof this._parameters>) {
-    const elements = await this._fetcher.findElementsBySemantic(semantics, 10);
+    const elements = await this._fetcher.findElementsBySemantics(semantics, 10);
     const lines = elements.map((element) => {
       return [
         `Selector: ${element.selector}`,
@@ -55,9 +55,10 @@ export class FindElementsBySemanticTool extends Tool {
     });
 
     lines.unshift(
-      `${lines.length} closest elements for "${semantics}". ` +
+      `${lines.length} elements listed by the closest from "${semantics}". ` +
         "Use `Html.findElementsByCluster` to get all elements." +
-        "Use `Html.findClusters` to get all clusters."
+        "Use `Html.findClusters` to get all clusters.",
+        "Use other tools to interact with the browser."
     );
     return lines.join("\n\n");
   }
@@ -119,10 +120,10 @@ export class FindClustersTool extends Tool {
   }
 }
 
-export class FindClustersBySemanticTool extends Tool {
+export class FindClustersBySemanticsTool extends Tool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
-  protected _description = "Find HTML clusters by semantic description.";
+  protected _description = "Find HTML clusters by semantics description.";
   protected _parameters = z.object({
     semantics: z.string().describe("Description of the clusters to find."),
   });
@@ -134,7 +135,7 @@ export class FindClustersBySemanticTool extends Tool {
   }
 
   async execute({ semantics }: z.infer<typeof this._parameters>) {
-    const clusters = await this._fetcher.findClustersBySemantic(semantics);
+    const clusters = await this._fetcher.findClustersBySemantics(semantics);
     const representatives = [] as (ElementData | undefined)[];
     for (const cluster of clusters) {
       const element = await this._fetcher.findElementsByCluster(

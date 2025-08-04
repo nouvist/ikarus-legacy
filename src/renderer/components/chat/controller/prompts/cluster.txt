@@ -1,4 +1,4 @@
-Analyze the provided HTML element cluster and generate a concise, functional description that captures both the semantic purpose and contextual meaning of the grouped elements.
+Analyze the provided HTML element cluster and generate a concise, functional description that captures both the semantics purpose and contextual meaning of the grouped elements.
 
 Generate a brief description that:
 - Identifies the primary function or content type of the clustered elements

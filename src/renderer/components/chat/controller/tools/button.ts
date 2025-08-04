@@ -14,12 +14,12 @@ export default function registerButtonTools(
 ) {
   registrar.register(
     "Button.findBySemantics",
-    new FindBySemanticTool(browser, fetcher)
+    new FindBySemanticsTool(browser, fetcher)
   );
   registrar.register("Button.clickBySelector", new ClickBottonTool(browser));
 }
 
-export class FindBySemanticTool extends Tool {
+export class FindBySemanticsTool extends Tool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
 

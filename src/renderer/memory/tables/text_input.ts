@@ -58,6 +58,6 @@ export default class TextInputTable extends InMemoryTable<TextInputData> {
   }
 
   async remove(hash: TextInputData["hash"]) {
-    await this.raw.delete(`hash == ${hash}`);
+    await this.raw.delete(`\`hash\` == ${JSON.stringify(hash)}`);
   }
 }

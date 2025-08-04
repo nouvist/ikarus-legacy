@@ -29,7 +29,7 @@ interface _ClusterWithKeywords extends _Cluster {
   keywords: string[];
 }
 
-interface _ClusterWithSemantic extends _ClusterWithKeywords {
+interface _ClusterWithSemantics extends _ClusterWithKeywords {
   embedding: number[];
 }
 
@@ -48,12 +48,12 @@ export default class HtmlFetcher {
     this._memory = memory;
     this._runner = runner;
 
-    this.findElementsBySemantic = this.findElementsBySemantic.bind(this);
+    this.findElementsBySemantics = this.findElementsBySemantics.bind(this);
     this.findElementsByCluster = this.findElementsByCluster.bind(this);
     this.findElementByClusterAndIndex =
       this.findElementByClusterAndIndex.bind(this);
     this.findClusters = this.findClusters.bind(this);
-    this.findClustersBySemantic = this.findClustersBySemantic.bind(this);
+    this.findClustersBySemantics = this.findClustersBySemantics.bind(this);
 
     this.fetchHtmls = this.fetchHtmls.bind(this);
     this._storeElements = this._storeElements.bind(this);
@@ -63,16 +63,16 @@ export default class HtmlFetcher {
     this._clusterElements = this._clusterElements.bind(this);
     this._mergeClusters = this._mergeClusters.bind(this);
     this._applyKeywordToClusters = this._applyKeywordToClusters.bind(this);
-    this._applySemanticToClusters = this._applySemanticToClusters.bind(this);
+    this._applySemanticsToClusters = this._applySemanticsToClusters.bind(this);
   }
 
-  async findElementsBySemantic(
+  async findElementsBySemantics(
     semantics: string,
-    limit?: number,
+    limit?: number
   ): Promise<ElementData[]> {
     await this.fetchHtmlsIfNeeded();
     const embedding = await this._runner.embed(semantics);
-    return this._memory.htmlElement.findBySemantic(embedding, limit);
+    return this._memory.htmlElement.findBySemantics(embedding, limit);
   }
 
   async findElementsByCluster(
@@ -96,13 +96,13 @@ export default class HtmlFetcher {
     return this._memory.htmlCluster.findAll();
   }
 
-  async findClustersBySemantic(
+  async findClustersBySemantics(
     semantics: string,
     limit = 10
   ): Promise<ClusterData[]> {
     await this.fetchHtmlsIfNeeded();
     const embedding = await this._runner.embed(semantics);
-    return this._memory.htmlCluster.findBySemantic(embedding, limit);
+    return this._memory.htmlCluster.findBySemantics(embedding, limit);
   }
 
   async fetchHtmlsIfNeeded() {
@@ -125,13 +125,13 @@ export default class HtmlFetcher {
     const merged = this._mergeClusters(clustered);
     console.log(`[HtmlFetcher] ada ${merged.length} wlee`);
     const clusterWithKeywords = this._applyKeywordToClusters(merged);
-    console.log(`[HtmlFetcher] semantic?`);
-    const clusterWithSemantic =
-      await this._applySemanticToClusters(clusterWithKeywords);
+    console.log(`[HtmlFetcher] semantics?`);
+    const clusterWithSemantics =
+      await this._applySemanticsToClusters(clusterWithKeywords);
 
-    await this._storeElements(clusterWithSemantic);
-    await this._storeClusters(clusterWithSemantic);
-    return clusterWithSemantic;
+    await this._storeElements(clusterWithSemantics);
+    await this._storeClusters(clusterWithSemantics);
+    return clusterWithSemantics;
   }
 
   async _storeElements(clusters: _Cluster[]) {
@@ -152,7 +152,7 @@ export default class HtmlFetcher {
     }
   }
 
-  async _storeClusters(clusters: _ClusterWithSemantic[]) {
+  async _storeClusters(clusters: _ClusterWithSemantics[]) {
     this._memory.htmlCluster.clear();
     await this._memory.htmlCluster.add(
       clusters.map((cluster) => ({
@@ -193,6 +193,23 @@ export default class HtmlFetcher {
       for (let i = 0; i < element.children.length; i++) {
         traverse(element.children[i], depth + 1);
       }
+    }
+
+    const priority = [
+      ...Array.from(root.querySelectorAll("input")).filter(
+        (el) => !el.type || el.type === "text"
+      ),
+      ...root.querySelectorAll("textarea"),
+      ...root.querySelectorAll("button"),
+      ...root.querySelectorAll("input[type='submit']"),
+      ...root.querySelectorAll("input[type='button']"),
+      ...root.querySelectorAll("input[type='reset']"),
+      ...root.querySelectorAll("a"),
+    ];
+
+    for (const el of priority) {
+      if (visited.has(el)) continue;
+      traverse(el);
     }
 
     traverse(root);
@@ -307,10 +324,10 @@ export default class HtmlFetcher {
     return applied;
   }
 
-  private async _applySemanticToClusters(
+  private async _applySemanticsToClusters(
     clusters: _ClusterWithKeywords[]
-  ): Promise<_ClusterWithSemantic[]> {
-    const applied = [] as _ClusterWithSemantic[];
+  ): Promise<_ClusterWithSemantics[]> {
+    const applied = [] as _ClusterWithSemantics[];
     for (const cluster of clusters) {
       const representatives = [
         cluster.keywords.join(" "),

@@ -162,10 +162,10 @@ const _map = {
   "TextInput.changeBySelector": "Typing something in...",
   "TextInput.submitBySelector": "Submitting the form...",
 
-  "Html.findElementsBySemantic": "Searching for meaningful content...",
+  "Html.findElementsBySemantics": "Searching for meaningful content...",
   "Html.findElementsByCluster": "Grouping similar elements...",
   "Html.findClusters": "Looking for patterns on the page...",
-  "Html.findClustersBySemantic": "Clustering by meaning...",
+  "Html.findClustersBySemantics": "Clustering by meaning...",
 
   "Csv.getMetadata": "Reading CSV details...",
   "Csv.getRow": "Fetching a row from the data...",

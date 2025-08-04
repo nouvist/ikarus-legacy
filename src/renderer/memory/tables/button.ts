@@ -52,6 +52,6 @@ export default class ButtonTable extends InMemoryTable<ButtonData> {
   }
 
   async remove(hash: ButtonData["hash"]) {
-    await this.raw.delete(`hash == ${hash}`);
+    await this.raw.delete(`\`hash\` == ${JSON.stringify(hash)}`);
   }
 }

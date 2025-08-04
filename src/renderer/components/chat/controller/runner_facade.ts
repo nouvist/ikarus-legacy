@@ -263,7 +263,7 @@ export default class RunnerFacade {
 
     return new UserMessage(context.join("\n"), {
       // visible: await managed.env.isDebug(),
-      visible: false,
+      // visible: false,
     });
   }
 
@@ -287,6 +287,8 @@ export default class RunnerFacade {
   }
 
   protected async _createHtmlContext(context: string[]) {
+    return;
+
     if (this._browser.value.url().length === 0) return;
     const clusters = (await this._fetcher.findClusters()).sort(
       (a, b) => b.elements - a.elements
@@ -312,6 +314,14 @@ export default class RunnerFacade {
       context.push(`  Elements: ${cluster.elements}`);
       context.push(`  Representative: ${text}`);
     }
+    if (clusters.length > 5) {
+      context.push(`... and ${clusters.length - 5} more clusters.`);
+    }
+
+    const inputs = await this._fetcher.fetchTextInputs();
+    const buttons = await this._fetcher.fetchButtons();
+    context.push(`Input fields: ${inputs?.length || 0}`);
+    context.push(`Buttons and anchors: ${buttons?.length || 0}`);
   }
 
   protected async _createCsvContext(context: string[]) {
