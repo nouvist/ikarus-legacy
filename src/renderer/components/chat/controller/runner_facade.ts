@@ -12,16 +12,22 @@ import TooManyRequestsController from "~/renderer/components/chat/controller/too
 import createTools from "~/renderer/components/chat/controller/tools";
 import { CsvController } from "~/renderer/components/csv";
 import InMemory from "~/renderer/memory";
+import { ElementData } from "~/renderer/memory/tables/html";
 import { Completer, LateRefCell } from "~/shared/core";
 import { Mutex, Rxjs } from "~/shared/rxjs";
 
-export interface RunnerInvokeOptions {
-  messages: Message[];
-  callback: (message: Message) => void;
-  abortSignal?: AbortSignal;
+export interface RunnerInvokeRequest {
   maxSteps?: number;
   temperature?: number;
   frequencyPenalty?: number;
+}
+
+export interface RunnerInvokeOptions {
+  getMessages: () => Message[];
+  setMessages: (messages: Message[]) => void;
+  concatMessages: (messages: Message[] | Message) => void;
+  abortSignal?: AbortSignal;
+  request?: RunnerInvokeRequest;
 }
 
 export interface OpenAiApiOptions {
@@ -85,6 +91,10 @@ export default class RunnerFacade {
     this.initializeEmbedding = this.initializeEmbedding.bind(this);
     this.initializeLastUsed = this.initializeLastUsed.bind(this);
     this._createContext = this._createContext.bind(this);
+    this._createTimeContext = this._createTimeContext.bind(this);
+    this._createUrlContext = this._createUrlContext.bind(this);
+    this._createHtmlContext = this._createHtmlContext.bind(this);
+    this._createCsvContext = this._createCsvContext.bind(this);
     this._refreshMutex = this._refreshMutex.bind(this);
 
     if (RunnerFacade._instance) {
@@ -94,12 +104,35 @@ export default class RunnerFacade {
     RunnerFacade._completer.resolve();
   }
 
-  async execute({ messages, abortSignal, ...options }: RunnerInvokeOptions) {
-    messages.push(await this._createContext());
+  async execute({
+    abortSignal,
+    concatMessages,
+    getMessages,
+    setMessages,
+    ...options
+  }: RunnerInvokeOptions) {
+    const context = await this._createContext();
+    let messages = getMessages();
+
+    if (
+      messages.length > 0 &&
+      messages[messages.length - 1] instanceof UserMessage
+    ) {
+      setMessages([
+        ...messages.slice(0, -1),
+        context,
+        messages[messages.length - 1],
+      ]);
+    } else {
+      concatMessages(context);
+    }
+
     await this.stream({
       ...options,
       abortSignal,
-      messages,
+      concatMessages,
+      getMessages,
+      setMessages,
     });
   }
 
@@ -214,24 +247,75 @@ export default class RunnerFacade {
   }
 
   protected async _createContext(extra?: string[]) {
+    console.log(this);
     const context = [] as string[];
-    const csv = await this._csv.value.parse();
+    await this._createTimeContext(context);
+    await this._createUrlContext(context);
+    await this._createHtmlContext(context);
+    await this._createCsvContext(context);
 
+    if (extra) context.push(...extra);
+
+    context.push();
+    ("Use tools to interact with the browser and read the CSV data.");
+    context.unshift("<system>");
+    context.push("</system>");
+
+    return new UserMessage(context.join("\n"), {
+      // visible: await managed.env.isDebug(),
+      visible: false,
+    });
+  }
+
+  protected async _createTimeContext(context: string[]) {
     const date = new Date();
     const formattedDate = new Intl.DateTimeFormat("en-US", {
       dateStyle: "full",
     }).format(date);
-    context.push(`Current time: ${formattedDate}`);
+    context.push(`Current time: ${formattedDate}.`);
+  }
 
+  protected async _createUrlContext(context: string[]) {
     const url = this._browser.value.url();
-    if (this._browser.value.url().length > 0) {
+    if (url.length > 0) {
       const title = await this._browser.value.title();
       context.push("Current URL: " + url);
       if (title) context.push("Current Title: " + title);
     } else {
       context.push("No URL is loaded in the browser.");
     }
+  }
 
+  protected async _createHtmlContext(context: string[]) {
+    if (this._browser.value.url().length === 0) return;
+    const clusters = (await this._fetcher.findClusters()).sort(
+      (a, b) => b.elements - a.elements
+    );
+    const representatives = [] as (ElementData | undefined)[];
+    for (const cluster of clusters) {
+      const elements = await this._fetcher.findElementsByCluster(
+        cluster.hash,
+        1
+      );
+      representatives.push(...elements);
+    }
+
+    context.push(`${clusters.length} HTML clusters found.`);
+    for (let i = 0; i < 5 && i < clusters.length; i++) {
+      const cluster = clusters[i];
+      const representative = representatives[i];
+      let text = representative?.text || "None";
+      if (text.length > 110) text = text.substring(0, 100) + "...";
+
+      context.push(`- Hash: ${cluster.hash}`);
+      context.push(`  Keywords: ${Array.from(cluster.keywords).join(", ")}`);
+      context.push(`  Elements: ${cluster.elements}`);
+      context.push(`  Representative: ${text}`);
+    }
+  }
+
+  protected async _createCsvContext(context: string[]) {
+    const csv = await this._csv.value.parse();
     if (csv && csv.data.length > 0) {
       context.push(`CSV rows: ${csv.data.length}`);
       context.push(
@@ -244,16 +328,6 @@ export default class RunnerFacade {
       context.push("CSV rows: 0");
       context.push("CSV headers: [user has not selected a CSV file]");
     }
-
-    if (extra) context.push(...extra);
-
-    context.push(
-      "Use tools to interact with the browser and read the CSV data."
-    );
-    context.unshift("<system>");
-    context.push("</system>");
-
-    return new UserMessage(context.join("\n"), { visible: false });
   }
 
   protected async _refreshMutex() {

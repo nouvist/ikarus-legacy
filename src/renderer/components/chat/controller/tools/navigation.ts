@@ -18,7 +18,7 @@ export default function registerNavigationTools(
 
 export class GetUrlTool extends Tool {
   protected _browser: BrowserController;
-  protected _description = "Get the current URL of the browser";
+  protected _description = "Get the current URL of the browser.";
   protected _parameters = z.object({});
 
   constructor(browser: BrowserController) {
@@ -28,13 +28,16 @@ export class GetUrlTool extends Tool {
 
   async execute() {
     const url = this._browser.url();
-    return "The current URL is: " + url;
+    return [
+      "The current URL is: " + url,
+      "Use `Html` tools to get the web content.",
+    ].join("\n");
   }
 }
 
 export class GetTitleTool extends Tool {
   protected _browser: BrowserController;
-  protected _description = "Get the current title of the browser";
+  protected _description = "Get the current title of the browser.";
   protected _parameters = z.object({});
 
   constructor(browser: BrowserController) {
@@ -50,11 +53,11 @@ export class GetTitleTool extends Tool {
 
 export class GoToUrlTool extends Tool {
   protected _browser: BrowserController;
-  protected _description = "Navigate the browser to a specified URL";
+  protected _description = "Navigate the browser to a specified URL.";
   protected _parameters = z.object({
     url: z
       .string()
-      .describe("The URL to navigate to with its protocol (e.g. https://*)"),
+      .describe("The URL to navigate to with its protocol (e.g. https://*)."),
   });
 
   constructor(browser: BrowserController) {
@@ -64,13 +67,16 @@ export class GoToUrlTool extends Tool {
 
   async execute({ url }: z.infer<typeof this._parameters>) {
     await this._browser.go(url);
-    return `Navigated to ${url}`;
+    return [
+      `Navigated to ${url}`,
+      "Use `Html` tools to get the web content.",
+    ].join("\n");
   }
 }
 
 export class GoBackTool extends Tool {
   protected _browser: BrowserController;
-  protected _description = "Navigate the browser back to the previous page";
+  protected _description = "Navigate the browser back to the previous page.";
   protected _parameters = z.object({});
 
   constructor(browser: BrowserController) {
@@ -80,17 +86,20 @@ export class GoBackTool extends Tool {
 
   async execute() {
     if (!this._browser.canGoBack()) {
-      return "Cannot go back, no previous page available";
+      return "Cannot go back, no previous page available.";
     }
 
     await this._browser.goBack();
-    return "Navigated back to the previous page";
+    return [
+      "Navigated back to the previous page.",
+      "Use `Html` tools to get the web content.",
+    ].join("\n");
   }
 }
 
 export class GoForwardTool extends Tool {
   protected _browser: BrowserController;
-  protected _description = "Navigate the browser forward to the next page";
+  protected _description = "Navigate the browser forward to the next page.";
   protected _parameters = z.object({});
 
   constructor(browser: BrowserController) {
@@ -100,10 +109,13 @@ export class GoForwardTool extends Tool {
 
   async execute() {
     if (!this._browser.canGoForward()) {
-      return "Cannot go forward, no next page available";
+      return "Cannot go forward, no next page available.";
     }
 
     await this._browser.goForward();
-    return "Navigated forward to the next page";
+    return [
+      "Navigated forward to the next page.",
+      "Use `Html` tools to get the web content.",
+    ].join("\n");
   }
 }

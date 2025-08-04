@@ -48,38 +48,38 @@ export class HtmlElementTable extends InMemoryTable<ElementData> {
 
   constructor(connection: Connection) {
     super(connection);
-    this.findHtmlBySemantic = this.findHtmlBySemantic.bind(this);
-    this.findHtmlsByCluster = this.findHtmlsByCluster.bind(this);
-    this.findHtmlByClusterAndIndex = this.findHtmlByClusterAndIndex.bind(this);
+    this.findByCluster = this.findByCluster.bind(this);
+    this.findBySemantic = this.findBySemantic.bind(this);
+    this.findByClusterAndIndex = this.findByClusterAndIndex.bind(this);
   }
 
   async ensureInitialized() {
     await super.ensureInitialized();
   }
 
-  async findHtmlBySemantic(
-    embedding: ElementData["embedding"],
-    limit?: number
-  ) {
+  async findBySemantic(embedding: ElementData["embedding"], limit?: number) {
     let query = this.raw.query().nearestTo(embedding);
     if (limit) query = query.limit(limit);
     return (await query.toArray()) as ElementData[];
   }
 
-  async findHtmlsByCluster(clusterHash: ElementData["clusterHash"]) {
-    return (await this.raw
+  async findByCluster(clusterHash: ElementData["clusterHash"], limit?: number) {
+    let query = this.raw
       .query()
-      .where(`clusterHash == ${clusterHash}`)
-      .toArray()) as ElementData[];
+      .where(`\`clusterHash\` == ${JSON.stringify(clusterHash)}`);
+    if (limit) query = query.limit(limit);
+    return (await query.toArray()) as ElementData[];
   }
 
-  async findHtmlByClusterAndIndex(
+  async findByClusterAndIndex(
     clusterHash: ElementData["clusterHash"],
     index: ElementData["clusterIndex"]
   ) {
     const result = await this.raw
       .query()
-      .where(`clusterHash == ${clusterHash} && clusterIndex == ${index}`)
+      .where(
+        `\`clusterHash\` == ${JSON.stringify(clusterHash)} && \`clusterIndex\` == ${JSON.stringify(index)}`
+      )
       .limit(1)
       .toArray();
     return result[0] as ElementData | undefined;
@@ -106,5 +106,15 @@ export class HtmlClusterTable extends InMemoryTable<ClusterData> {
 
   async ensureInitialized() {
     await super.ensureInitialized();
+  }
+
+  async findAll() {
+    return (await this.raw.query().toArray()) as ClusterData[];
+  }
+
+  async findBySemantic(embedding: ClusterData["embedding"], limit?: number) {
+    let query = this.raw.query().nearestTo(embedding);
+    if (limit) query = query.limit(limit);
+    return (await query.toArray()) as ClusterData[];
   }
 }

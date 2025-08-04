@@ -71,8 +71,8 @@ export class ChangeBySelectorTool extends Tool {
     findInput if you don't know the selector.
   `);
   protected _parameters = z.object({
-    selector: z.string().describe("The selector of the input field to change"),
-    value: z.string().describe("The new value to set in the input field"),
+    selector: z.string().describe("The selector of the input field to change."),
+    value: z.string().describe("The new value to set in the input field."),
   });
 
   constructor(browser: BrowserController) {
@@ -116,7 +116,7 @@ export class SubmitBySelectorTool extends Tool {
     don't know the selector.
   `);
   protected _parameters = z.object({
-    selector: z.string().describe("The selector of the input field to submit"),
+    selector: z.string().describe("The selector of the input field to submit."),
   });
 
   constructor(browser: BrowserController, fetcher: Fetcher) {

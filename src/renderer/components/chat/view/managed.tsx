@@ -28,7 +28,10 @@ export interface ChatManagedProps
   extends _ChatManagedSharedProps,
     PropsWithChildren {}
 
-export default function ChatManaged({ controller, children }: ChatManagedProps) {
+export default function ChatManaged({
+  controller,
+  children,
+}: ChatManagedProps) {
   return (
     <Stack>
       <Chat.Raw>
@@ -146,19 +149,26 @@ function _ChatUser({ chat }: _ChatProps<UserMessage>) {
 }
 
 const _map = {
-  "Navigation.getUrl": "Getting current URL...",
-  "Navigation.goToUrl": "Navigating to specified URL...",
-  "Navigation.goBack": "Going back to the previous page...",
-  "Navigation.goForward": "Moving forward to the next page...",
-  "Button.findBySemantics": "Searching for a button by its meaning...",
-  "Button.clickBySelector": "Clicking button using selector...",
-  "TextInput.findBySemantics": "Locating input field by semantics...",
-  "TextInput.changeBySelector": "Filling in input using selector...",
-  "TextInput.submitBySelector": "Submitting form via selector...",
-  "Html.findElementBySemantic": "Finding element by semantic meaning...",
-  "Html.findElementsByCluster": "Clustering and locating similar elements...",
-  "Html.findElementsByClusterAndIndex":
-    "Targeting clustered element by index...",
+  "Navigation.getUrl": "Getting current page URL...",
+  "Navigation.getTitle": "Checking the page title...",
+  "Navigation.goToUrl": "Heading to the new page...",
+  "Navigation.goBack": "Going back...",
+  "Navigation.goForward": "Moving forward...",
+
+  "Button.findBySemantics": "Looking for a button that fits...",
+  "Button.clickBySelector": "Clicking the button...",
+
+  "TextInput.findBySemantics": "Looking for a text field...",
+  "TextInput.changeBySelector": "Typing something in...",
+  "TextInput.submitBySelector": "Submitting the form...",
+
+  "Html.findElementsBySemantic": "Searching for meaningful content...",
+  "Html.findElementsByCluster": "Grouping similar elements...",
+  "Html.findClusters": "Looking for patterns on the page...",
+  "Html.findClustersBySemantic": "Clustering by meaning...",
+
+  "Csv.getMetadata": "Reading CSV details...",
+  "Csv.getRow": "Fetching a row from the data...",
 } as Record<string, string>;
 
 function _ChatAssistent({ chat }: _ChatProps<AssistantMessage>) {

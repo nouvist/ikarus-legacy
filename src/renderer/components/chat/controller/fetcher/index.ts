@@ -30,20 +30,28 @@ export default class Fetcher {
     this._textInput = new TextInputFetcher(...args);
   }
 
-  get findHtmlBySemantic() {
-    return this._html.findHtmlBySemantic;
+  get findElementsBySemantic() {
+    return this._html.findElementsBySemantic;
   }
 
-  get findHtmlsByCluster() {
-    return this._html.findHtmlsByCluster;
+  get findElementsByCluster() {
+    return this._html.findElementsByCluster;
   }
 
-  get findHtmlByClusterAndIndex() {
-    return this._html.findHtmlByClusterAndIndex;
+  get findElementByClusterAndIndex() {
+    return this._html.findElementByClusterAndIndex;
+  }
+
+  get findClusters() {
+    return this._html.findClusters;
+  }
+
+  get findClustersBySemantic() {
+    return this._html.findClustersBySemantic;
   }
 
   get fetchHtmls() {
-    return this._html.fetchHtmls;
+    return this._html.fetchHtmlsIfNeeded;
   }
 
   get findButton() {

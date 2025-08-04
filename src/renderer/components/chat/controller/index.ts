@@ -71,6 +71,8 @@ export class ChatController {
     this.waitUntilReady = this.waitUntilReady.bind(this);
     this.clear = this.clear.bind(this);
     this.invoke = this.invoke.bind(this);
+    this.get = this.get.bind(this);
+    this.set = this.set.bind(this);
     this.concat = this.concat.bind(this);
     this._refreshEmptiness = this._refreshEmptiness.bind(this);
     this._exposeDebug = this._exposeDebug.bind(this);
@@ -117,14 +119,22 @@ export class ChatController {
     this._contentful.next(false);
   }
 
+  get() {
+    return this._messages.value;
+  }
+
+  set(messages: Message[]) {
+    this._messages.next(messages);
+    this._refreshEmptiness();
+  }
+
   concat(next: Message[] | Message) {
     const currentMessages = this.messages.value;
-    if (Array.isArray(next)) {
-      this._messages.next([...currentMessages, ...next]);
-    } else {
-      this._messages.next([...currentMessages, next]);
-    }
-    this._refreshEmptiness();
+    this.set(
+      Array.isArray(next)
+        ? [...currentMessages, ...next]
+        : [...currentMessages, next]
+    );
   }
 
   async invoke(message: string, abort?: AbortController) {
@@ -132,9 +142,10 @@ export class ChatController {
       this._messagesMutex.next(false);
       this.concat(new UserMessage(message));
       await this._runner.execute({
-        messages: this.messages.value,
-        callback: this.concat,
         abortSignal: abort?.signal,
+        concatMessages: this.concat,
+        getMessages: this.get,
+        setMessages: this.set,
       });
     } finally {
       this._messagesMutex.next(true);

@@ -61,7 +61,7 @@ export class ClickBottonTool extends Tool {
     you don't know the selector.
   `);
   protected _parameters = z.object({
-    selector: z.string().describe("The selector of the button to click"),
+    selector: z.string().describe("The selector of the button to click."),
   });
 
   constructor(browser: BrowserController) {

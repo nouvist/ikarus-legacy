@@ -25,7 +25,7 @@ export interface TextInputData {
 }
 
 export default class TextInputTable extends InMemoryTable<TextInputData> {
-  protected _name = "text_inputs";
+  protected _name = "textInputs";
   protected _schema = new Schema([
     new Field("hash", new Utf8()),
     new Field("tag", new Utf8()),

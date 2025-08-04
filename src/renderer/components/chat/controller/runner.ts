@@ -16,7 +16,10 @@ import {
   ToolMessage,
   UserMessage,
 } from "~/renderer/components/chat";
-import { RunnerInvokeOptions } from "~/renderer/components/chat/controller/runner_facade";
+import {
+  RunnerInvokeOptions,
+  RunnerInvokeRequest,
+} from "~/renderer/components/chat/controller/runner_facade";
 import TooManyRequestsController, {
   TooManyRequestsState,
 } from "~/renderer/components/chat/controller/too_many_requests_controller";
@@ -45,11 +48,11 @@ export default class Runner {
     return `${value.length}::${hash}` as const;
   }
 
-  protected static _defaultOptions = {
+  protected static _defaultRequest = {
     maxSteps: 10,
     temperature: 0.7,
     frequencyPenalty: 0.75,
-  } satisfies Partial<RunnerInvokeOptions>;
+  } satisfies Partial<RunnerInvokeRequest>;
 
   constructor(
     embedding: RefCell<EmbeddingModel<string>>,
@@ -138,18 +141,19 @@ export default class Runner {
   }
 
   async invoke({
-    messages,
-    callback,
     abortSignal,
+    concatMessages,
+    getMessages,
+    setMessages,
     ...options
   }: RunnerInvokeOptions): Promise<Message[]> {
     try {
       const result = await generateText({
-        ...Runner._defaultOptions,
-        ...options,
+        ...Runner._defaultRequest,
+        ...options.request,
         abortSignal,
         model: this._language.value,
-        messages: messages,
+        messages: getMessages(),
         tools: this._tools,
       });
 
@@ -181,10 +185,8 @@ export default class Runner {
       }
 
       console.log(next);
-      if (callback) {
-        for (const message of next) {
-          callback(message);
-        }
+      for (const message of next) {
+        concatMessages(message);
       }
 
       return next;
@@ -196,28 +198,30 @@ export default class Runner {
         throw error;
       }
       return this.invoke({
-        ...Runner._defaultOptions,
+        ...Runner._defaultRequest,
         ...options,
-        messages,
-        callback,
         abortSignal,
+        concatMessages,
+        getMessages,
+        setMessages,
       });
     }
   }
 
   async stream({
-    messages,
-    callback,
+    concatMessages,
+    getMessages,
+    setMessages,
     abortSignal,
     ...options
   }: RunnerInvokeOptions): Promise<void> {
     try {
       const stream = streamText({
-        ...Runner._defaultOptions,
+        ...Runner._defaultRequest,
         ...options,
         abortSignal,
         model: this._language.value,
-        messages: messages,
+        messages: getMessages(),
         tools: this._tools,
       });
 
@@ -237,7 +241,7 @@ export default class Runner {
             last.content.push(chunk);
           } else {
             completeLast();
-            callback((last = new AssistantMessage([chunk])));
+            concatMessages((last = new AssistantMessage([chunk])));
           }
         }
 
@@ -247,7 +251,7 @@ export default class Runner {
             last.content.push(chunkAsTool);
           } else {
             completeLast();
-            callback((last = new ToolMessage([chunkAsTool])));
+            concatMessages((last = new ToolMessage([chunkAsTool])));
           }
         }
 
@@ -256,7 +260,7 @@ export default class Runner {
             last.concat(chunk.textDelta);
           } else {
             completeLast();
-            callback((last = new AssistantMessage(chunk.textDelta)));
+            concatMessages((last = new AssistantMessage(chunk.textDelta)));
           }
         }
       }
@@ -268,10 +272,11 @@ export default class Runner {
         throw error;
       }
       return this.stream({
-        ...Runner._defaultOptions,
+        ...Runner._defaultRequest,
         ...options,
-        messages,
-        callback,
+        concatMessages,
+        getMessages,
+        setMessages,
         abortSignal,
       });
     }

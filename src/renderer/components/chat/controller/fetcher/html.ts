@@ -2,7 +2,7 @@ import fnv from "fnv-plus";
 import { BrowserController } from "~/renderer/components/browser";
 import Runner from "~/renderer/components/chat/controller/runner";
 import InMemory from "~/renderer/memory";
-import { ElementData } from "~/renderer/memory/tables/html";
+import { ClusterData, ElementData } from "~/renderer/memory/tables/html";
 import natural from "~/renderer/node/natural";
 import { RefCell } from "~/shared/core";
 import { HtmlUtils } from "~/shared/html";
@@ -48,9 +48,12 @@ export default class HtmlFetcher {
     this._memory = memory;
     this._runner = runner;
 
-    this.findHtmlBySemantic = this.findHtmlBySemantic.bind(this);
-    this.findHtmlsByCluster = this.findHtmlsByCluster.bind(this);
-    this.findHtmlByClusterAndIndex = this.findHtmlByClusterAndIndex.bind(this);
+    this.findElementsBySemantic = this.findElementsBySemantic.bind(this);
+    this.findElementsByCluster = this.findElementsByCluster.bind(this);
+    this.findElementByClusterAndIndex =
+      this.findElementByClusterAndIndex.bind(this);
+    this.findClusters = this.findClusters.bind(this);
+    this.findClustersBySemantic = this.findClustersBySemantic.bind(this);
 
     this.fetchHtmls = this.fetchHtmls.bind(this);
     this._storeElements = this._storeElements.bind(this);
@@ -63,26 +66,43 @@ export default class HtmlFetcher {
     this._applySemanticToClusters = this._applySemanticToClusters.bind(this);
   }
 
-  async findHtmlBySemantic(semantics: string, limit = 10) {
+  async findElementsBySemantic(
+    semantics: string,
+    limit?: number,
+  ): Promise<ElementData[]> {
     await this.fetchHtmlsIfNeeded();
     const embedding = await this._runner.embed(semantics);
-    return this._memory.htmlElement.findHtmlBySemantic(embedding, limit);
+    return this._memory.htmlElement.findBySemantic(embedding, limit);
   }
 
-  async findHtmlsByCluster(clusterHash: ElementData["clusterHash"]) {
+  async findElementsByCluster(
+    clusterHash: ElementData["clusterHash"],
+    limit?: number
+  ): Promise<ElementData[]> {
     await this.fetchHtmlsIfNeeded();
-    return this._memory.htmlElement.findHtmlsByCluster(clusterHash);
+    return this._memory.htmlElement.findByCluster(clusterHash, limit);
   }
 
-  async findHtmlByClusterAndIndex(
+  async findElementByClusterAndIndex(
     clusterHash: ElementData["clusterHash"],
     index: number
-  ) {
+  ): Promise<ElementData | undefined> {
     await this.fetchHtmlsIfNeeded();
-    return this._memory.htmlElement.findHtmlByClusterAndIndex(
-      clusterHash,
-      index
-    );
+    return this._memory.htmlElement.findByClusterAndIndex(clusterHash, index);
+  }
+
+  async findClusters() {
+    await this.fetchHtmlsIfNeeded();
+    return this._memory.htmlCluster.findAll();
+  }
+
+  async findClustersBySemantic(
+    semantics: string,
+    limit = 10
+  ): Promise<ClusterData[]> {
+    await this.fetchHtmlsIfNeeded();
+    const embedding = await this._runner.embed(semantics);
+    return this._memory.htmlCluster.findBySemantic(embedding, limit);
   }
 
   async fetchHtmlsIfNeeded() {
@@ -105,7 +125,7 @@ export default class HtmlFetcher {
     const merged = this._mergeClusters(clustered);
     console.log(`[HtmlFetcher] ada ${merged.length} wlee`);
     const clusterWithKeywords = this._applyKeywordToClusters(merged);
-    console.log(`[HtmlFetcher] nyoba llm`);
+    console.log(`[HtmlFetcher] semantic?`);
     const clusterWithSemantic =
       await this._applySemanticToClusters(clusterWithKeywords);
 

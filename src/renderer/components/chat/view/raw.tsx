@@ -287,6 +287,13 @@ const _ChatShared = styled.div`
     color: ${(p) => p.theme.accent.primary};
     text-decoration: none;
   }
+
+  hr {
+    border: none;
+    height: 1px;
+    margin: 16px 0;
+    background-color: ${(p) => p.theme.elevation.solid};
+  }
 `;
 
 function encapsulate<T extends object>(component: T, type: ChatType) {

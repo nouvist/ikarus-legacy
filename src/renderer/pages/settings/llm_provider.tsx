@@ -60,7 +60,7 @@ export default function SettingsPageLlmProvider() {
     setState(() => ({
       changed: true,
       url: "https://api.groq.com/openai/v1",
-      model: "qwen/qwen3-32b",
+      model: "llama-3.1-8b-instant",
       key: env,
     }));
   }
@@ -70,7 +70,7 @@ export default function SettingsPageLlmProvider() {
     setState(() => ({
       changed: true,
       url: "https://api.together.xyz/v1",
-      model: "llama3.2:1b",
+      model: "",
       key: env,
     }));
   }
@@ -92,7 +92,7 @@ export default function SettingsPageLlmProvider() {
     setState(() => ({
       changed: true,
       url: "http://127.0.0.1:11434/v1",
-      model: "llama3.2:1b",
+      model: "qwen3:1.7b",
       key: "ollama",
     }));
   }
