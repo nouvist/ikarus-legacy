@@ -263,7 +263,7 @@ export default class RunnerFacade {
 
     return new UserMessage(context.join("\n"), {
       // visible: await managed.env.isDebug(),
-      // visible: false,
+      visible: false,
     });
   }
 
