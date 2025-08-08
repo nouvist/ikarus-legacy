@@ -1,5 +1,6 @@
 import { BrowserController } from "~/renderer/components/browser";
 import ButtonFetcher from "~/renderer/components/chat/controller/fetcher/button";
+import CheckboxInputFetcher from "~/renderer/components/chat/controller/fetcher/checkbox_input";
 import HtmlFetcher from "~/renderer/components/chat/controller/fetcher/html";
 import RadioInputFetcher from "~/renderer/components/chat/controller/fetcher/radio_input";
 import TextInputFetcher from "~/renderer/components/chat/controller/fetcher/text_input";
@@ -14,6 +15,7 @@ export default class Fetcher {
 
   readonly html: HtmlFetcher;
   readonly radio: RadioInputFetcher;
+  readonly checkbox: CheckboxInputFetcher;
   readonly button: ButtonFetcher;
   readonly text: TextInputFetcher;
 
@@ -29,6 +31,7 @@ export default class Fetcher {
     const args = [this._browser, this._memory, this._runner] as const;
     this.html = new HtmlFetcher(...args);
     this.radio = new RadioInputFetcher(...args);
+    this.checkbox = new CheckboxInputFetcher(...args);
     this.button = new ButtonFetcher(...args);
     this.text = new TextInputFetcher(...args);
   }

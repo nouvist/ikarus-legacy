@@ -12,7 +12,6 @@ import TooManyRequestsController from "~/renderer/components/chat/controller/too
 import createTools from "~/renderer/components/chat/controller/tools";
 import { CsvController } from "~/renderer/components/csv";
 import InMemory from "~/renderer/memory";
-import { ElementData } from "~/renderer/memory/tables/html";
 import { Completer, LateRefCell } from "~/shared/core";
 import { Mutex, Rxjs } from "~/shared/rxjs";
 
@@ -155,7 +154,7 @@ export default class RunnerFacade {
       this._browser.value,
       this._csv.value,
       this._fetcher,
-      this._createContext,
+      this._createContext
     );
 
     this._runner.registerTools(tools);
@@ -258,7 +257,7 @@ export default class RunnerFacade {
     context.push("Use tools to interact with the browser and CSV.");
 
     if (!noTags) {
-      context.push("Use Html.getSummary to get this summary again.");
+      context.push("Use Core.getSummary to get this summary again.");
       context.unshift("<system>");
       context.push("</system>");
     }
@@ -294,11 +293,16 @@ export default class RunnerFacade {
     const buttons = dom.querySelectorAll("button, a").length;
     const submits = dom.querySelectorAll("input[type='submit']").length;
     const radio = dom.querySelectorAll("input[type='radio']").length;
+    const checkbox = dom.querySelectorAll("input[type='checkbox']").length;
     const inputs =
-      dom.querySelectorAll("input, textarea").length - radio - submits;
+      dom.querySelectorAll("input, textarea").length -
+      submits -
+      radio -
+      checkbox;
     context.push(`Number of buttons and links: ${buttons + submits}`);
     context.push(`Number of text inputs and text areas: ${inputs}`);
     context.push(`Number of radio buttons: ${radio}`);
+    context.push(`Number of checkbox inputs: ${checkbox}`);
   }
 
   protected async _createCsvContext(context: string[]) {

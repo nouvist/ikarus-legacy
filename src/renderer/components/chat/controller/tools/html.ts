@@ -1,7 +1,6 @@
 import z from "zod";
 import { BrowserController } from "~/renderer/components/browser";
 import Fetcher from "~/renderer/components/chat/controller/fetcher";
-import { UserMessage } from "~/renderer/components/chat/controller/structs";
 import {
   Tool,
   ToolRegistrar,
@@ -12,9 +11,7 @@ export default function registerHtmlTools(
   registrar: ToolRegistrar,
   browser: BrowserController,
   fetcher: Fetcher,
-  context: (extra?: string[], noTags?: boolean) => Promise<UserMessage>
 ) {
-  registrar.register("Html.getSummary", new GetSummaryTool(browser, context));
   registrar.register(
     "Html.findElementsBySemantics",
     new FindElementsBySemanticsTool(browser, fetcher)
@@ -31,31 +28,6 @@ export default function registerHtmlTools(
     "Html.findClustersBySemantics",
     new FindClustersBySemanticsTool(browser, fetcher)
   );
-}
-
-export class GetSummaryTool extends Tool {
-  protected _browser: BrowserController;
-  protected _context: (
-    extra?: string[],
-    noTags?: boolean
-  ) => Promise<UserMessage>;
-
-  protected _description = "Get a summary of the current page.";
-  protected _parameters = z.object({});
-
-  constructor(
-    browser: BrowserController,
-    context: (extra?: string[], noTags?: boolean) => Promise<UserMessage>
-  ) {
-    super();
-    this._browser = browser;
-    this._context = context;
-  }
-
-  async execute() {
-    const message = await this._context(undefined, true);
-    return message.content;
-  }
 }
 
 export class FindElementsBySemanticsTool extends Tool {

@@ -1,6 +1,10 @@
 import type { Connection } from "@lancedb/lancedb";
 import ButtonTable from "~/renderer/memory/tables/button";
 import {
+  CheckboxInputClusterTable,
+  CheckboxInputTable,
+} from "~/renderer/memory/tables/checkbox_input";
+import {
   HtmlClusterTable,
   HtmlElementTable,
 } from "~/renderer/memory/tables/html";
@@ -24,6 +28,9 @@ export default class InMemory {
   protected _radioInputs?: RadioInputTable;
   protected _radioInputClusters?: RadioInputClusterTable;
 
+  protected _checkboxInputs?: CheckboxInputTable;
+  protected _checkboxInputClusters?: CheckboxInputClusterTable;
+
   constructor() {
     this._throwNotInitializedError = this._throwNotInitializedError.bind(this);
   }
@@ -39,6 +46,10 @@ export default class InMemory {
 
     this._radioInputs = new RadioInputTable(this._connection);
     this._radioInputClusters = new RadioInputClusterTable(this._connection);
+
+    this._checkboxInputs = new CheckboxInputTable(this._connection);
+    this._checkboxInputClusters = new CheckboxInputClusterTable(this._connection);
+
     await Promise.all([
       this._htmlElement.ensureInitialized(),
       this._htmlCluster.ensureInitialized(),
@@ -48,6 +59,9 @@ export default class InMemory {
 
       this._radioInputs.ensureInitialized(),
       this._radioInputClusters.ensureInitialized(),
+
+      this._checkboxInputs.ensureInitialized(),
+      this._checkboxInputClusters.ensureInitialized(),
     ]);
     this._isInitialized = true;
   }
@@ -86,5 +100,15 @@ export default class InMemory {
   get radioInputClusters() {
     if (!this._radioInputClusters) throw this._throwNotInitializedError();
     return this._radioInputClusters;
+  }
+
+  get checkboxInputs() {
+    if (!this._checkboxInputs) throw this._throwNotInitializedError();
+    return this._checkboxInputs;
+  }
+
+  get checkboxInputClusters() {
+    if (!this._checkboxInputClusters) throw this._throwNotInitializedError();
+    return this._checkboxInputClusters;
   }
 }

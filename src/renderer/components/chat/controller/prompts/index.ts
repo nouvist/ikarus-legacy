@@ -1,4 +1,4 @@
-import system from "./system.txt?raw";
+import system from "./system_next.txt?raw";
 import retrieve from "./retrieve.txt?raw";
 import augment from "./augment.txt?raw";
 import cluster from "./cluster.txt?raw";
