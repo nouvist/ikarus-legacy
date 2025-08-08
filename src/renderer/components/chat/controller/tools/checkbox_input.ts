@@ -19,13 +19,31 @@ export default function registerCheckboxInputTools(
     "CheckboxInput.findByName",
     new FindByNameTool(browser, fetcher)
   );
+
   registrar.register(
-    "CheckboxInput.changeByValue",
-    new ChangeByValueTool(browser, fetcher)
+    "CheckboxInput.checkByValue",
+    new CheckByValueTool(browser, fetcher)
   );
   registrar.register(
-    "CheckboxInput.changeBySelector",
-    new ChangeBySelectorTool(browser)
+    "CheckboxInput.uncheckByValue",
+    new UncheckByValueTool(browser, fetcher)
+  );
+  registrar.register(
+    "CheckboxInput.toggleByValue",
+    new ToggleByValueTool(browser, fetcher)
+  );
+
+  registrar.register(
+    "CheckboxInput.checkBySelector",
+    new CheckBySelectorTool(browser)
+  );
+  registrar.register(
+    "CheckboxInput.uncheckBySelector",
+    new UncheckBySelectorTool(browser)
+  );
+  registrar.register(
+    "CheckboxInput.toggleBySelector",
+    new ToggleBySelectorTool(browser)
   );
 }
 
@@ -108,13 +126,69 @@ export class FindByNameTool extends Tool {
   }
 }
 
-export class ChangeByValueTool extends Tool {
+export class CheckByValueTool extends Tool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
-  protected _description = "Change checkbox input by value.";
+  protected _description = "Check a checkbox input by value.";
   protected _parameters = z.object({
-    name: z.string().describe("Name of the checkbox input to change."),
-    value: z.string().describe("Value of the checkbox input to change."),
+    name: z.string().describe("Name of the checkbox input to check."),
+    value: z.string().describe("Value of the checkbox input to check."),
+  });
+
+  constructor(browser: BrowserController, fetcher: Fetcher) {
+    super();
+    this._browser = browser;
+    this._fetcher = fetcher;
+  }
+
+  async execute({ name, value }: z.infer<typeof this._parameters>) {
+    const dom = await this._browser.dom();
+    const input = dom.querySelector<HTMLInputElement>(
+      `input[name="${CSS.escape(name)}"][value="${CSS.escape(value)}"]`
+    );
+    if (!input) return "Checkbox input not found.";
+    if (input.type !== "checkbox") return "Element is not a checkbox input.";
+    if (input.checked) return "Checkbox input is already checked.";
+    input.click();
+    return "Checkbox input checked successfully.";
+  }
+}
+
+export class UncheckByValueTool extends Tool {
+  protected _browser: BrowserController;
+  protected _fetcher: Fetcher;
+  protected _description = "Uncheck a checkbox input by value.";
+  protected _parameters = z.object({
+    name: z.string().describe("Name of the checkbox input to uncheck."),
+    value: z.string().describe("Value of the checkbox input to uncheck."),
+  });
+
+  constructor(browser: BrowserController, fetcher: Fetcher) {
+    super();
+    this._browser = browser;
+    this._fetcher = fetcher;
+  }
+
+  async execute({ name, value }: z.infer<typeof this._parameters>) {
+    const dom = await this._browser.dom();
+    const input = dom.querySelector<HTMLInputElement>(
+      `input[name="${CSS.escape(name)}"][value="${CSS.escape(value)}"]`
+    );
+    if (!input) return "Checkbox input not found.";
+    if (input.type !== "checkbox") return "Element is not a checkbox input.";
+    if (!input.checked) return "Checkbox input is already unchecked.";
+    input.click();
+    return "Checkbox input unchecked successfully.";
+  }
+}
+
+export class ToggleByValueTool extends Tool {
+  protected _browser: BrowserController;
+  protected _fetcher: Fetcher;
+  protected _description = "Toggle a checkbox input by value.";
+  protected _parameters = z.object({
+    name: z.string().describe("Name of the checkbox input to toggle."),
+    value: z.string().describe("Value of the checkbox input to toggle."),
   });
 
   constructor(browser: BrowserController, fetcher: Fetcher) {
@@ -131,15 +205,61 @@ export class ChangeByValueTool extends Tool {
     if (!input) return "Checkbox input not found.";
     if (input.type !== "checkbox") return "Element is not a checkbox input.";
     input.click();
-    return "Checkbox input changed successfully.";
+    return "Checkbox input toggled successfully.";
   }
 }
 
-export class ChangeBySelectorTool extends Tool {
+export class CheckBySelectorTool extends Tool {
   protected _browser: BrowserController;
-  protected _description = "Click a checkbox input by its selector.";
+  protected _description = "Check a checkbox input by its selector.";
   protected _parameters = z.object({
-    selector: z.string().describe("Selector of the checkbox input to click."),
+    selector: z.string().describe("Selector of the checkbox input to check."),
+  });
+
+  constructor(browser: BrowserController) {
+    super();
+    this._browser = browser;
+  }
+
+  async execute({ selector }: z.infer<typeof this._parameters>) {
+    const dom = await this._browser.dom();
+    const input = dom.querySelector<HTMLInputElement>(selector);
+    if (!input) return "Checkbox input not found.";
+    if (input.type !== "checkbox") return "Element is not a checkbox input.";
+    if (input.checked) return "Checkbox input is already checked.";
+    input.click();
+    return "Checkbox input checked successfully.";
+  }
+}
+
+export class UncheckBySelectorTool extends Tool {
+  protected _browser: BrowserController;
+  protected _description = "Uncheck a checkbox input by its selector.";
+  protected _parameters = z.object({
+    selector: z.string().describe("Selector of the checkbox input to uncheck."),
+  });
+
+  constructor(browser: BrowserController) {
+    super();
+    this._browser = browser;
+  }
+
+  async execute({ selector }: z.infer<typeof this._parameters>) {
+    const dom = await this._browser.dom();
+    const input = dom.querySelector<HTMLInputElement>(selector);
+    if (!input) return "Checkbox input not found.";
+    if (input.type !== "checkbox") return "Element is not a checkbox input.";
+    if (!input.checked) return "Checkbox input is already unchecked.";
+    input.click();
+    return "Checkbox input unchecked successfully.";
+  }
+}
+
+export class ToggleBySelectorTool extends Tool {
+  protected _browser: BrowserController;
+  protected _description = "Toggle a checkbox input by its selector.";
+  protected _parameters = z.object({
+    selector: z.string().describe("Selector of the checkbox input to toggle."),
   });
 
   constructor(browser: BrowserController) {
@@ -153,6 +273,6 @@ export class ChangeBySelectorTool extends Tool {
     if (!input) return "Checkbox input not found.";
     if (input.type !== "checkbox") return "Element is not a checkbox input.";
     input.click();
-    return "Checkbox input clicked successfully.";
+    return "Checkbox input toggled successfully.";
   }
 }

@@ -169,8 +169,12 @@ const _map = {
 
   "CheckboxInput.findBySemantics": "Looking for a checkbox that fits...",
   "CheckboxInput.findByName": "Finding checkboxes by name...",
-  "CheckboxInput.changeByValue": "Toggling the matching checkbox value...",
-  "CheckboxInput.changeBySelector": "Toggling the checkbox...",
+  "CheckboxInput.checkByValue": "Checking the matching checkbox...",
+  "CheckboxInput.uncheckByValue": "Unchecking the matching checkbox...",
+  "CheckboxInput.toggleByValue": "Toggling the matching checkbox...",
+  "CheckboxInput.checkBySelector": "Checking the checkbox...",
+  "CheckboxInput.uncheckBySelector": "Unchecking the checkbox...",
+  "CheckboxInput.toggleBySelector": "Toggling the checkbox...",
 
   "Button.findBySemantics": "Looking for a button that fits...",
   "Button.clickBySelector": "Clicking the button...",

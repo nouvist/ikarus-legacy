@@ -11,7 +11,7 @@ import { RefCell } from "~/shared/core";
 import { HtmlUtils } from "~/shared/html";
 
 interface _CheckboxInputCluster {
-  name: string;
+  name?: string;
   options: _CheckboxInput[];
 }
 
@@ -112,17 +112,17 @@ export default class CheckboxInputFetcher {
   }
 
   async _collectClusters(dom: Document): Promise<_CheckboxInputCluster[]> {
-    const clusters = new Map<string, _CheckboxInputCluster>();
+    const clusters = new Map<string | undefined, _CheckboxInputCluster>();
     const inputs = dom.querySelectorAll<HTMLInputElement>(
       "input[type='checkbox']"
     );
 
     for (const input of inputs) {
-      const name = input.getAttribute("name");
-      if (!name) continue;
+      const name = input.getAttribute("name") ?? undefined;
 
       if (!clusters.has(name)) clusters.set(name, { name, options: [] });
       const cluster = clusters.get(name)!;
+
       cluster.options.push({
         selector: HtmlUtils.getElementSelector(input),
         hash: HtmlUtils.getHashFromElement(input),
@@ -141,7 +141,8 @@ export default class CheckboxInputFetcher {
 
     for (const group of groups) {
       const appliedOptions: _CheckboxInputWithSemantics[] = [];
-      const labels: string[] = [group.name];
+      const labels: string[] = [];
+      if (group.name) labels.push(group.name);
 
       for (const option of group.options) {
         const semantics = await this._runner.embed(option.labels.join("\n"));
@@ -167,7 +168,7 @@ export default class CheckboxInputFetcher {
     await this._memory.checkboxInputClusters.clear();
     await this._memory.checkboxInputClusters.add(
       clusters.map((cluster) => ({
-        name: cluster.name,
+        name: cluster.name ?? "::NO_NAME::",
         options: cluster.options.length,
         semantics: cluster.semantics,
       }))
@@ -182,7 +183,7 @@ export default class CheckboxInputFetcher {
           hash: option.hash,
           selector: option.selector,
           embedding: option.semantics,
-          name: cluster.name,
+          name: cluster.name ?? "::NO_NAME::",
           value: option.value,
           text: option.text,
           labels: option.labels,
