@@ -91,6 +91,5 @@ jobs:
         run: |
           head=$(git rev-parse HEAD)
           head8=$(echo "$head" | cut -c1-8)
-          files=$(find out -maxdepth 1 -name "istn-agent-*.tar.gz")
-          gh release create "$head8" "$files" \
+          gh release create "$head8" "./out/*.tar.gz" \
             --title "Release $head8"
