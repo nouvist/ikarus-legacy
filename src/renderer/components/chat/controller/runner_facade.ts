@@ -29,14 +29,18 @@ export interface RunnerInvokeOptions {
   request?: RunnerInvokeRequest;
 }
 
-export interface OpenAiApiOptions {
+export interface RunnerLanguageOptions {
   url: string;
   key: string;
   model: string;
 }
 
-export type RunnerLanguageOptions = OpenAiApiOptions;
-export type RunnerEmbeddingOptions = OpenAiApiOptions;
+export interface RunnerEmbeddingOptions {
+  url: string;
+  key: string;
+  model: string;
+  dimensions: number;
+}
 
 export interface RunnerPersistentOptions {
   language?: RunnerLanguageOptions;
@@ -160,6 +164,11 @@ export default class RunnerFacade {
     this._runner.registerTools(tools);
     await this._memory.ensureInitialized();
     await this.initializeLastUsed();
+  }
+
+  getTextEmbeddingDimensions(): number {
+    const options = this.getPersistentOptions();
+    return options.embedding?.dimensions || 768;
   }
 
   getPersistentOptions(): RunnerPersistentOptions {

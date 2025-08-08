@@ -240,7 +240,7 @@ export default function SettingsPageLlmProvider() {
                   Revert
                 </Button>
                 <Button
-                  disabled={!state.changed}
+                  disabled={!state.changed || !state.url || !state.model}
                   color={ColorType.Primary}
                   onClick={handleSave}
                 >

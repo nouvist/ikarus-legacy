@@ -1,4 +1,5 @@
 import { Field, FixedSizeList, Float32, Schema, Utf8 } from "apache-arrow";
+import RunnerFacade from "~/renderer/components/chat/controller/runner_facade";
 import InMemoryTable from "~/renderer/memory/tables/abstract";
 
 export enum TextInputDataType {
@@ -31,7 +32,10 @@ export default class TextInputTable extends InMemoryTable<TextInputData> {
     new Field("selector", new Utf8()),
     new Field(
       "embedding",
-      new FixedSizeList(768, new Field("item", new Float32()))
+      new FixedSizeList(
+        RunnerFacade.instance.getTextEmbeddingDimensions(),
+        new Field("item", new Float32())
+      )
     ),
   ]);
 

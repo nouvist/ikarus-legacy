@@ -6,6 +6,7 @@ import {
   Schema,
   Utf8,
 } from "apache-arrow";
+import RunnerFacade from "~/renderer/components/chat/controller/runner_facade";
 import InMemoryTable from "~/renderer/memory/tables/abstract";
 
 export interface CheckboxInputData {
@@ -26,7 +27,10 @@ export default class CheckboxInputTable extends InMemoryTable<CheckboxInputData>
     new Field("selector", new Utf8()),
     new Field(
       "embedding",
-      new FixedSizeList(768, new Field("item", new Float32()))
+      new FixedSizeList(
+        RunnerFacade.instance.getTextEmbeddingDimensions(),
+        new Field("item", new Float32())
+      )
     ),
     new Field("name", new Utf8()),
     new Field("value", new Utf8()),

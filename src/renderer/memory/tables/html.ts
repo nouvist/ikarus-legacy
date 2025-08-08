@@ -8,6 +8,7 @@ import {
   Uint32,
   Utf8,
 } from "apache-arrow";
+import RunnerFacade from "~/renderer/components/chat/controller/runner_facade";
 import InMemoryTable from "~/renderer/memory/tables/abstract";
 
 export interface ElementData {
@@ -42,7 +43,10 @@ export class HtmlElementTable extends InMemoryTable<ElementData> {
     new Field("clusterIndex", new Uint32()),
     new Field(
       "embedding",
-      new FixedSizeList(768, new Field("item", new Float32()))
+      new FixedSizeList(
+        RunnerFacade.instance.getTextEmbeddingDimensions(),
+        new Field("item", new Float32())
+      )
     ),
   ]);
 
@@ -102,7 +106,10 @@ export class HtmlClusterTable extends InMemoryTable<ClusterData> {
     // new Field("description", new Utf8()),
     new Field(
       "embedding",
-      new FixedSizeList(768, new Field("item", new Float32()))
+      new FixedSizeList(
+        RunnerFacade.instance.getTextEmbeddingDimensions(),
+        new Field("item", new Float32())
+      )
     ),
   ]);
 

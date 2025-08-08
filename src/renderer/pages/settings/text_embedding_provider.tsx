@@ -5,6 +5,7 @@ import Card from "~/renderer/components/card";
 import RunnerFacade from "~/renderer/components/chat/controller/runner_facade";
 import Flex, { JustifyContent } from "~/renderer/components/flex";
 import Input from "~/renderer/components/input";
+import Modal from "~/renderer/components/modal";
 import { ColorType } from "~/renderer/foundations/colors";
 import Constraints from "~/renderer/foundations/constraints";
 import EdgeInsets from "~/renderer/foundations/edge_insets";
@@ -14,6 +15,7 @@ interface _State {
   url: string;
   key: string;
   model: string;
+  dimensions?: number;
 }
 
 export function SettingsPageTextEmbeddingProvider() {
@@ -42,6 +44,12 @@ export function SettingsPageTextEmbeddingProvider() {
     setState((prev) => ({ ...prev, model, changed: true }));
   }
 
+  function handleDimensions(e: ChangeEvent<HTMLInputElement>) {
+    const dimensions = parseInt(e.target.value, 10);
+    if (isNaN(dimensions) || state.dimensions === dimensions) return;
+    setState((prev) => ({ ...prev, dimensions, changed: true }));
+  }
+
   async function handleUseOpenAi() {
     const env = (await managed.env.get("OPENAI_API_KEY")) || "";
     setState(() => ({
@@ -58,11 +66,12 @@ export function SettingsPageTextEmbeddingProvider() {
       url: "http://127.0.0.1:11434/v1",
       model: "nomic-embed-text:v1.5",
       key: "ollama",
+      dimensions: 768,
     }));
   }
 
   async function handleSave() {
-    await RunnerFacade.instance.initializeEmbedding(state, true);
+    await RunnerFacade.instance.initializeEmbedding(state as any, true);
     setState((prev) => ({ ...prev, changed: false }));
   }
 
@@ -73,6 +82,7 @@ export function SettingsPageTextEmbeddingProvider() {
       url: options.embedding?.url || "",
       key: options.embedding?.key || "",
       model: options.embedding?.model || "",
+      dimensions: options.embedding?.dimensions,
     }));
   }
 
@@ -131,6 +141,25 @@ export function SettingsPageTextEmbeddingProvider() {
           </tr>
 
           <tr>
+            <td>Dims</td>
+            <td>
+              <Input
+                type="number"
+                value={state.dimensions || ""}
+                onKeyDown={handleKeyDown}
+                onChange={handleDimensions}
+                placeholder="768"
+              />
+            </td>
+          </tr>
+
+          <tr>
+            <td colSpan={2}>
+              Dimensions change requires a restart of the app to take effect.
+            </td>
+          </tr>
+
+          <tr>
             <td colSpan={2}>Other providers:</td>
           </tr>
 
@@ -164,7 +193,12 @@ export function SettingsPageTextEmbeddingProvider() {
                   Revert
                 </Button>
                 <Button
-                  disabled={!state.changed}
+                  disabled={
+                    !state.changed ||
+                    !state.url ||
+                    !state.model ||
+                    !state.dimensions
+                  }
                   color={ColorType.Primary}
                   onClick={handleSave}
                 >
