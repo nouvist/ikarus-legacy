@@ -1,6 +1,7 @@
 import z from "zod";
 import { BrowserController } from "~/renderer/components/browser";
 import Fetcher from "~/renderer/components/chat/controller/fetcher";
+import { UserMessage } from "~/renderer/components/chat/controller/structs";
 import {
   Tool,
   ToolRegistrar,
@@ -10,8 +11,10 @@ import { ElementData } from "~/renderer/memory/tables/html";
 export default function registerHtmlTools(
   registrar: ToolRegistrar,
   browser: BrowserController,
-  fetcher: Fetcher
+  fetcher: Fetcher,
+  context: (extra?: string[], noTags?: boolean) => Promise<UserMessage>
 ) {
+  registrar.register("Html.getSummary", new GetSummaryTool(browser, context));
   registrar.register(
     "Html.findElementsBySemantics",
     new FindElementsBySemanticsTool(browser, fetcher)
@@ -30,6 +33,31 @@ export default function registerHtmlTools(
   );
 }
 
+export class GetSummaryTool extends Tool {
+  protected _browser: BrowserController;
+  protected _context: (
+    extra?: string[],
+    noTags?: boolean
+  ) => Promise<UserMessage>;
+
+  protected _description = "Get a summary of the current page.";
+  protected _parameters = z.object({});
+
+  constructor(
+    browser: BrowserController,
+    context: (extra?: string[], noTags?: boolean) => Promise<UserMessage>
+  ) {
+    super();
+    this._browser = browser;
+    this._context = context;
+  }
+
+  async execute() {
+    const message = await this._context(undefined, true);
+    return message.content;
+  }
+}
+
 export class FindElementsBySemanticsTool extends Tool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
@@ -45,7 +73,10 @@ export class FindElementsBySemanticsTool extends Tool {
   }
 
   async execute({ semantics }: z.infer<typeof this._parameters>) {
-    const elements = await this._fetcher.findElementsBySemantics(semantics, 10);
+    const elements = await this._fetcher.html.findElementsBySemantics(
+      semantics,
+      10
+    );
     const lines = elements.map((element) => {
       return [
         `Selector: ${element.selector}`,
@@ -58,7 +89,7 @@ export class FindElementsBySemanticsTool extends Tool {
       `${lines.length} elements listed by the closest from "${semantics}". ` +
         "Use `Html.findElementsByCluster` to get all elements." +
         "Use `Html.findClusters` to get all clusters.",
-        "Use other tools to interact with the browser."
+      "Use other tools to interact with the browser."
     );
     return lines.join("\n\n");
   }
@@ -79,7 +110,7 @@ export class FindElementsByClusterTool extends Tool {
   }
 
   async execute({ cluster }: z.infer<typeof this._parameters>) {
-    const elements = await this._fetcher.findElementsByCluster(cluster);
+    const elements = await this._fetcher.html.findElementsByCluster(cluster);
     const lines = elements.map((element) => {
       return [
         `Selector: ${element.selector}`,
@@ -106,7 +137,7 @@ export class FindClustersTool extends Tool {
   }
 
   async execute() {
-    const clusters = await this._fetcher.findClusters();
+    const clusters = await this._fetcher.html.findClusters();
     const lines = clusters.map((cluster) => {
       return [
         `Hash: ${cluster.hash}`,
@@ -135,10 +166,11 @@ export class FindClustersBySemanticsTool extends Tool {
   }
 
   async execute({ semantics }: z.infer<typeof this._parameters>) {
-    const clusters = await this._fetcher.findClustersBySemantics(semantics);
+    const clusters =
+      await this._fetcher.html.findClustersBySemantics(semantics);
     const representatives = [] as (ElementData | undefined)[];
     for (const cluster of clusters) {
-      const element = await this._fetcher.findElementsByCluster(
+      const element = await this._fetcher.html.findElementsByCluster(
         cluster.hash,
         1
       );

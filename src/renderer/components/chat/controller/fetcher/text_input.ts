@@ -96,7 +96,7 @@ export default class TextInputFetcher {
     if (abortSignal?.aborted) return;
     console.log(`[TextInputFetcher] nemu ${inputs.length}`);
 
-    let existings = await this._memory.textInputs.getAll();
+    let existings = await this._memory.textInputs.findAll();
     let removed = 0;
     for (const cursor of existings) {
       if (abortSignal?.aborted) break;

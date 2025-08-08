@@ -1,6 +1,7 @@
 import { BrowserController } from "~/renderer/components/browser";
 import ButtonFetcher from "~/renderer/components/chat/controller/fetcher/button";
 import HtmlFetcher from "~/renderer/components/chat/controller/fetcher/html";
+import RadioInputFetcher from "~/renderer/components/chat/controller/fetcher/radio_input";
 import TextInputFetcher from "~/renderer/components/chat/controller/fetcher/text_input";
 import Runner from "~/renderer/components/chat/controller/runner";
 import InMemory from "~/renderer/memory";
@@ -11,9 +12,10 @@ export default class Fetcher {
   protected _memory: InMemory;
   protected _runner: Runner;
 
-  protected _html: HtmlFetcher;
-  protected _button: ButtonFetcher;
-  protected _textInput: TextInputFetcher;
+  readonly html: HtmlFetcher;
+  readonly radio: RadioInputFetcher;
+  readonly button: ButtonFetcher;
+  readonly text: TextInputFetcher;
 
   constructor(
     browser: RefCell<BrowserController>,
@@ -25,48 +27,9 @@ export default class Fetcher {
     this._runner = runner;
 
     const args = [this._browser, this._memory, this._runner] as const;
-    this._html = new HtmlFetcher(...args);
-    this._button = new ButtonFetcher(...args);
-    this._textInput = new TextInputFetcher(...args);
-  }
-
-  get findElementsBySemantics() {
-    return this._html.findElementsBySemantics;
-  }
-
-  get findElementsByCluster() {
-    return this._html.findElementsByCluster;
-  }
-
-  get findElementByClusterAndIndex() {
-    return this._html.findElementByClusterAndIndex;
-  }
-
-  get findClusters() {
-    return this._html.findClusters;
-  }
-
-  get findClustersBySemantics() {
-    return this._html.findClustersBySemantics;
-  }
-
-  get fetchHtmls() {
-    return this._html.fetchHtmlsIfNeeded;
-  }
-
-  get findButton() {
-    return this._button.findButton;
-  }
-
-  get fetchButtons() {
-    return this._button.fetchButtons;
-  }
-
-  get findTextInput() {
-    return this._textInput.findTextInput;
-  }
-
-  get fetchTextInputs() {
-    return this._textInput.fetchTextInputs;
+    this.html = new HtmlFetcher(...args);
+    this.radio = new RadioInputFetcher(...args);
+    this.button = new ButtonFetcher(...args);
+    this.text = new TextInputFetcher(...args);
   }
 }

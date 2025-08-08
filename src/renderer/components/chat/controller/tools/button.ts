@@ -35,10 +35,10 @@ export class FindBySemanticsTool extends Tool {
   }
 
   async execute({ semantics }: z.infer<typeof this._parameters>) {
-    await this._fetcher.fetchButtons();
+    await this._fetcher.button.fetch();
 
     semantics = semantics.trim().toLowerCase();
-    const buttons = await this._fetcher.findButton(semantics);
+    const buttons = await this._fetcher.button.findBySemantics(semantics);
     const lines = buttons.map((button) =>
       [
         `Text: ${button.text}`,

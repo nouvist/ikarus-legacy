@@ -91,6 +91,45 @@ export abstract class HtmlUtils {
     return text.trim();
   }
 
+  static getElementLabels(element: Element): string[] {
+    const labels: string[] = [];
+    const text = element.textContent?.trim() || "";
+    if (text) labels.push(text);
+
+    if (
+      element instanceof HTMLInputElement ||
+      element instanceof HTMLTextAreaElement ||
+      element instanceof HTMLSelectElement ||
+      element instanceof HTMLButtonElement
+    ) {
+      const aria = element.getAttribute("aria-label") || "";
+      const id = element.getAttribute("id") || "";
+      if (aria) labels.push(aria);
+      if (id) {
+        const label = element.ownerDocument?.querySelector(
+          `label[for="${CSS.escape(id)}"]`
+        );
+        if (label) {
+          const text = label.textContent?.trim() || "";
+          if (text) labels.push(text);
+        }
+      }
+
+      for (
+        let cursor = element.parentElement;
+        cursor && cursor.tagName !== "BODY";
+        cursor = cursor.parentElement
+      ) {
+        if (cursor.tagName !== "LABEL") continue;
+        const text = cursor.textContent?.trim() || "";
+        if (!text) break;
+        labels.push(text);
+      }
+    }
+
+    return labels;
+  }
+
   static isElementValid(element: Element): boolean {
     if (!(element instanceof HTMLElement)) return false;
     if (element.tagName === "SCRIPT") return false;

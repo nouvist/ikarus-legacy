@@ -1,10 +1,4 @@
-import {
-  Field,
-  FixedSizeList,
-  Float32,
-  Schema,
-  Utf8
-} from "apache-arrow";
+import { Field, FixedSizeList, Float32, Schema, Utf8 } from "apache-arrow";
 import InMemoryTable from "~/renderer/memory/tables/abstract";
 
 export enum TextInputDataType {
@@ -45,19 +39,18 @@ export default class TextInputTable extends InMemoryTable<TextInputData> {
     await super.ensureInitialized();
   }
 
-  async getAll() {
-    return (await this.raw.query().toArray()) as TextInputData[];
+  async findAll(): Promise<TextInputData[]> {
+    return await this.raw.query().toArray();
   }
 
-  async findNearestTo(embedding: TextInputData["embedding"], limit = 10) {
-    return (await this.raw
-      .query()
-      .nearestTo(embedding)
-      .limit(limit)
-      .toArray()) as TextInputData[];
+  async findNearestTo(
+    embedding: TextInputData["embedding"],
+    limit = 10
+  ): Promise<TextInputData[]> {
+    return await this.raw.query().nearestTo(embedding).limit(limit).toArray();
   }
 
-  async remove(hash: TextInputData["hash"]) {
+  async remove(hash: TextInputData["hash"]): Promise<void> {
     await this.raw.delete(`\`hash\` == ${JSON.stringify(hash)}`);
   }
 }

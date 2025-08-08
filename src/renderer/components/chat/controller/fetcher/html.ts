@@ -55,7 +55,9 @@ export default class HtmlFetcher {
     this.findClusters = this.findClusters.bind(this);
     this.findClustersBySemantics = this.findClustersBySemantics.bind(this);
 
-    this.fetchHtmls = this.fetchHtmls.bind(this);
+    this.fetch = this.fetch.bind(this);
+    this.fetchHtmlsIfNeeded = this.fetchHtmlsIfNeeded.bind(this);
+
     this._storeElements = this._storeElements.bind(this);
     this._storeClusters = this._storeClusters.bind(this);
     this._collectElements = this._collectElements.bind(this);
@@ -91,7 +93,7 @@ export default class HtmlFetcher {
     return this._memory.htmlElement.findByClusterAndIndex(clusterHash, index);
   }
 
-  async findClusters() {
+  async findClusters(): Promise<ClusterData[]> {
     await this.fetchHtmlsIfNeeded();
     return this._memory.htmlCluster.findAll();
   }
@@ -105,15 +107,15 @@ export default class HtmlFetcher {
     return this._memory.htmlCluster.findBySemantics(embedding, limit);
   }
 
-  async fetchHtmlsIfNeeded() {
+  async fetchHtmlsIfNeeded(): Promise<void> {
     const dom = await this._browser.value.dom();
     const hash = fnv.hash(dom.body.outerHTML, 64).hex();
     if (this._last === hash) return;
     this._last = hash;
-    return this.fetchHtmls(dom);
+    await this.fetch(dom);
   }
 
-  async fetchHtmls(dom?: Document) {
+  async fetch(dom?: Document) {
     dom ??= await this._browser.value.dom();
     const elements = this._collectElements(dom.body);
     console.log(`[HtmlFetcher] ada ${elements.length} elemen jir wkwkwk`);

@@ -1,7 +1,8 @@
 import { BrowserController } from "~/renderer/components/browser";
+import FetcherDefaults from "~/renderer/components/chat/controller/fetcher/defaults";
 import Runner from "~/renderer/components/chat/controller/runner";
 import InMemory from "~/renderer/memory";
-import { ButtonDataType } from "~/renderer/memory/tables/button";
+import { ButtonData, ButtonDataType } from "~/renderer/memory/tables/button";
 import { RefCell } from "~/shared/core";
 import { HtmlUtils } from "~/shared/html";
 
@@ -19,16 +20,19 @@ export default class ButtonFetcher {
     this._memory = memory;
     this._runner = runner;
 
-    this.findButton = this.findButton.bind(this);
-    this.fetchButtons = this.fetchButtons.bind(this);
+    this.findBySemantics = this.findBySemantics.bind(this);
+    this.fetch = this.fetch.bind(this);
   }
 
-  async findButton(semantics: string, limit = 10) {
+  async findBySemantics(
+    semantics: string,
+    limit = FetcherDefaults.limit
+  ): Promise<ButtonData[]> {
     const embedding = await this._runner.embed(semantics);
     return this._memory.buttons.findNearestTo(embedding, limit);
   }
 
-  async fetchButtons(abortSignal?: AbortSignal) {
+  async fetch(abortSignal?: AbortSignal) {
     const dom = await this._browser.value.dom();
     const buttons = Array.from(
       dom.querySelectorAll(
@@ -73,7 +77,7 @@ export default class ButtonFetcher {
     }
     console.log(`[ButtonFetcher] filter ${buttons.length}`);
 
-    let existings = await this._memory.buttons.getAll();
+    let existings = await this._memory.buttons.findAll();
     let removed = 0;
     for (const cursor of existings) {
       if (abortSignal?.aborted) break;

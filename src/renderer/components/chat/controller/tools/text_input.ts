@@ -42,10 +42,10 @@ export class FindBySemanticsTool extends Tool {
 
   async execute({ semantics }: z.infer<typeof this._parameters>) {
     const dom = await this._browser.dom();
-    await this._fetcher.fetchTextInputs();
+    await this._fetcher.text.fetchTextInputs();
 
     semantics = semantics.trim().toLowerCase();
-    const inputs = await this._fetcher.findTextInput(semantics);
+    const inputs = await this._fetcher.text.findTextInput(semantics);
     const lines = inputs.map((input) =>
       [
         `Tag: ${input.tag}`,
@@ -112,8 +112,7 @@ export class SubmitBySelectorTool extends Tool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
   protected _description = inline(`
-    Submit an input field on the page, given its selector. Use findInput if you
-    don't know the selector.
+    Emulate pressing the Enter key on an input field, given its selector.
   `);
   protected _parameters = z.object({
     selector: z.string().describe("The selector of the input field to submit."),

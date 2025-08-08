@@ -1,10 +1,4 @@
-import {
-  Field,
-  FixedSizeList,
-  Float32,
-  Schema,
-  Utf8
-} from "apache-arrow";
+import { Field, FixedSizeList, Float32, Schema, Utf8 } from "apache-arrow";
 import InMemoryTable from "~/renderer/memory/tables/abstract";
 
 export enum ButtonDataType {
@@ -39,19 +33,18 @@ export default class ButtonTable extends InMemoryTable<ButtonData> {
     await super.ensureInitialized();
   }
 
-  async getAll() {
-    return (await this.raw.query().toArray()) as ButtonData[];
+  async findAll(): Promise<ButtonData[]> {
+    return await this.raw.query().toArray();
   }
 
-  async findNearestTo(embedding: ButtonData["embedding"], limit = 10) {
-    return (await this.raw
-      .query()
-      .nearestTo(embedding)
-      .limit(limit)
-      .toArray()) as ButtonData[];
+  async findNearestTo(
+    embedding: ButtonData["embedding"],
+    limit = 10
+  ): Promise<ButtonData[]> {
+    return await this.raw.query().nearestTo(embedding).limit(limit).toArray();
   }
 
-  async remove(hash: ButtonData["hash"]) {
+  async remove(hash: ButtonData["hash"]): Promise<void> {
     await this.raw.delete(`\`hash\` == ${JSON.stringify(hash)}`);
   }
 }

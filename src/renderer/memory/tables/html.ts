@@ -57,24 +57,30 @@ export class HtmlElementTable extends InMemoryTable<ElementData> {
     await super.ensureInitialized();
   }
 
-  async findBySemantics(embedding: ElementData["embedding"], limit?: number) {
+  async findBySemantics(
+    embedding: ElementData["embedding"],
+    limit?: number
+  ): Promise<ElementData[]> {
     let query = this.raw.query().nearestTo(embedding);
     if (limit) query = query.limit(limit);
-    return (await query.toArray()) as ElementData[];
+    return await query.toArray();
   }
 
-  async findByCluster(clusterHash: ElementData["clusterHash"], limit?: number) {
+  async findByCluster(
+    clusterHash: ElementData["clusterHash"],
+    limit?: number
+  ): Promise<ElementData[]> {
     let query = this.raw
       .query()
       .where(`\`clusterHash\` == ${JSON.stringify(clusterHash)}`);
     if (limit) query = query.limit(limit);
-    return (await query.toArray()) as ElementData[];
+    return await query.toArray();
   }
 
   async findByClusterAndIndex(
     clusterHash: ElementData["clusterHash"],
     index: ElementData["clusterIndex"]
-  ) {
+  ): Promise<ElementData | undefined> {
     const result = await this.raw
       .query()
       .where(
@@ -82,7 +88,7 @@ export class HtmlElementTable extends InMemoryTable<ElementData> {
       )
       .limit(1)
       .toArray();
-    return result[0] as ElementData | undefined;
+    return result[0];
   }
 }
 
@@ -108,13 +114,16 @@ export class HtmlClusterTable extends InMemoryTable<ClusterData> {
     await super.ensureInitialized();
   }
 
-  async findAll() {
-    return (await this.raw.query().toArray()) as ClusterData[];
+  async findAll(): Promise<ClusterData[]> {
+    return await this.raw.query().toArray();
   }
 
-  async findBySemantics(embedding: ClusterData["embedding"], limit?: number) {
+  async findBySemantics(
+    embedding: ClusterData["embedding"],
+    limit?: number
+  ): Promise<ClusterData[]> {
     let query = this.raw.query().nearestTo(embedding);
     if (limit) query = query.limit(limit);
-    return (await query.toArray()) as ClusterData[];
+    return await query.toArray();
   }
 }

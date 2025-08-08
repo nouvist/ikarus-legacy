@@ -154,7 +154,8 @@ export default class RunnerFacade {
     const tools = createTools(
       this._browser.value,
       this._csv.value,
-      this._fetcher
+      this._fetcher,
+      this._createContext,
     );
 
     this._runner.registerTools(tools);
@@ -246,20 +247,21 @@ export default class RunnerFacade {
     await Promise.all(promises);
   }
 
-  protected async _createContext(extra?: string[]) {
+  protected async _createContext(extra?: string[], noTags = false) {
     const context = [] as string[];
     await this._createTimeContext(context);
     await this._createUrlContext(context);
     await this._createHtmlContext(context);
     await this._createCsvContext(context);
 
-    if (extra) context.push(...extra);
+    if (extra && extra.length > 0) context.push(...extra);
+    context.push("Use tools to interact with the browser and CSV.");
 
-    context.push(
-      "Use tools to interact with the browser and read the CSV data."
-    );
-    context.unshift("<system>");
-    context.push("</system>");
+    if (!noTags) {
+      context.push("Use Html.getSummary to get this summary again.");
+      context.unshift("<system>");
+      context.push("</system>");
+    }
 
     return new UserMessage(context.join("\n"), {
       // visible: await managed.env.isDebug(),
@@ -287,41 +289,16 @@ export default class RunnerFacade {
   }
 
   protected async _createHtmlContext(context: string[]) {
-    return;
-
     if (this._browser.value.url().length === 0) return;
-    const clusters = (await this._fetcher.findClusters()).sort(
-      (a, b) => b.elements - a.elements
-    );
-    const representatives = [] as (ElementData | undefined)[];
-    for (const cluster of clusters) {
-      const elements = await this._fetcher.findElementsByCluster(
-        cluster.hash,
-        1
-      );
-      representatives.push(...elements);
-    }
-
-    context.push(`${clusters.length} HTML clusters found.`);
-    for (let i = 0; i < 5 && i < clusters.length; i++) {
-      const cluster = clusters[i];
-      const representative = representatives[i];
-      let text = representative?.text || "None";
-      if (text.length > 110) text = text.substring(0, 100) + "...";
-
-      context.push(`- Hash: ${cluster.hash}`);
-      context.push(`  Keywords: ${Array.from(cluster.keywords).join(", ")}`);
-      context.push(`  Elements: ${cluster.elements}`);
-      context.push(`  Representative: ${text}`);
-    }
-    if (clusters.length > 5) {
-      context.push(`... and ${clusters.length - 5} more clusters.`);
-    }
-
-    const inputs = await this._fetcher.fetchTextInputs();
-    const buttons = await this._fetcher.fetchButtons();
-    context.push(`Input fields: ${inputs?.length || 0}`);
-    context.push(`Buttons and anchors: ${buttons?.length || 0}`);
+    const dom = await this._browser.value.dom();
+    const buttons = dom.querySelectorAll("button, a").length;
+    const submits = dom.querySelectorAll("input[type='submit']").length;
+    const radio = dom.querySelectorAll("input[type='radio']").length;
+    const inputs =
+      dom.querySelectorAll("input, textarea").length - radio - submits;
+    context.push(`Number of buttons and links: ${buttons + submits}`);
+    context.push(`Number of text inputs and text areas: ${inputs}`);
+    context.push(`Number of radio buttons: ${radio}`);
   }
 
   protected async _createCsvContext(context: string[]) {
