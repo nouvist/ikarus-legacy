@@ -5,7 +5,6 @@ import Card from "~/renderer/components/card";
 import RunnerFacade from "~/renderer/components/chat/controller/runner_facade";
 import Flex, { JustifyContent } from "~/renderer/components/flex";
 import Input from "~/renderer/components/input";
-import Modal from "~/renderer/components/modal";
 import { ColorType } from "~/renderer/foundations/colors";
 import Constraints from "~/renderer/foundations/constraints";
 import EdgeInsets from "~/renderer/foundations/edge_insets";

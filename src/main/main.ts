@@ -29,6 +29,14 @@ app.on("second-instance", () => {
 
 function createWindow() {
   const isDebugMode = !!MAIN_WINDOW_VITE_DEV_SERVER_URL;
+  const isProfileMode = ["true", "on", "1"].includes(
+    process.env["PROFILE_MODE"]?.toLowerCase().trim() ?? "false"
+  );
+
+  if (isProfileMode) {
+    console.warn("[Main::createWindow] mode profile nyala jir wkwkwk");
+  }
+
   const window = new BrowserWindow({
     show: isDebugMode,
     roundedCorners: true,
@@ -44,7 +52,7 @@ function createWindow() {
     },
     titleBarStyle: "hidden",
     webPreferences: {
-      devTools: isDebugMode,
+      devTools: isDebugMode || isProfileMode,
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: false,
       nodeIntegration: true,
@@ -56,19 +64,22 @@ function createWindow() {
   const bridge = new MainBridge(window);
   const winsvc = new WindowService(window, bridge);
   const refsvc = new RefreshService(window, isDebugMode);
-  new EnvService(bridge);
+  new EnvService(bridge, isDebugMode, isProfileMode);
 
   if (!isDebugMode) refsvc.enable();
 
   setTimeout(async () => {
     if (winsvc.isShown) return;
-    if (isDebugMode) return;
     await dialog.showMessageBox(window, {
-      title: "Not responding",
+      title: "Aplikasi meninggal...",
       message: "App is not responding, failsafe triggered.",
     });
     window.close();
   }, 5e3);
+
+  if (isDebugMode || isProfileMode) {
+    window.webContents.openDevTools({ mode: "detach" });
+  }
 
   if (isDebugMode) {
     window.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
