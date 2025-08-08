@@ -75,7 +75,7 @@ function createWindow() {
       message: "App is not responding, failsafe triggered.",
     });
     window.close();
-  }, 5e3);
+  }, 30e3);
 
   if (isDebugMode || isProfileMode) {
     window.webContents.openDevTools({ mode: "detach" });
