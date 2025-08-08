@@ -149,11 +149,28 @@ function _ChatUser({ chat }: _ChatProps<UserMessage>) {
 }
 
 const _map = {
+  "Core.getSummary": "Summarizing the current content...",
+
   "Navigation.getUrl": "Getting current page URL...",
   "Navigation.getTitle": "Checking the page title...",
   "Navigation.goToUrl": "Heading to the new page...",
   "Navigation.goBack": "Going back...",
   "Navigation.goForward": "Moving forward...",
+
+  "Html.findElementsBySemantics": "Searching for meaningful content...",
+  "Html.findElementsByCluster": "Grouping similar elements...",
+  "Html.findClusters": "Looking for patterns on the page...",
+  "Html.findClustersBySemantics": "Clustering by meaning...",
+
+  "RadioInput.findBySemantics": "Looking for a radio option that fits...",
+  "RadioInput.findByName": "Finding radio options by name...",
+  "RadioInput.changeByValue": "Selecting the matching radio value...",
+  "RadioInput.changeBySelector": "Changing radio option...",
+
+  "CheckboxInput.findBySemantics": "Looking for a checkbox that fits...",
+  "CheckboxInput.findByName": "Finding checkboxes by name...",
+  "CheckboxInput.changeByValue": "Toggling the matching checkbox value...",
+  "CheckboxInput.changeBySelector": "Toggling the checkbox...",
 
   "Button.findBySemantics": "Looking for a button that fits...",
   "Button.clickBySelector": "Clicking the button...",
@@ -161,11 +178,6 @@ const _map = {
   "TextInput.findBySemantics": "Looking for a text field...",
   "TextInput.changeBySelector": "Typing something in...",
   "TextInput.submitBySelector": "Submitting the form...",
-
-  "Html.findElementsBySemantics": "Searching for meaningful content...",
-  "Html.findElementsByCluster": "Grouping similar elements...",
-  "Html.findClusters": "Looking for patterns on the page...",
-  "Html.findClustersBySemantics": "Clustering by meaning...",
 
   "Csv.getMetadata": "Reading CSV details...",
   "Csv.getRow": "Fetching a row from the data...",
