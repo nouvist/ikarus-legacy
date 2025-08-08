@@ -23,7 +23,7 @@ export interface CsvProps {
 
 export default function Csv({ controller }: CsvProps) {
   const data = useObservable(controller.data);
-  const drag = useObservable(controller.subject);
+  const drag = useObservable(controller.drag);
 
   return (
     <Fragment>

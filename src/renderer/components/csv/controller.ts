@@ -31,7 +31,6 @@ export class CsvData {
         error: reject,
         complete: (results) => {
           this._csv = results;
-          console.log("[CsvData] parse", results);
           resolve(results);
         },
       });
@@ -45,13 +44,9 @@ export class CsvController {
   protected _timeout?: NodeJS.Timeout;
 
   readonly data = Rxjs.asImmutable(this._data);
-  readonly subject = Rxjs.asImmutable(this._drag);
+  readonly drag = Rxjs.asImmutable(this._drag);
 
   constructor() {
-    console.log("CsvController initialized");
-    this._drag.subscribe((value) => {
-      console.log("CSV drag state changed:", value);
-    });
     this.register = this.register.bind(this);
     this.dispose = this.dispose.bind(this);
     this.clear = this.clear.bind(this);

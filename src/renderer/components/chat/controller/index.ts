@@ -52,8 +52,7 @@ export class ChatController {
 
   protected static createDefaultMessages() {
     if (!this._defaultMessages) {
-      // this._defaultMessages = [new SystemMessage(Prompts.getSystemPropmt())];
-      this._defaultMessages = [];
+      this._defaultMessages = [new SystemMessage(Prompts.getSystemPropmt())];
 
       for (const message of this._defaultMessages) {
         if (!(message instanceof AssistantMessage)) continue;

@@ -55,7 +55,7 @@ export default class ButtonFetcher {
       .filter(({ text }) => text.length > 0)
       .sort((a, b) => a.selector.localeCompare(b.selector));
     if (abortSignal?.aborted) return;
-    console.log(`[Fetcher::fetchButtons] nemu ${buttons.length}`);
+    console.log(`[ButtonFetcher] nemu ${buttons.length}`);
 
     for (let i = 0; i < buttons.length; i++) {
       const child = buttons[i];
@@ -71,7 +71,7 @@ export default class ButtonFetcher {
         }
       }
     }
-    console.log(`[Fetcher::fetchButtons] filter ${buttons.length}`);
+    console.log(`[ButtonFetcher] filter ${buttons.length}`);
 
     let existings = await this._memory.buttons.getAll();
     let removed = 0;
@@ -81,8 +81,8 @@ export default class ButtonFetcher {
       await this._memory.buttons.remove(cursor.hash);
       removed++;
     }
-    console.log(`[Fetcher::fetchButtons] ada ${existings.length} dari db`);
-    console.log(`[Fetcher::fetchButtons] hapus ${removed} dari db`);
+    console.log(`[ButtonFetcher] ada ${existings.length} dari db`);
+    console.log(`[ButtonFetcher] hapus ${removed} dari db`);
 
     for (let i = 0; i < buttons.length; i++) {
       const cursor = buttons[i];
@@ -93,17 +93,17 @@ export default class ButtonFetcher {
 
     if (abortSignal?.aborted) return;
     if (buttons.length === 0) {
-      console.log("[Fetcher::fetchButtons] gak ada button baru");
+      console.log("[ButtonFetcher] gak ada button baru");
       return;
     }
 
-    console.log(`[Fetcher::fetchButtons] embedding...`);
+    console.log(`[ButtonFetcher] embedding...`);
     const embeddings = await this._runner.embedMany(
       buttons.map(({ text }) => text),
       abortSignal
     );
 
-    console.log(`[Fetcher::fetchButtons] nambahin...`);
+    console.log(`[ButtonFetcher] nambahin...`);
     await this._memory.buttons.add(
       buttons.map((button, index) => ({
         selector: button.selector,

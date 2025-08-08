@@ -247,7 +247,6 @@ export default class RunnerFacade {
   }
 
   protected async _createContext(extra?: string[]) {
-    console.log(this);
     const context = [] as string[];
     await this._createTimeContext(context);
     await this._createUrlContext(context);
@@ -256,8 +255,9 @@ export default class RunnerFacade {
 
     if (extra) context.push(...extra);
 
-    context.push();
-    ("Use tools to interact with the browser and read the CSV data.");
+    context.push(
+      "Use tools to interact with the browser and read the CSV data."
+    );
     context.unshift("<system>");
     context.push("</system>");
 
