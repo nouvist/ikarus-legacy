@@ -91,10 +91,10 @@ export abstract class HtmlUtils {
     return text.trim();
   }
 
-  static getElementLabels(element: Element): string[] {
+  static getLabelsFromElement(element: Element): string[] {
     const labels: string[] = [];
     const text = element.textContent?.trim() || "";
-    if (text) labels.push(text);
+    if (text && !(element instanceof HTMLSelectElement)) labels.push(text);
 
     if (
       element instanceof HTMLInputElement ||

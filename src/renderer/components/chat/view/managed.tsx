@@ -151,23 +151,23 @@ function _ChatUser({ chat }: _ChatProps<UserMessage>) {
 const _map = {
   "Core.getSummary": "Summarizing the current content...",
 
-  "Navigation.getUrl": "Getting current page URL...",
+  "Navigation.getUrl": "Getting the current page URL...",
   "Navigation.getTitle": "Checking the page title...",
   "Navigation.goToUrl": "Heading to the new page...",
   "Navigation.goBack": "Going back...",
   "Navigation.goForward": "Moving forward...",
 
-  "Html.findElementsBySemantics": "Searching for meaningful content...",
+  "Html.findElementsBySemantics": "Finding meaningful content...",
   "Html.findElementsByCluster": "Grouping similar elements...",
   "Html.findClusters": "Looking for patterns on the page...",
   "Html.findClustersBySemantics": "Clustering by meaning...",
 
-  "RadioInput.findBySemantics": "Looking for a radio option that fits...",
+  "RadioInput.findBySemantics": "Finding a radio option that fits...",
   "RadioInput.findByName": "Finding radio options by name...",
   "RadioInput.changeByValue": "Selecting the matching radio value...",
-  "RadioInput.changeBySelector": "Changing radio option...",
+  "RadioInput.changeBySelector": "Changing the radio option...",
 
-  "CheckboxInput.findBySemantics": "Looking for a checkbox that fits...",
+  "CheckboxInput.findBySemantics": "Finding a checkbox that fits...",
   "CheckboxInput.findByName": "Finding checkboxes by name...",
   "CheckboxInput.checkByValue": "Checking the matching checkbox...",
   "CheckboxInput.uncheckByValue": "Unchecking the matching checkbox...",
@@ -176,12 +176,15 @@ const _map = {
   "CheckboxInput.uncheckBySelector": "Unchecking the checkbox...",
   "CheckboxInput.toggleBySelector": "Toggling the checkbox...",
 
-  "Button.findBySemantics": "Looking for a button that fits...",
+  "Button.findBySemantics": "Finding a button that fits...",
   "Button.clickBySelector": "Clicking the button...",
 
-  "TextInput.findBySemantics": "Looking for a text field...",
+  "TextInput.findBySemantics": "Finding a text field...",
   "TextInput.changeBySelector": "Typing something in...",
   "TextInput.submitBySelector": "Submitting the form...",
+
+  "Select.findBySemantics": "Finding a dropdown that fits...",
+  "Select.selectByValue": "Selecting an option from the dropdown...",
 
   "Csv.getMetadata": "Reading CSV details...",
   "Csv.getRow": "Fetching a row from the data...",

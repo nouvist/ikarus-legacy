@@ -3,10 +3,7 @@ import { BrowserController } from "~/renderer/components/browser";
 import FetcherDefaults from "~/renderer/components/chat/controller/fetcher/defaults";
 import Runner from "~/renderer/components/chat/controller/runner";
 import InMemory from "~/renderer/memory";
-import {
-  CheckboxInputClusterData,
-  CheckboxInputData,
-} from "~/renderer/memory/tables/checkbox_input";
+import { CheckboxInputData } from "~/renderer/memory/tables/checkbox_input";
 import { RefCell } from "~/shared/core";
 import { HtmlUtils } from "~/shared/html";
 
@@ -50,15 +47,12 @@ export default class CheckboxInputFetcher {
 
     this.findElementsByName = this.findElementsByName.bind(this);
     this.findElementsBySemantics = this.findElementsBySemantics.bind(this);
-    this.findClusterByName = this.findClusterByName.bind(this);
-    this.findClustersBySemantics = this.findClustersBySemantics.bind(this);
 
     this.fetch = this.fetch.bind(this);
     this.fetchIfNeeded = this.fetchIfNeeded.bind(this);
 
     this._collectClusters = this._collectClusters.bind(this);
     this._applySemantics = this._applySemantics.bind(this);
-    this._storeClusters = this._storeClusters.bind(this);
     this._storeInputs = this._storeInputs.bind(this);
   }
 
@@ -76,29 +70,11 @@ export default class CheckboxInputFetcher {
     return this._memory.checkboxInputs.findNearestTo(embedding, limit);
   }
 
-  async findClusterByName(
-    name: string
-  ): Promise<CheckboxInputClusterData | undefined> {
-    await this.fetchIfNeeded();
-    return this._memory.checkboxInputClusters.findByName(name);
-  }
-
-  async findClustersBySemantics(
-    semantics: number[],
-    limit = FetcherDefaults.limit
-  ): Promise<CheckboxInputClusterData[]> {
-    await this.fetchIfNeeded();
-    return this._memory.checkboxInputClusters.findNearestTo(semantics, limit);
-  }
-
   async fetch(dom?: Document): Promise<_CheckboxInputClusterWithSemantics[]> {
     dom ??= await this._browser.value.dom();
     const inputs = await this._collectClusters(dom);
     const applied = await this._applySemantics(inputs);
-    console.log(`[CheckboxInputFetcher] ${inputs.length} clusters`);
-    // console.log(`[CheckboxInputFetcher] saving clusters`);
-    // await this._storeClusters(applied);
-    console.log(`[CheckboxInputFetcher] saving checkbox inputs`);
+    console.log(`[CheckboxInputFetcher] ${inputs.length} uwu`);
     await this._storeInputs(applied);
     return applied;
   }
@@ -128,7 +104,7 @@ export default class CheckboxInputFetcher {
         hash: HtmlUtils.getHashFromElement(input),
         value: input.value,
         text: input.textContent?.trim() || "",
-        labels: HtmlUtils.getElementLabels(input),
+        labels: HtmlUtils.getLabelsFromElement(input),
         raw: input,
       });
     }
@@ -162,17 +138,6 @@ export default class CheckboxInputFetcher {
     }
 
     return applied;
-  }
-
-  async _storeClusters(clusters: _CheckboxInputClusterWithSemantics[]) {
-    await this._memory.checkboxInputClusters.clear();
-    await this._memory.checkboxInputClusters.add(
-      clusters.map((cluster) => ({
-        name: cluster.name ?? "::NO_NAME::",
-        options: cluster.options.length,
-        semantics: cluster.semantics,
-      }))
-    );
   }
 
   async _storeInputs(clusters: _CheckboxInputClusterWithSemantics[]) {

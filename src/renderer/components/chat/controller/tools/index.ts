@@ -12,6 +12,7 @@ import {
 import registerHtmlTools from "~/renderer/components/chat/controller/tools/html";
 import registerNavigationTools from "~/renderer/components/chat/controller/tools/navigation";
 import registerRadioInputTools from "~/renderer/components/chat/controller/tools/radio_input";
+import registerSelectTools from "~/renderer/components/chat/controller/tools/select";
 import registerTextInputTools from "~/renderer/components/chat/controller/tools/text_input";
 import { CsvController } from "~/renderer/components/csv";
 
@@ -30,6 +31,7 @@ export default function createTools(
   registerCheckboxInputTools(registrar, browser, fetcher);
   registerButtonTools(registrar, browser, fetcher);
   registerTextInputTools(registrar, browser, fetcher);
+  registerSelectTools(registrar, browser, fetcher);
   registerCsvTools(registrar, csv);
 
   return registrar.finalize();

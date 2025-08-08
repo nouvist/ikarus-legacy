@@ -3,6 +3,7 @@ import ButtonFetcher from "~/renderer/components/chat/controller/fetcher/button"
 import CheckboxInputFetcher from "~/renderer/components/chat/controller/fetcher/checkbox_input";
 import HtmlFetcher from "~/renderer/components/chat/controller/fetcher/html";
 import RadioInputFetcher from "~/renderer/components/chat/controller/fetcher/radio_input";
+import SelectFetcher from "~/renderer/components/chat/controller/fetcher/select";
 import TextInputFetcher from "~/renderer/components/chat/controller/fetcher/text_input";
 import Runner from "~/renderer/components/chat/controller/runner";
 import InMemory from "~/renderer/memory";
@@ -18,6 +19,7 @@ export default class Fetcher {
   readonly checkbox: CheckboxInputFetcher;
   readonly button: ButtonFetcher;
   readonly text: TextInputFetcher;
+  readonly select: SelectFetcher;
 
   constructor(
     browser: RefCell<BrowserController>,
@@ -34,5 +36,6 @@ export default class Fetcher {
     this.checkbox = new CheckboxInputFetcher(...args);
     this.button = new ButtonFetcher(...args);
     this.text = new TextInputFetcher(...args);
+    this.select = new SelectFetcher(...args);
   }
 }
