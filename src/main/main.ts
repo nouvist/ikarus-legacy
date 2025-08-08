@@ -30,7 +30,9 @@ app.on("second-instance", () => {
 function createWindow() {
   const isDebugMode = !!MAIN_WINDOW_VITE_DEV_SERVER_URL;
   const isProfileMode = ["true", "on", "1"].includes(
-    process.env["PROFILE_MODE"]?.toLowerCase().trim() ?? "false"
+    (process.env["PROFILE"] ?? process.env["PROFILE_MODE"] ?? "false")
+      .toLowerCase()
+      .trim()
   );
 
   if (isProfileMode) {
