@@ -1,39 +1,43 @@
-import type { ForgeConfig } from "@electron-forge/shared-types";
-import { MakerSquirrel } from "@electron-forge/maker-squirrel";
-import { MakerZIP } from "@electron-forge/maker-zip";
 import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerRpm } from "@electron-forge/maker-rpm";
-import { VitePlugin } from "@electron-forge/plugin-vite";
+import { MakerSquirrel } from "@electron-forge/maker-squirrel";
+import { MakerZIP } from "@electron-forge/maker-zip";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
+import { VitePlugin } from "@electron-forge/plugin-vite";
+import type { ForgeConfig } from "@electron-forge/shared-types";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-let _requireds: Set<string> | undefined;
-function requireds() {
-  if (_requireds) return _requireds;
-  const results = new Set<string>();
-  function traverse(name: string) {
-    if (results.has(name)) return;
-    results.add(name);
-    const file = path.join(__dirname, "node_modules", name, "package.json");
-    if (!fs.existsSync(file)) return;
-    const json = JSON.parse(fs.readFileSync(file, "utf-8"));
-
-    Object.keys(json.dependencies || {}).forEach(traverse);
-    Object.keys(json.peerDependencies || {}).forEach(traverse);
-    Object.keys(json.optionalDependencies || {}).forEach(traverse);
-  }
-
-  traverse("natural");
-  traverse("@lancedb/lancedb");
-
-  return (_requireds = results);
+function traverse(name: string, set?: Set<string>) {
+  set ??= new Set<string>();
+  if (set.has(name)) return set;
+  set.add(name);
+  const file = path.join(__dirname, "node_modules", name, "package.json");
+  if (!fs.existsSync(file)) return set;
+  const json = JSON.parse(fs.readFileSync(file, "utf-8"));
+  [
+    ...Object.keys(json.dependencies || {}),
+    ...Object.keys(json.peerDependencies || {}),
+    ...Object.keys(json.optionalDependencies || {}),
+  ].forEach((dep) => traverse(dep, set));
+  return set;
 }
 
-// for (const name of requireds()) {
-//   console.log(`Required: ${name}`);
-// }
+let _requireds: string[] | undefined;
+function requireds(): string[] {
+  if (_requireds) return _requireds;
+  const set = new Set<string>();
+  const json = JSON.parse(fs.readFileSync("package.json", "utf-8"));
+  Object.keys(json.dependencies || {}).forEach((dep) => traverse(dep, set));
+  return (_requireds = Array.from(set).sort((a, b) => a.localeCompare(b)));
+}
+
+if (require.main === module) {
+  for (const name of requireds()) {
+    console.log(`Required: ${name}`);
+  }
+}
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -43,11 +47,10 @@ const config: ForgeConfig = {
       if (path.startsWith("/src")) return true;
       if (path.startsWith("/.vscode")) return true;
       if (path.startsWith("/.npmrc")) return true;
-      if (path.endsWith(".config.ts")) return true;
-      if (path.endsWith(".d.ts")) return true;
-      if (path.endsWith(".md")) return true;
+      if (path.endsWith(".ts")) return true;
       if (path === "/index.html") return true;
       if (path === "/tsconfig.json") return true;
+      if (path === "/README.md") return true;
 
       return false;
     },
