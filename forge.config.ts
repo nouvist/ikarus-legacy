@@ -6,38 +6,7 @@ import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import type { ForgeConfig } from "@electron-forge/shared-types";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
-import * as fs from "node:fs";
-import * as path from "node:path";
-
-function traverse(name: string, set?: Set<string>) {
-  set ??= new Set<string>();
-  if (set.has(name)) return set;
-  set.add(name);
-  const file = path.join(__dirname, "node_modules", name, "package.json");
-  if (!fs.existsSync(file)) return set;
-  const json = JSON.parse(fs.readFileSync(file, "utf-8"));
-  [
-    ...Object.keys(json.dependencies || {}),
-    ...Object.keys(json.peerDependencies || {}),
-    ...Object.keys(json.optionalDependencies || {}),
-  ].forEach((dep) => traverse(dep, set));
-  return set;
-}
-
-let _requireds: string[] | undefined;
-function requireds(): string[] {
-  if (_requireds) return _requireds;
-  const set = new Set<string>();
-  const json = JSON.parse(fs.readFileSync("package.json", "utf-8"));
-  Object.keys(json.dependencies || {}).forEach((dep) => traverse(dep, set));
-  return (_requireds = Array.from(set).sort((a, b) => a.localeCompare(b)));
-}
-
-if (require.main === module) {
-  for (const name of requireds()) {
-    console.log(`Required: ${name}`);
-  }
-}
+import { requiredsWithNamespaces } from "./build_tools";
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -51,6 +20,15 @@ const config: ForgeConfig = {
       if (path === "/index.html") return true;
       if (path === "/tsconfig.json") return true;
       if (path === "/README.md") return true;
+      
+      if (path.startsWith("/node_modules/")) {
+        for (const required of requiredsWithNamespaces()) {
+          if (path.startsWith(`/node_modules/${required}`)) {
+            return false;
+          }
+        }
+        return true;
+      }
 
       return false;
     },
