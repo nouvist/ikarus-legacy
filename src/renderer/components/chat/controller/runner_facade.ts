@@ -20,9 +20,7 @@ import { Mutex, Rxjs } from "~/shared/rxjs";
 export interface RunnerInvokeRequest<TS extends ToolSet> {
   temperature?: number;
   frequencyPenalty?: number;
-  stopWhen?:
-    | StopCondition<NoInfer<TS>>
-    | Array<StopCondition<NoInfer<TS>>>;
+  stopWhen?: StopCondition<NoInfer<TS>> | Array<StopCondition<NoInfer<TS>>>;
 }
 
 export interface RunnerInvokeOptions<TS extends ToolSet> {
@@ -212,15 +210,15 @@ export default class RunnerFacade {
       const google = createGoogleGenerativeAI({
         apiKey: options.key,
       });
-      this._language.value = google.languageModel(options.model);
+      this._language.value = google.chat(options.model);
     } else {
-      const ollama = createOpenAI({
+      const openai = createOpenAI({
         baseURL: options.url.startsWith("https://api.openai.com")
           ? undefined
           : options.url,
         apiKey: options.key,
       });
-      this._language.value = ollama.languageModel(options.model);
+      this._language.value = openai.chat(options.model);
     }
 
     this._refreshMutex();
@@ -236,11 +234,13 @@ export default class RunnerFacade {
       });
     }
 
-    const ollama = createOpenAI({
-      baseURL: options.url,
+    const openai = createOpenAI({
+      baseURL: options.url.startsWith("https://api.openai.com")
+        ? undefined
+        : options.url,
       apiKey: options.key,
     });
-    this._embedding.value = ollama.embedding(options.model);
+    this._embedding.value = openai.textEmbedding(options.model);
 
     this._refreshMutex();
   }
