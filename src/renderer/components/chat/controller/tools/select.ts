@@ -2,32 +2,30 @@ import z from "zod";
 import { BrowserController } from "~/renderer/components/browser";
 import Fetcher from "~/renderer/components/chat/controller/fetcher";
 import {
-  Tool,
-  ToolRegistrar,
+  ManagedTool
 } from "~/renderer/components/chat/controller/tools/fundamental";
 import { inline } from "~/shared/core";
 
-export default function registerSelectTools(
-  registrar: ToolRegistrar,
+export type SelectTools = ReturnType<typeof createSelectTools>;
+export default function createSelectTools(
   browser: BrowserController,
   fetcher: Fetcher
 ) {
-  registrar.register(
-    "Select.findBySemantics",
-    new FindSelectBySemanticsTool(browser, fetcher)
-  );
-  registrar.register(
-    "Select.selectByValue",
-    new SelectByValueTool(browser)
-  );
+  return {
+    "Select.findBySemantics": new FindSelectBySemanticsTool(
+      browser,
+      fetcher
+    ).toTool(),
+    "Select.selectByValue": new SelectByValueTool(browser).toTool(),
+  } as const;
 }
 
-export class FindSelectBySemanticsTool extends Tool {
+export class FindSelectBySemanticsTool extends ManagedTool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
 
-  protected _description = "Get select (dropdown) information from the page.";
-  protected _parameters = z.object({
+  description = "Get select (dropdown) information from the page.";
+  input = z.object({
     semantics: z.string().describe("Description of the select to find."),
   });
 
@@ -37,7 +35,7 @@ export class FindSelectBySemanticsTool extends Tool {
     this._fetcher = fetcher;
   }
 
-  async execute({ semantics }: z.infer<typeof this._parameters>) {
+  async execute({ semantics }: z.infer<typeof this.input>) {
     await this._fetcher.select.fetch();
 
     semantics = semantics.trim().toLowerCase();
@@ -63,14 +61,14 @@ export class FindSelectBySemanticsTool extends Tool {
   }
 }
 
-export class SelectByValueTool extends Tool {
+export class SelectByValueTool extends ManagedTool {
   protected _browser: BrowserController;
-  protected _description = inline(`
+  description = inline(`
     Select an option from a dropdown (select) element on the page, given its
     selector and the value to select. Use Select.findBySemantics if you don't
     know the selector.
   `);
-  protected _parameters = z.object({
+  input = z.object({
     selector: z.string().describe("The selector of the select element."),
     value: z.string().describe("The value of the option to select."),
   });
@@ -80,7 +78,7 @@ export class SelectByValueTool extends Tool {
     this._browser = browser;
   }
 
-  async execute({ selector, value }: z.infer<typeof this._parameters>) {
+  async execute({ selector, value }: z.infer<typeof this.input>) {
     const dom = await this._browser.dom();
     const select = dom.querySelector<HTMLSelectElement>(selector);
     if (!select) return "Select element not found.";

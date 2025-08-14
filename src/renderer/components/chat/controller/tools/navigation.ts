@@ -1,25 +1,24 @@
 import z from "zod";
 import { BrowserController } from "~/renderer/components/browser";
 import {
-  Tool,
-  ToolRegistrar,
+  ManagedTool
 } from "~/renderer/components/chat/controller/tools/fundamental";
 
-export default function registerNavigationTools(
-  registrar: ToolRegistrar,
-  browser: BrowserController
-) {
-  registrar.register("Navigation.getUrl", new GetUrlTool(browser));
-  registrar.register("Navigation.getTitle", new GetTitleTool(browser));
-  registrar.register("Navigation.goToUrl", new GoToUrlTool(browser));
-  registrar.register("Navigation.goBack", new GoBackTool(browser));
-  registrar.register("Navigation.goForward", new GoForwardTool(browser));
+export type NavigationTools = ReturnType<typeof createNavigationTools>;
+export default function createNavigationTools(browser: BrowserController) {
+  return {
+    "Navigation.getUrl": new GetUrlTool(browser).toTool(),
+    "Navigation.getTitle": new GetTitleTool(browser).toTool(),
+    "Navigation.goToUrl": new GoToUrlTool(browser).toTool(),
+    "Navigation.goBack": new GoBackTool(browser).toTool(),
+    "Navigation.goForward": new GoForwardTool(browser).toTool(),
+  } as const;
 }
 
-export class GetUrlTool extends Tool {
+export class GetUrlTool extends ManagedTool {
   protected _browser: BrowserController;
-  protected _description = "Get the current URL of the browser.";
-  protected _parameters = z.object({});
+  description = "Get the current URL of the browser.";
+  input = z.object({});
 
   constructor(browser: BrowserController) {
     super();
@@ -35,10 +34,10 @@ export class GetUrlTool extends Tool {
   }
 }
 
-export class GetTitleTool extends Tool {
+export class GetTitleTool extends ManagedTool {
   protected _browser: BrowserController;
-  protected _description = "Get the current title of the browser.";
-  protected _parameters = z.object({});
+  description = "Get the current title of the browser.";
+  input = z.object({});
 
   constructor(browser: BrowserController) {
     super();
@@ -51,10 +50,10 @@ export class GetTitleTool extends Tool {
   }
 }
 
-export class GoToUrlTool extends Tool {
+export class GoToUrlTool extends ManagedTool {
   protected _browser: BrowserController;
-  protected _description = "Navigate the browser to a specified URL.";
-  protected _parameters = z.object({
+  description = "Navigate the browser to a specified URL.";
+  input = z.object({
     url: z
       .string()
       .describe("The URL to navigate to with its protocol (e.g. https://*)."),
@@ -65,7 +64,7 @@ export class GoToUrlTool extends Tool {
     this._browser = browser;
   }
 
-  async execute({ url }: z.infer<typeof this._parameters>) {
+  async execute({ url }: z.infer<typeof this.input>) {
     await this._browser.go(url);
     return [
       `Navigated to ${url}`,
@@ -76,10 +75,10 @@ export class GoToUrlTool extends Tool {
   }
 }
 
-export class GoBackTool extends Tool {
+export class GoBackTool extends ManagedTool {
   protected _browser: BrowserController;
-  protected _description = "Navigate the browser back to the previous page.";
-  protected _parameters = z.object({});
+  description = "Navigate the browser back to the previous page.";
+  input = z.object({});
 
   constructor(browser: BrowserController) {
     super();
@@ -101,10 +100,10 @@ export class GoBackTool extends Tool {
   }
 }
 
-export class GoForwardTool extends Tool {
+export class GoForwardTool extends ManagedTool {
   protected _browser: BrowserController;
-  protected _description = "Navigate the browser forward to the next page.";
-  protected _parameters = z.object({});
+  description = "Navigate the browser forward to the next page.";
+  input = z.object({});
 
   constructor(browser: BrowserController) {
     super();

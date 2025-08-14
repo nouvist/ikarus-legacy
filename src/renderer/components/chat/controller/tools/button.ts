@@ -2,29 +2,30 @@ import z from "zod";
 import { BrowserController } from "~/renderer/components/browser";
 import Fetcher from "~/renderer/components/chat/controller/fetcher";
 import {
-  Tool,
-  ToolRegistrar,
+  ManagedTool
 } from "~/renderer/components/chat/controller/tools/fundamental";
 import { inline } from "~/shared/core";
 
-export default function registerButtonTools(
-  registrar: ToolRegistrar,
+export type ButtonTools = ReturnType<typeof createButtonTools>;
+export default function createButtonTools(
   browser: BrowserController,
   fetcher: Fetcher
 ) {
-  registrar.register(
-    "Button.findBySemantics",
-    new FindBySemanticsTool(browser, fetcher)
-  );
-  registrar.register("Button.clickBySelector", new ClickBottonTool(browser));
+  return {
+    "Button.findBySemantics": new FindBySemanticsTool(
+      browser,
+      fetcher
+    ).toTool(),
+    "Button.clickBySelector": new ClickBottonTool(browser).toTool(),
+  } as const;
 }
 
-export class FindBySemanticsTool extends Tool {
+export class FindBySemanticsTool extends ManagedTool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
 
-  protected _description = "Get button or anchor information from the page.";
-  protected _parameters = z.object({
+  description = "Get button or anchor information from the page.";
+  input = z.object({
     semantics: z.string().describe("Description of the button to find."),
   });
 
@@ -34,7 +35,7 @@ export class FindBySemanticsTool extends Tool {
     this._fetcher = memory;
   }
 
-  async execute({ semantics }: z.infer<typeof this._parameters>) {
+  async execute({ semantics }: z.infer<typeof this.input>) {
     await this._fetcher.button.fetch();
 
     semantics = semantics.trim().toLowerCase();
@@ -54,13 +55,13 @@ export class FindBySemanticsTool extends Tool {
   }
 }
 
-export class ClickBottonTool extends Tool {
+export class ClickBottonTool extends ManagedTool {
   protected _browser: BrowserController;
-  protected _description = inline(`
+  description = inline(`
     Click a button or anchor on the page, given its selector. Use findButton if
     you don't know the selector.
   `);
-  protected _parameters = z.object({
+  input = z.object({
     selector: z.string().describe("The selector of the button to click."),
   });
 
@@ -69,7 +70,7 @@ export class ClickBottonTool extends Tool {
     this._browser = browser;
   }
 
-  async execute({ selector }: z.infer<typeof this._parameters>) {
+  async execute({ selector }: z.infer<typeof this.input>) {
     const dom = await this._browser.dom();
     const element = dom.querySelector<HTMLButtonElement>(selector);
 

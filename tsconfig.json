@@ -9,7 +9,7 @@
     // "target": "ES2020", // default Electron Forge
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "module": "CommonJS", // default Electron Forge
+    "module": "nodenext", // default Electron Forge
     // "module": "ESNext", // default Vite + React
     "skipLibCheck": true,
 
@@ -21,7 +21,7 @@
     },
 
     /* Bundler mode */
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     // "moduleResolution": "bundler",
     // "allowImportingTsExtensions": true,
     // "verbatimModuleSyntax": true,

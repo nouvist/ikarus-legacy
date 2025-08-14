@@ -2,39 +2,37 @@ import z from "zod";
 import { BrowserController } from "~/renderer/components/browser";
 import Fetcher from "~/renderer/components/chat/controller/fetcher";
 import {
-  Tool,
-  ToolRegistrar,
+  ManagedTool
 } from "~/renderer/components/chat/controller/tools/fundamental";
 import { ElementData } from "~/renderer/memory/tables/html";
 
-export default function registerHtmlTools(
-  registrar: ToolRegistrar,
+export type HtmlTools = ReturnType<typeof createHtmlTools>;
+export default function createHtmlTools(
   browser: BrowserController,
-  fetcher: Fetcher,
+  fetcher: Fetcher
 ) {
-  registrar.register(
-    "Html.findElementsBySemantics",
-    new FindElementsBySemanticsTool(browser, fetcher)
-  );
-  registrar.register(
-    "Html.findElementsByCluster",
-    new FindElementsByClusterTool(browser, fetcher)
-  );
-  registrar.register(
-    "Html.findClusters",
-    new FindClustersTool(browser, fetcher)
-  );
-  registrar.register(
-    "Html.findClustersBySemantics",
-    new FindClustersBySemanticsTool(browser, fetcher)
-  );
+  return {
+    "Html.findElementsBySemantics": new FindElementsBySemanticsTool(
+      browser,
+      fetcher
+    ).toTool(),
+    "Html.findElementsByCluster": new FindElementsByClusterTool(
+      browser,
+      fetcher
+    ).toTool(),
+    "Html.findClusters": new FindClustersTool(browser, fetcher).toTool(),
+    "Html.findClustersBySemantics": new FindClustersBySemanticsTool(
+      browser,
+      fetcher
+    ).toTool(),
+  } as const;
 }
 
-export class FindElementsBySemanticsTool extends Tool {
+export class FindElementsBySemanticsTool extends ManagedTool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
-  protected _description = "Find HTML elements by semantics description.";
-  protected _parameters = z.object({
+  description = "Find HTML elements by semantics description.";
+  input = z.object({
     semantics: z.string().describe("Description of the elements to find."),
   });
 
@@ -44,7 +42,7 @@ export class FindElementsBySemanticsTool extends Tool {
     this._fetcher = fetcher;
   }
 
-  async execute({ semantics }: z.infer<typeof this._parameters>) {
+  async execute({ semantics }: z.infer<typeof this.input>) {
     const elements = await this._fetcher.html.findElementsBySemantics(
       semantics,
       10
@@ -67,11 +65,11 @@ export class FindElementsBySemanticsTool extends Tool {
   }
 }
 
-export class FindElementsByClusterTool extends Tool {
+export class FindElementsByClusterTool extends ManagedTool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
-  protected _description = "Find HTML elements by cluster.";
-  protected _parameters = z.object({
+  description = "Find HTML elements by cluster.";
+  input = z.object({
     cluster: z.string().describe("Cluster hash to find elements in."),
   });
 
@@ -81,7 +79,7 @@ export class FindElementsByClusterTool extends Tool {
     this._fetcher = fetcher;
   }
 
-  async execute({ cluster }: z.infer<typeof this._parameters>) {
+  async execute({ cluster }: z.infer<typeof this.input>) {
     const elements = await this._fetcher.html.findElementsByCluster(cluster);
     const lines = elements.map((element) => {
       return [
@@ -96,11 +94,11 @@ export class FindElementsByClusterTool extends Tool {
   }
 }
 
-export class FindClustersTool extends Tool {
+export class FindClustersTool extends ManagedTool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
-  protected _description = "Find all HTML clusters.";
-  protected _parameters = z.object({});
+  description = "Find all HTML clusters.";
+  input = z.object({});
 
   constructor(browser: BrowserController, fetcher: Fetcher) {
     super();
@@ -123,11 +121,11 @@ export class FindClustersTool extends Tool {
   }
 }
 
-export class FindClustersBySemanticsTool extends Tool {
+export class FindClustersBySemanticsTool extends ManagedTool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
-  protected _description = "Find HTML clusters by semantics description.";
-  protected _parameters = z.object({
+  description = "Find HTML clusters by semantics description.";
+  input = z.object({
     semantics: z.string().describe("Description of the clusters to find."),
   });
 
@@ -137,7 +135,7 @@ export class FindClustersBySemanticsTool extends Tool {
     this._fetcher = fetcher;
   }
 
-  async execute({ semantics }: z.infer<typeof this._parameters>) {
+  async execute({ semantics }: z.infer<typeof this.input>) {
     const clusters =
       await this._fetcher.html.findClustersBySemantics(semantics);
     const representatives = [] as (ElementData | undefined)[];

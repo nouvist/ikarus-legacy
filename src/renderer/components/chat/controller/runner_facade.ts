@@ -1,6 +1,6 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
-import { EmbeddingModel, LanguageModel } from "ai";
+import { EmbeddingModel, LanguageModel, StopCondition, ToolSet } from "ai";
 import { BrowserController } from "~/renderer/components/browser";
 import Fetcher from "~/renderer/components/chat/controller/fetcher";
 import Runner from "~/renderer/components/chat/controller/runner";
@@ -9,24 +9,28 @@ import {
   UserMessage,
 } from "~/renderer/components/chat/controller/structs";
 import TooManyRequestsController from "~/renderer/components/chat/controller/too_many_requests_controller";
-import createTools from "~/renderer/components/chat/controller/tools";
+import createTools, {
+  Tools,
+} from "~/renderer/components/chat/controller/tools";
 import { CsvController } from "~/renderer/components/csv";
 import InMemory from "~/renderer/memory";
 import { Completer, LateRefCell } from "~/shared/core";
 import { Mutex, Rxjs } from "~/shared/rxjs";
 
-export interface RunnerInvokeRequest {
-  maxSteps?: number;
+export interface RunnerInvokeRequest<TS extends ToolSet> {
   temperature?: number;
   frequencyPenalty?: number;
+  stopWhen?:
+    | StopCondition<NoInfer<TS>>
+    | Array<StopCondition<NoInfer<TS>>>;
 }
 
-export interface RunnerInvokeOptions {
+export interface RunnerInvokeOptions<TS extends ToolSet> {
   getMessages: () => Message[];
   setMessages: (messages: Message[]) => void;
   concatMessages: (messages: Message[] | Message) => void;
   abortSignal?: AbortSignal;
-  request?: RunnerInvokeRequest;
+  request?: RunnerInvokeRequest<TS>;
 }
 
 export interface RunnerLanguageOptions {
@@ -60,7 +64,7 @@ export default class RunnerFacade {
   protected _isInitialized = false;
   protected _memory = new InMemory();
 
-  protected _runner = new Runner(
+  protected _runner = new Runner<Tools>(
     this._embedding,
     this._language,
     this.tooManyRequests
@@ -113,7 +117,7 @@ export default class RunnerFacade {
     getMessages,
     setMessages,
     ...options
-  }: RunnerInvokeOptions) {
+  }: RunnerInvokeOptions<Tools>) {
     const context = await this._createContext();
     let messages = getMessages();
 

@@ -8,6 +8,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --check .",
     "format:fix": "prettier --write ."
   },

@@ -1,19 +1,21 @@
-import { LanguageModelV1ProviderMetadata } from "@ai-sdk/provider";
 import {
   AssistantContent,
-  CoreAssistantMessage,
-  CoreSystemMessage,
-  CoreToolMessage,
-  CoreUserMessage,
+  AssistantModelMessage,
+  JSONValue,
+  ModelMessage,
+  SystemModelMessage,
   ToolCallPart,
   ToolContent,
-  ToolResultPart,
+  ToolModelMessage,
+  ToolSet,
+  TypedToolResult,
+  UserModelMessage,
 } from "ai";
 import { BehaviorSubject } from "rxjs";
-import { getRandom } from "~/shared/core";
 import { Rxjs } from "~/shared/rxjs";
 
-type ProviderOptions = LanguageModelV1ProviderMetadata;
+// TODO: pake yg keekspos harusnya jir
+type ProviderOptions = Record<string, Record<string, JSONValue>>;
 
 export interface MessageOptions {
   provider?: ProviderOptions;
@@ -24,10 +26,10 @@ export interface StreamMessageOptions extends MessageOptions {
   completed?: boolean;
 }
 
-export type Message =
+export type Message<TS extends ToolSet = any> =
   | AssistantMessage
   | SystemMessage
-  | ToolMessage
+  | ToolMessage<TS>
   | UserMessage;
 
 export enum MessageRole {
@@ -37,41 +39,17 @@ export enum MessageRole {
   User = "user",
 }
 
-export abstract class ToolEmulator {
-  static emulateToolCall(name: string, args: object) {
-    const id = "emulated::" + getRandom();
-    return [
-      { id, name },
-      new AssistantMessage(
-        [
-          {
-            type: "tool-call",
-            toolCallId: id,
-            toolName: name,
-            args: args,
-          } satisfies ToolCallPart,
-        ],
-        { visible: false }
-      ),
-    ] as const;
-  }
-
-  static emulateToolResult(meta: { id: string; name: string }, result: string) {
-    return new ToolMessage(
-      [
-        {
-          type: "tool-result",
-          toolCallId: meta.id,
-          toolName: meta.name,
-          result: result,
-        } satisfies ToolResultPart,
-      ],
-      { visible: false }
-    );
-  }
+interface SharedMessageTrait {
+  toModel(): ModelMessage;
 }
 
-export class AssistantMessage implements CoreAssistantMessage {
+export function convertMessageToModel(messages: Message[]) {
+  return messages.map((it) => it.toModel());
+}
+
+export class AssistantMessage
+  implements AssistantModelMessage, SharedMessageTrait
+{
   readonly role = MessageRole.Assistant as const;
   readonly providerOptions?: ProviderOptions;
   readonly subject = new BehaviorSubject<AssistantContent>("");
@@ -84,20 +62,17 @@ export class AssistantMessage implements CoreAssistantMessage {
     this.concat = this.concat.bind(this);
     this.complete = this.complete.bind(this);
     this.waitUntilComplete = this.waitUntilComplete.bind(this);
+    this.toModel = this.toModel.bind(this);
     if (content) this.next(content);
     if (options?.completed) this.complete();
   }
 
-  static fromCoreMessage(message: CoreAssistantMessage) {
-    if (message instanceof AssistantMessage) return message;
-    const obj = new AssistantMessage(
-      typeof message.content === "string"
-        ? message.content
-        : message.content.join("").toString(),
-      message.providerOptions
-    );
-    obj.complete();
-    return obj;
+  toModel(): AssistantModelMessage {
+    return {
+      role: this.role,
+      content: this.content,
+      providerOptions: this.providerOptions,
+    };
   }
 
   static isEmpty(content: AssistantContent): content is never {
@@ -147,7 +122,7 @@ export class AssistantMessage implements CoreAssistantMessage {
   }
 }
 
-export class SystemMessage implements CoreSystemMessage {
+export class SystemMessage implements SystemModelMessage, SharedMessageTrait {
   readonly role = MessageRole.System as const;
   readonly content: string;
   readonly providerOptions?: ProviderOptions;
@@ -157,33 +132,58 @@ export class SystemMessage implements CoreSystemMessage {
     this.visible = options?.visible ?? true;
     this.content = content;
     this.providerOptions = options?.provider;
+    this.toModel = this.toModel.bind(this);
   }
 
-  static fromCoreMessage(message: CoreSystemMessage) {
-    if (message instanceof SystemMessage) return message;
-    return new SystemMessage(message.content, message.providerOptions);
+  toModel(): SystemModelMessage {
+    return {
+      role: this.role,
+      content: this.content,
+      providerOptions: this.providerOptions,
+    };
   }
 }
 
-export class ToolMessage implements CoreToolMessage {
+export class ToolMessage<TS extends ToolSet>
+  implements ToolModelMessage, SharedMessageTrait
+{
   readonly role = MessageRole.Tool as const;
   readonly content: ToolContent;
   readonly providerOptions?: ProviderOptions;
   visible: boolean;
 
-  constructor(content: ToolContent, options?: MessageOptions) {
-    this.visible = options?.visible ?? true;
-    this.content = content;
-    this.providerOptions = options?.provider;
+  protected _convert(content: TypedToolResult<TS>[]): ToolContent {
+    return content.map((it) => ({
+      type: "tool-result",
+      toolName: it.toolName,
+      toolCallId: it.toolCallId,
+      output: { type: "text", value: String(it.output) },
+      providerOptions: this.providerOptions,
+    }));
   }
 
-  static fromCoreMessage(message: CoreToolMessage) {
-    if (message instanceof ToolMessage) return message;
-    return new ToolMessage(message.content, message.providerOptions);
+  constructor(content: TypedToolResult<TS>[], options?: MessageOptions) {
+    this.visible = options?.visible ?? true;
+    this.content = this._convert(content);
+    this.providerOptions = options?.provider;
+    this.push = this.push.bind(this);
+    this.toModel = this.toModel.bind(this);
+  }
+
+  push(content: TypedToolResult<TS>) {
+    this.content.push(...this._convert([content]));
+  }
+
+  toModel(): ToolModelMessage {
+    return {
+      role: this.role,
+      content: this.content,
+      providerOptions: this.providerOptions,
+    };
   }
 }
 
-export class UserMessage implements CoreUserMessage {
+export class UserMessage implements UserModelMessage, SharedMessageTrait {
   readonly role = MessageRole.User as const;
   readonly content: string;
   readonly providerOptions?: ProviderOptions;
@@ -193,15 +193,14 @@ export class UserMessage implements CoreUserMessage {
     this.visible = options?.visible ?? true;
     this.content = content;
     this.providerOptions = options?.provider;
+    this.toModel = this.toModel.bind(this);
   }
 
-  static fromCoreMessage(message: CoreUserMessage) {
-    if (message instanceof UserMessage) return message;
-    return new UserMessage(
-      typeof message.content === "string"
-        ? message.content
-        : message.content.join(""),
-      message.providerOptions
-    );
+  toModel(): UserModelMessage {
+    return {
+      role: this.role,
+      content: this.content,
+      providerOptions: this.providerOptions,
+    };
   }
 }

@@ -5,12 +5,13 @@ import {
   generateText,
   LanguageModel,
   streamText,
-  Tool,
-  ToolResultPart,
+  ToolSet,
+  TypedToolResult,
 } from "ai";
 import fnv from "fnv-plus";
 import {
   AssistantMessage,
+  convertMessageToModel,
   Message,
   SystemMessage,
   ToolMessage,
@@ -32,11 +33,11 @@ interface _Cached<T> {
   timeout: number;
 }
 
-export default class Runner {
+export default class Runner<TS extends ToolSet> {
   protected _tooManyRequests: TooManyRequestsController;
   protected _embedding: RefCell<EmbeddingModel<string>>;
   protected _language: RefCell<LanguageModel>;
-  protected _tools: Record<string, Tool> = {};
+  protected _tools = {} satisfies Partial<TS> as TS;
   protected _embeddingCache = new Map<_CacheId, _Cached<number[]>>();
   protected _embeddingCacheTimeout?: NodeJS.Timeout;
   protected _languageCache = new Map<string, _Cached<string>>();
@@ -48,11 +49,10 @@ export default class Runner {
     return `${value.length}::${hash}` as const;
   }
 
-  protected static _defaultRequest = {
-    maxSteps: 10,
+  protected _defaultRequest = {
     temperature: 0.7,
     frequencyPenalty: 0.75,
-  } satisfies Partial<RunnerInvokeRequest>;
+  } satisfies Partial<RunnerInvokeRequest<TS>>;
 
   constructor(
     embedding: RefCell<EmbeddingModel<string>>,
@@ -80,11 +80,11 @@ export default class Runner {
     this._isTooManyRequestsError = this._isTooManyRequestsError.bind(this);
   }
 
-  registerTools(tools: Record<string, Tool>, append = false) {
+  registerTools(tools: Partial<TS>, append = false) {
     if (append) {
       this._tools = { ...this._tools, ...tools };
     } else {
-      this._tools = tools;
+      this._tools = tools as TS;
     }
   }
 
@@ -112,7 +112,6 @@ export default class Runner {
           model: this._language.value,
           messages: [new SystemMessage(system), new UserMessage(user)],
           temperature: 0,
-          maxSteps: 1,
         });
         this._languageCache.set(
           cacheId,
@@ -146,14 +145,14 @@ export default class Runner {
     getMessages,
     setMessages,
     ...options
-  }: RunnerInvokeOptions): Promise<Message[]> {
+  }: RunnerInvokeOptions<TS>): Promise<Message[]> {
     try {
-      const result = await generateText({
-        ...Runner._defaultRequest,
+      const result = await generateText<TS>({
+        ...this._defaultRequest,
         ...options.request,
         abortSignal,
         model: this._language.value,
-        messages: getMessages(),
+        messages: convertMessageToModel(getMessages()),
         tools: this._tools,
       });
 
@@ -176,6 +175,8 @@ export default class Runner {
         }
 
         if (step.toolResults.length > 0) {
+          console.log(step);
+          console.log(step.toolResults);
           const message = new ToolMessage(
             step.toolResults,
             step.providerMetadata
@@ -198,7 +199,7 @@ export default class Runner {
         throw error;
       }
       return this.invoke({
-        ...Runner._defaultRequest,
+        ...this._defaultRequest,
         ...options,
         abortSignal,
         concatMessages,
@@ -214,14 +215,14 @@ export default class Runner {
     setMessages,
     abortSignal,
     ...options
-  }: RunnerInvokeOptions): Promise<void> {
+  }: RunnerInvokeOptions<TS>): Promise<void> {
     try {
       const stream = streamText({
-        ...Runner._defaultRequest,
+        ...this._defaultRequest,
         ...options,
         abortSignal,
         model: this._language.value,
-        messages: getMessages(),
+        messages: convertMessageToModel(getMessages()),
         tools: this._tools,
       });
 
@@ -246,21 +247,21 @@ export default class Runner {
         }
 
         if ((chunk.type as string) === "tool-result") {
-          const chunkAsTool = chunk as any as ToolResultPart;
+          const chunkAsTool = chunk as TypedToolResult<TS>;
           if (last instanceof ToolMessage) {
-            last.content.push(chunkAsTool);
+            last.push(chunkAsTool);
           } else {
             completeLast();
-            concatMessages((last = new ToolMessage([chunkAsTool])));
+            concatMessages((last = new ToolMessage<TS>([chunkAsTool])));
           }
         }
 
         if (chunk.type === "text-delta") {
           if (last instanceof AssistantMessage) {
-            last.concat(chunk.textDelta);
+            last.concat(chunk.text);
           } else {
             completeLast();
-            concatMessages((last = new AssistantMessage(chunk.textDelta)));
+            concatMessages((last = new AssistantMessage(chunk.text)));
           }
         }
       }
@@ -272,7 +273,7 @@ export default class Runner {
         throw error;
       }
       return this.stream({
-        ...Runner._defaultRequest,
+        ...this._defaultRequest,
         ...options,
         concatMessages,
         getMessages,

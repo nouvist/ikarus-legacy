@@ -2,57 +2,50 @@ import z from "zod";
 import { BrowserController } from "~/renderer/components/browser";
 import Fetcher from "~/renderer/components/chat/controller/fetcher";
 import {
-  Tool,
+  ManagedTool,
   ToolRegistrar,
 } from "~/renderer/components/chat/controller/tools/fundamental";
 
-export default function registerCheckboxInputTools(
-  registrar: ToolRegistrar,
+export type CheckboxInputTools = ReturnType<typeof createCheckboxInputTools>;
+export default function createCheckboxInputTools(
   browser: BrowserController,
   fetcher: Fetcher
 ) {
-  registrar.register(
-    "CheckboxInput.findBySemantics",
-    new FindBySemanticsTool(browser, fetcher)
-  );
-  registrar.register(
-    "CheckboxInput.findByName",
-    new FindByNameTool(browser, fetcher)
-  );
+  return {
+    "CheckboxInput.findBySemantics": new FindBySemanticsTool(
+      browser,
+      fetcher
+    ).toTool(),
+    "CheckboxInput.findByName": new FindByNameTool(browser, fetcher).toTool(),
 
-  registrar.register(
-    "CheckboxInput.checkByValue",
-    new CheckByValueTool(browser, fetcher)
-  );
-  registrar.register(
-    "CheckboxInput.uncheckByValue",
-    new UncheckByValueTool(browser, fetcher)
-  );
-  registrar.register(
-    "CheckboxInput.toggleByValue",
-    new ToggleByValueTool(browser, fetcher)
-  );
+    "CheckboxInput.checkByValue": new CheckByValueTool(
+      browser,
+      fetcher
+    ).toTool(),
+    "CheckboxInput.uncheckByValue": new UncheckByValueTool(
+      browser,
+      fetcher
+    ).toTool(),
+    "CheckboxInput.toggleByValue": new ToggleByValueTool(
+      browser,
+      fetcher
+    ).toTool(),
 
-  registrar.register(
-    "CheckboxInput.checkBySelector",
-    new CheckBySelectorTool(browser)
-  );
-  registrar.register(
-    "CheckboxInput.uncheckBySelector",
-    new UncheckBySelectorTool(browser)
-  );
-  registrar.register(
-    "CheckboxInput.toggleBySelector",
-    new ToggleBySelectorTool(browser)
-  );
+    "CheckboxInput.checkBySelector": new CheckBySelectorTool(browser).toTool(),
+    "CheckboxInput.uncheckBySelector": new UncheckBySelectorTool(
+      browser
+    ).toTool(),
+    "CheckboxInput.toggleBySelector": new ToggleBySelectorTool(
+      browser
+    ).toTool(),
+  } as const;
 }
 
-export class FindBySemanticsTool extends Tool {
+export class FindBySemanticsTool extends ManagedTool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
-  protected _description =
-    "Get checkbox input field information from the page.";
-  protected _parameters = z.object({
+  description = "Get checkbox input field information from the page.";
+  input = z.object({
     semantics: z
       .string()
       .describe("Description of the checkbox input to find."),
@@ -64,7 +57,7 @@ export class FindBySemanticsTool extends Tool {
     this._fetcher = fetcher;
   }
 
-  async execute({ semantics }: z.infer<typeof this._parameters>) {
+  async execute({ semantics }: z.infer<typeof this.input>) {
     semantics = semantics.trim();
     const result =
       await this._fetcher.checkbox.findElementsBySemantics(semantics);
@@ -89,11 +82,11 @@ export class FindBySemanticsTool extends Tool {
   }
 }
 
-export class FindByNameTool extends Tool {
+export class FindByNameTool extends ManagedTool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
-  protected _description = "Get checkbox input field information by name.";
-  protected _parameters = z.object({
+  description = "Get checkbox input field information by name.";
+  input = z.object({
     name: z.string().describe("Name of the checkbox input to find."),
   });
 
@@ -103,7 +96,7 @@ export class FindByNameTool extends Tool {
     this._fetcher = fetcher;
   }
 
-  async execute({ name }: z.infer<typeof this._parameters>) {
+  async execute({ name }: z.infer<typeof this.input>) {
     const result = await this._fetcher.checkbox.findElementsByName(name);
     const dom = await this._browser.dom();
 
@@ -126,11 +119,11 @@ export class FindByNameTool extends Tool {
   }
 }
 
-export class CheckByValueTool extends Tool {
+export class CheckByValueTool extends ManagedTool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
-  protected _description = "Check a checkbox input by value.";
-  protected _parameters = z.object({
+  description = "Check a checkbox input by value.";
+  input = z.object({
     name: z.string().describe("Name of the checkbox input to check."),
     value: z.string().describe("Value of the checkbox input to check."),
   });
@@ -141,7 +134,7 @@ export class CheckByValueTool extends Tool {
     this._fetcher = fetcher;
   }
 
-  async execute({ name, value }: z.infer<typeof this._parameters>) {
+  async execute({ name, value }: z.infer<typeof this.input>) {
     const dom = await this._browser.dom();
     const input = dom.querySelector<HTMLInputElement>(
       `input[name="${CSS.escape(name)}"][value="${CSS.escape(value)}"]`
@@ -154,11 +147,11 @@ export class CheckByValueTool extends Tool {
   }
 }
 
-export class UncheckByValueTool extends Tool {
+export class UncheckByValueTool extends ManagedTool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
-  protected _description = "Uncheck a checkbox input by value.";
-  protected _parameters = z.object({
+  description = "Uncheck a checkbox input by value.";
+  input = z.object({
     name: z.string().describe("Name of the checkbox input to uncheck."),
     value: z.string().describe("Value of the checkbox input to uncheck."),
   });
@@ -169,7 +162,7 @@ export class UncheckByValueTool extends Tool {
     this._fetcher = fetcher;
   }
 
-  async execute({ name, value }: z.infer<typeof this._parameters>) {
+  async execute({ name, value }: z.infer<typeof this.input>) {
     const dom = await this._browser.dom();
     const input = dom.querySelector<HTMLInputElement>(
       `input[name="${CSS.escape(name)}"][value="${CSS.escape(value)}"]`
@@ -182,11 +175,11 @@ export class UncheckByValueTool extends Tool {
   }
 }
 
-export class ToggleByValueTool extends Tool {
+export class ToggleByValueTool extends ManagedTool {
   protected _browser: BrowserController;
   protected _fetcher: Fetcher;
-  protected _description = "Toggle a checkbox input by value.";
-  protected _parameters = z.object({
+  description = "Toggle a checkbox input by value.";
+  input = z.object({
     name: z.string().describe("Name of the checkbox input to toggle."),
     value: z.string().describe("Value of the checkbox input to toggle."),
   });
@@ -197,7 +190,7 @@ export class ToggleByValueTool extends Tool {
     this._fetcher = fetcher;
   }
 
-  async execute({ name, value }: z.infer<typeof this._parameters>) {
+  async execute({ name, value }: z.infer<typeof this.input>) {
     const dom = await this._browser.dom();
     const input = dom.querySelector<HTMLInputElement>(
       `input[name="${CSS.escape(name)}"][value="${CSS.escape(value)}"]`
@@ -209,10 +202,10 @@ export class ToggleByValueTool extends Tool {
   }
 }
 
-export class CheckBySelectorTool extends Tool {
+export class CheckBySelectorTool extends ManagedTool {
   protected _browser: BrowserController;
-  protected _description = "Check a checkbox input by its selector.";
-  protected _parameters = z.object({
+  description = "Check a checkbox input by its selector.";
+  input = z.object({
     selector: z.string().describe("Selector of the checkbox input to check."),
   });
 
@@ -221,7 +214,7 @@ export class CheckBySelectorTool extends Tool {
     this._browser = browser;
   }
 
-  async execute({ selector }: z.infer<typeof this._parameters>) {
+  async execute({ selector }: z.infer<typeof this.input>) {
     const dom = await this._browser.dom();
     const input = dom.querySelector<HTMLInputElement>(selector);
     if (!input) return "Checkbox input not found.";
@@ -232,10 +225,10 @@ export class CheckBySelectorTool extends Tool {
   }
 }
 
-export class UncheckBySelectorTool extends Tool {
+export class UncheckBySelectorTool extends ManagedTool {
   protected _browser: BrowserController;
-  protected _description = "Uncheck a checkbox input by its selector.";
-  protected _parameters = z.object({
+  description = "Uncheck a checkbox input by its selector.";
+  input = z.object({
     selector: z.string().describe("Selector of the checkbox input to uncheck."),
   });
 
@@ -244,7 +237,7 @@ export class UncheckBySelectorTool extends Tool {
     this._browser = browser;
   }
 
-  async execute({ selector }: z.infer<typeof this._parameters>) {
+  async execute({ selector }: z.infer<typeof this.input>) {
     const dom = await this._browser.dom();
     const input = dom.querySelector<HTMLInputElement>(selector);
     if (!input) return "Checkbox input not found.";
@@ -255,10 +248,10 @@ export class UncheckBySelectorTool extends Tool {
   }
 }
 
-export class ToggleBySelectorTool extends Tool {
+export class ToggleBySelectorTool extends ManagedTool {
   protected _browser: BrowserController;
-  protected _description = "Toggle a checkbox input by its selector.";
-  protected _parameters = z.object({
+  description = "Toggle a checkbox input by its selector.";
+  input = z.object({
     selector: z.string().describe("Selector of the checkbox input to toggle."),
   });
 
@@ -267,7 +260,7 @@ export class ToggleBySelectorTool extends Tool {
     this._browser = browser;
   }
 
-  async execute({ selector }: z.infer<typeof this._parameters>) {
+  async execute({ selector }: z.infer<typeof this.input>) {
     const dom = await this._browser.dom();
     const input = dom.querySelector<HTMLInputElement>(selector);
     if (!input) return "Checkbox input not found.";

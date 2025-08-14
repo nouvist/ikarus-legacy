@@ -1,62 +1,38 @@
-import { jsonSchema, tool, ToolExecutionOptions } from "ai";
+import { Tool, tool, ToolCallOptions, zodSchema } from "ai";
 import z from "zod";
 
-export abstract class Tool {
-  protected abstract _description: string;
-  protected abstract _parameters: z.ZodTypeAny;
+export type ManagedToolInputInfer<T extends ManagedTool> = z.infer<T["input"]>;
+export type ManagedToolInfer<T extends ManagedTool> = Tool<
+  ManagedToolInputInfer<T>
+>;
+
+export abstract class ManagedTool {
+  abstract description: string;
+  abstract input: z.ZodObject;
 
   constructor() {
-    this._execute = this._execute.bind(this);
-    this.validate = this.validate.bind(this);
-    this.execute = this.execute.bind(this);
     this.toTool = this.toTool.bind(this);
+    this._execute = this._execute.bind(this);
+    this.execute = this.execute.bind(this);
   }
 
   toTool() {
     return tool({
-      description: this._description,
-      parameters: jsonSchema(z.toJSONSchema(this._parameters)),
+      description: this.description,
+      inputSchema: zodSchema(this.input),
       execute: this._execute,
-    });
+    }) as ManagedToolInfer<this>;
   }
 
-  protected _execute(args: unknown, opts: ToolExecutionOptions): Promise<any> {
-    try {
-      const parsed = this.validate(args);
-      return this.execute(parsed, opts);
-    } catch (error) {
-      if (!(error instanceof Error)) {
-        return Promise.resolve("Error: An unknown error occurred");
-      }
-      return Promise.resolve("Error: " + error.message);
-    }
-  }
-
-  validate(args: unknown): asserts args is z.infer<typeof this._parameters> {
-    const parsed = this._parameters.parse(args);
-    if (parsed === undefined) throw new Error("Invalid arguments");
-    return parsed as any;
+  protected _execute(
+    args: z.infer<typeof this.input>,
+    opts: ToolCallOptions
+  ): Promise<any> {
+    return this.execute(args, opts);
   }
 
   abstract execute(
-    args: z.infer<typeof this._parameters>,
-    opts: ToolExecutionOptions
+    args: z.infer<typeof this.input>,
+    opts: ToolCallOptions
   ): Promise<any>;
-}
-
-export class ToolRegistrar {
-  private _tools: Record<string, ReturnType<Tool["toTool"]>> = {};
-
-  constructor() {
-    this.register = this.register.bind(this);
-    this.finalize = this.finalize.bind(this);
-  }
-
-  register(name: string, tool: Tool) {
-    this._tools[name] = tool.toTool();
-  }
-
-  finalize() {
-    return this._tools;
-  }
 }

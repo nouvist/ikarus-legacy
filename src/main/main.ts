@@ -35,7 +35,7 @@ function createWindow() {
       .trim()
   );
 
-  if (isProfileMode) {
+  if (isProfileMode && !isDebugMode) {
     console.warn("[Main::createWindow] mode profile nyala jir wkwkwk");
   }
 
@@ -68,7 +68,7 @@ function createWindow() {
   const refsvc = new RefreshService(window, isDebugMode);
   new EnvService(bridge, isDebugMode, isProfileMode);
 
-  if (!isDebugMode) refsvc.enable();
+  if (!isDebugMode && !isProfileMode) refsvc.enable();
 
   setTimeout(async () => {
     if (winsvc.isShown) return;
@@ -79,7 +79,7 @@ function createWindow() {
     window.close();
   }, 30e3);
 
-  if (isDebugMode || isProfileMode) {
+  if (isProfileMode && !isDebugMode) {
     window.webContents.openDevTools({ mode: "detach" });
   }
 

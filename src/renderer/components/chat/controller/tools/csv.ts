@@ -1,30 +1,28 @@
 import z from "zod";
 import {
-  Tool,
-  ToolRegistrar,
+  ManagedTool
 } from "~/renderer/components/chat/controller/tools/fundamental";
 import { CsvController } from "~/renderer/components/csv";
 
-export default function registerCsvTools(
-  registrar: ToolRegistrar,
-  csv: CsvController
-) {
-  registrar.register("Csv.getMetadata", new GetMetadataTool(csv));
-  registrar.register("Csv.getRow", new GetRowTool(csv));
+export type CsvTools = ReturnType<typeof registerCsvTools>;
+export default function registerCsvTools(csv: CsvController) {
+  return {
+    "Csv.getMetadata": new GetMetadataTool(csv).toTool(),
+    "Csv.getRow": new GetRowTool(csv).toTool(),
+  } as const;
 }
 
-export class GetMetadataTool extends Tool {
+export class GetMetadataTool extends ManagedTool {
   protected _csv: CsvController;
-  protected _description =
-    "Get headers and number of rows from user selected CSV.";
-  protected _parameters = z.object();
+  description = "Get headers and number of rows from user selected CSV.";
+  input = z.object();
 
   constructor(csv: CsvController) {
     super();
     this._csv = csv;
   }
 
-  async execute(_: z.infer<typeof this._parameters>) {
+  async execute(_: z.infer<typeof this.input>) {
     const csv = await this._csv.parse();
     if (!csv) {
       return "User has not selected a CSV file. Ask the user to select one.";
@@ -40,10 +38,10 @@ export class GetMetadataTool extends Tool {
   }
 }
 
-export class GetRowTool extends Tool {
+export class GetRowTool extends ManagedTool {
   protected _csv: CsvController;
-  protected _description = "Get a row from user selected CSV.";
-  protected _parameters = z.object({
+  description = "Get a row from user selected CSV.";
+  input = z.object({
     index: z.number().int().min(0),
   });
 
@@ -52,7 +50,7 @@ export class GetRowTool extends Tool {
     this._csv = csv;
   }
 
-  async execute(params: z.infer<typeof this._parameters>) {
+  async execute(params: z.infer<typeof this.input>) {
     const csv = await this._csv.parse();
     if (!csv) {
       return "User has not selected a CSV file. Ask the user to select one.";
