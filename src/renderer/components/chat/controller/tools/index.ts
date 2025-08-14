@@ -22,6 +22,7 @@ export default function createTools(
 ) {
   return {
     "Core.getSummary": new GetSummaryTool(browser, context).toTool(),
+    "Core.done": new DoneTool().toTool(),
     ...createNavigationTools(browser),
     ...createHtmlTools(browser, fetcher),
     ...createRadioInputTools(browser, fetcher),
@@ -31,6 +32,15 @@ export default function createTools(
     ...createSelectTools(browser, fetcher),
     ...registerCsvTools(csv),
   } as const;
+}
+
+export class DoneTool extends ManagedTool {
+  description = "End the conversation and hand control back to the user.";
+  input = z.object({});
+
+  async execute() {
+    return "The conversation has been ended. The user can now respond or take control.";
+  }
 }
 
 export class GetSummaryTool extends ManagedTool {

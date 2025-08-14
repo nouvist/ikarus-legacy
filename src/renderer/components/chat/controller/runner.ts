@@ -4,6 +4,7 @@ import {
   embedMany,
   generateText,
   LanguageModel,
+  StepResult,
   streamText,
   ToolSet,
   TypedToolResult,
@@ -52,6 +53,7 @@ export default class Runner<TS extends ToolSet> {
   protected _defaultRequest = {
     temperature: 0.7,
     frequencyPenalty: 0.75,
+    stopWhen: [this._handleStopWhen.bind(this)],
   } satisfies Partial<RunnerInvokeRequest<TS>>;
 
   constructor(
@@ -69,6 +71,7 @@ export default class Runner<TS extends ToolSet> {
     this.stream = this.stream.bind(this);
     this.embed = this.embed.bind(this);
     this.embedMany = this.embedMany.bind(this);
+    this._handleStopWhen = this._handleStopWhen.bind(this);
     this._handleEmbeddingCacheTimeout =
       this._handleEmbeddingCacheTimeout.bind(this);
     this._handleLanguageCacheTimeout =
@@ -378,6 +381,14 @@ export default class Runner<TS extends ToolSet> {
       }
       return this.embedMany(values, abortSignal);
     }
+  }
+
+  _handleStopWhen(options: { steps: StepResult<TS>[] }){
+    console.log("STOPNYA BENERIN JIR");
+    console.log(options.steps);
+    const last = options.steps[options.steps.length - 1];
+    return last.toolCalls.some((it) => it.toolName === "Core.done");
+    // return true;
   }
 
   _handleEmbeddingCacheTimeout() {
