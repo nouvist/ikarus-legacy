@@ -115,9 +115,12 @@ export class AssistantMessage
   }
 
   concat(content: string) {
+    if (typeof content === "undefined") return;
     if (typeof this.content !== "string") {
       throw new Error("Cannot concat to non-string content");
     }
+
+    if (content.length === 0) return;
     this.subject.next(this.content + content);
   }
 }
