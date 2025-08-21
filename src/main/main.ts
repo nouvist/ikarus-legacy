@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog } from "electron";
+import { app, BrowserWindow, BrowserWindowConstructorOptions, nativeTheme } from "electron";
 import squirrel from "electron-squirrel-startup";
 import path from "node:path";
 import MainBridge from "~/main/bridge";
@@ -39,14 +39,51 @@ function createWindow() {
     console.warn("[Main::createWindow] mode profile nyala jir wkwkwk");
   }
 
-  const window = new BrowserWindow({
+  const window = new BrowserWindow(
+    createOptions({
+      isDebugMode,
+      isProfileMode,
+    })
+  );
+
+  const bridge = new MainBridge(window);
+  new RefreshService(window, isDebugMode || isProfileMode);
+  new EnvService(bridge, isDebugMode, isProfileMode);
+  new WindowService(window, bridge);
+
+  setTimeout(() => {
+    window.show();
+  }, 5e3);
+  
+  if (isProfileMode && !isDebugMode) {
+    window.webContents.openDevTools({ mode: "detach" });
+  }
+
+  if (isDebugMode) {
+    window.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  } else {
+    window.loadFile(
+      path.join(__dirname, "../renderer", `${MAIN_WINDOW_VITE_NAME}/index.html`)
+    );
+  }
+}
+
+function createOptions({
+  isDebugMode,
+  isProfileMode,
+}: {
+  isDebugMode: boolean;
+  isProfileMode: boolean;
+}): BrowserWindowConstructorOptions {
+  const isWindows = process.platform === "win32";
+  let result: BrowserWindowConstructorOptions = {
     show: isDebugMode,
     roundedCorners: true,
     fullscreenable: false,
-    backgroundColor: "#000000",
     minWidth: 900,
     minHeight: 600,
     frame: false,
+    backgroundColor: "#000000",
     titleBarOverlay: {
       color: "#000000",
       symbolColor: "#ffffff",
@@ -61,33 +98,21 @@ function createWindow() {
       sandbox: false,
       webviewTag: true,
     },
-  });
+  };
 
-  const bridge = new MainBridge(window);
-  const winsvc = new WindowService(window, bridge);
-  const refsvc = new RefreshService(window, isDebugMode);
-  new EnvService(bridge, isDebugMode, isProfileMode);
-
-  if (!isDebugMode && !isProfileMode) refsvc.enable();
-
-  setTimeout(async () => {
-    if (winsvc.isShown) return;
-    await dialog.showMessageBox(window, {
-      title: "Aplikasi meninggal...",
-      message: "App is not responding, failsafe triggered.",
-    });
-    window.close();
-  }, 30e3);
-
-  if (isProfileMode && !isDebugMode) {
-    window.webContents.openDevTools({ mode: "detach" });
+  if (isWindows) {
+    const isDarkMode = nativeTheme.shouldUseDarkColors;
+    result = {
+      ...result,
+      backgroundColor: "#00000000",
+      backgroundMaterial: "mica",
+      titleBarOverlay: {
+        color: "#00000000",
+        symbolColor: isDarkMode ? "#ffffff" : "#000000",
+        height: 48,
+      },
+    };
   }
 
-  if (isDebugMode) {
-    window.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-  } else {
-    window.loadFile(
-      path.join(__dirname, "../renderer", `${MAIN_WINDOW_VITE_NAME}/index.html`)
-    );
-  }
+  return result;
 }

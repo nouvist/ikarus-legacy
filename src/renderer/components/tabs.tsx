@@ -8,7 +8,7 @@ const Tabs = styled.div`
   gap: 8px;
   height: 100%;
   width: 320px;
-  border-right: 1px solid ${(p) => p.theme.elevation.solid};
+  border-right: 1px solid ${(p) => p.theme.elevation.t3};
   padding: 30px;
 `;
 

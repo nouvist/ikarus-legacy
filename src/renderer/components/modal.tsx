@@ -43,7 +43,7 @@ const _ModalButtonContainer = styled.div`
   justify-content: flex-end;
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid ${(p) => p.theme.elevation.solid};
+  border-top: 1px solid ${(p) => p.theme.elevation.t3};
   gap: 16px;
 `;
 

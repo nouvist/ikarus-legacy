@@ -1,4 +1,12 @@
-import { Children, Key, ReactNode, Ref, useRef } from "react";
+import {
+  Children,
+  Key,
+  ReactNode,
+  Ref,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useObservable } from "react-rx";
 import { Observable } from "rxjs";
 import { Completer, getRandom } from "~/shared/core";
@@ -18,6 +26,24 @@ export function getTwo(children: ReactNode) {
   });
 
   return [left, right];
+}
+
+export function useDarkMode() {
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  );
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    function handleChange(event: MediaQueryListEvent) {
+      setIsDarkMode(event.matches);
+    }
+
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
+  }, []);
+
+  return isDarkMode;
 }
 
 export function useRandom() {

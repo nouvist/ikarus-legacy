@@ -1,14 +1,14 @@
-import { ComponentProps, useEffect } from "react";
+import { ComponentProps } from "react";
 import styled, { createGlobalStyle } from "styled-components";
-import removeSplash from "~/renderer/foundations/remove_splash";
 
 import "normalize.css/normalize.css";
 import "~/renderer/assets/css/fonts.css";
+import { useRemoveSplash } from "~/renderer/foundations/remove_splash";
 
 export interface ShellProps extends ComponentProps<"div"> {}
 
 export default function Shell({ children, ...props }: ShellProps) {
-  useEffect(removeSplash, []);
+  useRemoveSplash();
 
   return (
     <_Container {...props}>

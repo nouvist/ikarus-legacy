@@ -38,8 +38,15 @@ export default class WindowService {
     });
 
     this._bridge.handle("Window::setTitleBarColor", async (_, color) => {
+      if (process.platform === "win32") return;
       this._window.setTitleBarOverlay({
         color,
+      });
+    });
+
+    this._bridge.handle("Window::setTitleBarSymbolColor", async (_, color) => {
+      this._window.setTitleBarOverlay({
+        symbolColor: color,
       });
     });
 

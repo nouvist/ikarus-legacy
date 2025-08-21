@@ -2,7 +2,6 @@ import RendererBridge from "~/preload/services/bridge";
 
 export default class WindowManaged {
   protected _bridge: RendererBridge;
-  protected _lastControlColor?: string;
 
   constructor(bridge: RendererBridge) {
     this._bridge = bridge;
@@ -12,7 +11,8 @@ export default class WindowManaged {
     this.show = this.show.bind(this);
     this.hide = this.hide.bind(this);
     this.debug = this.debug.bind(this);
-    this.setControlColors = this.setControlColors.bind(this);
+    this.setTitleBarColor = this.setTitleBarColor.bind(this);
+    this.setTitleBarSymbolColor = this.setTitleBarSymbolColor.bind(this);
   }
 
   async close() {
@@ -39,12 +39,11 @@ export default class WindowManaged {
     await this._bridge.invoke("Window::debug", undefined);
   }
 
-  getControlColors() {
-    return this._lastControlColor;
+  async setTitleBarColor(color: string) {
+    await this._bridge.invoke("Window::setTitleBarColor", color);
   }
 
-  async setControlColors(color: string) {
-    this._lastControlColor = color;
-    await this._bridge.invoke("Window::setTitleBarColor", color);
+  async setTitleBarSymbolColor(color: string) {
+    await this._bridge.invoke("Window::setTitleBarSymbolColor", color);
   }
 }

@@ -1,5 +1,6 @@
 import { PropsWithChildren } from "react";
 import { ThemeProvider } from "styled-components";
+import { useDarkMode } from "~/shared/react";
 
 export interface ThemeData {
   background: {
@@ -15,7 +16,6 @@ export interface ThemeData {
     danger: string;
   };
   elevation: {
-    solid: string;
     t1: string;
     t2: string;
     t3: string;
@@ -25,7 +25,9 @@ export interface ThemeData {
 export interface ThemeProps extends PropsWithChildren {}
 
 export default function Theme({ children }: ThemeProps) {
-  const theme: ThemeData = {
+  const isDarkMode = useDarkMode();
+
+  const darkTheme: ThemeData = {
     background: {
       e0: "#181818",
       e1: "#1f1f1f",
@@ -39,13 +41,37 @@ export default function Theme({ children }: ThemeProps) {
       danger: "#c22528",
     },
     elevation: {
-      solid: "#2b2b2b",
-      t1: "#e7e7e707",
-      t2: "#e7e7e70f",
-      t3: "#e7e7e719",
+      t1: "#ffffff07",
+      t2: "#ffffff0f",
+      t3: "#ffffff19",
     },
   };
-  return <ThemeProvider theme={theme}>{children}</ThemeProvider>;
+
+  const lightTheme: ThemeData = {
+    background: {
+      e0: "#ffffff",
+      e1: "#f0f0f0",
+    },
+    foreground: {
+      e0: "#000000",
+      e1: "#404040",
+    },
+    accent: {
+      primary: "#2a34bd",
+      danger: "#c22528",
+    },
+    elevation: {
+      t1: "#00000007",
+      t2: "#0000000f",
+      t3: "#00000019",
+    },
+  };
+
+  return (
+    <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
+      {children}
+    </ThemeProvider>
+  );
 }
 
 declare module "styled-components" {

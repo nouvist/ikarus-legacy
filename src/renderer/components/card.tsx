@@ -17,6 +17,7 @@ export interface CardProps extends ComponentProps<"div"> {
   borderColor?: ElevationColor;
   margin?: EdgeInsets;
   padding?: EdgeInsets;
+  solid?: boolean;
 }
 
 const Card = forwardRef(function Card(
@@ -29,6 +30,7 @@ const Card = forwardRef(function Card(
     margin,
     padding,
     children,
+    solid,
     ...props
   }: CardProps,
   ref: ForwardedRef<HTMLDivElement>
@@ -43,6 +45,7 @@ const Card = forwardRef(function Card(
       $borderColor={borderColor}
       $margin={margin}
       $padding={padding}
+      $solid={solid || !managed.platform.isWindows}
       {...props}
     >
       {children}
@@ -58,10 +61,14 @@ interface _CardProps extends ComponentProps<"div"> {
   $borderColor?: ElevationColor;
   $margin?: EdgeInsets;
   $padding?: EdgeInsets;
+  $solid?: boolean;
 }
 
 const _Card = styled.div<_CardProps>`
-  background: ${(p) => p.theme.background[p.$background ?? BackgroundColor.E0]};
+  background: ${(p) =>
+    p.$solid || p.$background
+      ? p.theme.background[p.$background ?? BackgroundColor.E0]
+      : "unset"};
   color: ${(p) => p.theme.foreground[p.$foreground ?? ForegroundColor.E0]};
   border-radius: ${(p) => p.$radius ?? 0}px;
   margin: ${(p) => p.$margin?.toCssVariable() ?? "0px"};
@@ -71,25 +78,25 @@ const _Card = styled.div<_CardProps>`
     p.$border?.isLeft &&
     css`
       border-left: 1px solid
-        ${p.theme.elevation[p.$borderColor ?? ElevationColor.Solid]};
+        ${p.theme.elevation[p.$borderColor ?? ElevationColor.T1]};
     `}
   ${(p) =>
     p.$border?.isRight &&
     css`
       border-right: 1px solid
-        ${p.theme.elevation[p.$borderColor ?? ElevationColor.Solid]};
+        ${p.theme.elevation[p.$borderColor ?? ElevationColor.T1]};
     `}
   ${(p) =>
     p.$border?.isTop &&
     css`
       border-top: 1px solid
-        ${p.theme.elevation[p.$borderColor ?? ElevationColor.Solid]};
+        ${p.theme.elevation[p.$borderColor ?? ElevationColor.T1]};
     `}
   ${(p) =>
     p.$border?.isBottom &&
     css`
       border-bottom: 1px solid
-        ${p.theme.elevation[p.$borderColor ?? ElevationColor.Solid]};
+        ${p.theme.elevation[p.$borderColor ?? ElevationColor.T1]};
     `}
 `;
 
@@ -174,7 +181,6 @@ interface _CardConstrainedProps extends _CardProps {
 const _CardConstrained = styled(_Card)<_CardConstrainedProps>`
   ${(p) => p.$constraints?.toCss()}
 `;
-
 
 const CardScroll = forwardRef(function CardScroll(
   {

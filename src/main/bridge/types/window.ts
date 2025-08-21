@@ -8,4 +8,5 @@ export interface WindowEventMap {
   "Window::hide": VoidEventItem;
   "Window::debug": VoidEventItem;
   "Window::setTitleBarColor": RendererVoidEventItem<string>;
+  "Window::setTitleBarSymbolColor": RendererVoidEventItem<string>;
 }

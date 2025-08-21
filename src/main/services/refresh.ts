@@ -10,6 +10,9 @@ export default class RefreshService {
     this._handleInput = this._handleInput.bind(this);
     this.enable = this.enable.bind(this);
     this.disable = this.disable.bind(this);
+
+    if (enabled) this.enable();
+    else this.disable();
   }
 
   get isEnabled() {

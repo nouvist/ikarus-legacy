@@ -1,22 +1,25 @@
-import { ComponentProps, ForwardedRef, forwardRef } from "react";
+import { ComponentProps, ForwardedRef, forwardRef, useEffect } from "react";
 import styled, { useTheme } from "styled-components";
 import Button, { ButtonProps } from "~/renderer/components/button";
+import Card from "~/renderer/components/card";
 
 export interface TitlebarProps extends ComponentProps<"div"> {}
 
 function Titlebar({ children, ...props }: TitlebarProps) {
   const theme = useTheme();
-  managed.window.setControlColors(theme.background.e0);
+  useEffect(() => {
+    managed.window.setTitleBarColor(theme.background.e0);
+    managed.window.setTitleBarSymbolColor(theme.foreground.e0);
+  }, [theme]);
 
   return <_Container {...props}>{children}</_Container>;
 }
 
-const _Container = styled.div`
+const _Container = styled(Card)`
   width: 100%;
   height: 49px;
   flex-shrink: 0;
-  background: ${(p) => p.theme.background.e0};
-  border-bottom: 1px solid ${(p) => p.theme.elevation.solid};
+  border-bottom: 1px solid ${(p) => p.theme.elevation.t3};
   display: flex;
   justify-content: center;
   align-items: center;

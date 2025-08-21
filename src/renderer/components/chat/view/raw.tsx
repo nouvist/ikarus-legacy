@@ -71,7 +71,7 @@ function ChatInput({
   return (
     <Card.Constrained
       border={EdgeFlags.top}
-      borderColor={ElevationColor.Solid}
+      borderColor={ElevationColor.T3}
       padding={EdgeInsets.symmetric({
         horizontal: 32,
         vertical: 20,
@@ -292,7 +292,7 @@ const _ChatShared = styled.div`
     border: none;
     height: 1px;
     margin: 16px 0;
-    background-color: ${(p) => p.theme.elevation.solid};
+    background-color: ${(p) => p.theme.elevation.t1};
   }
 `;
 
