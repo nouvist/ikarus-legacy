@@ -16,11 +16,13 @@ import Flex, {
   JustifyContent,
 } from "~/renderer/components/flex";
 import Input from "~/renderer/components/input";
+import KeyedStack from "~/renderer/components/keyed_stack";
 import Stack from "~/renderer/components/stack";
+import { ElevationColor } from "~/renderer/foundations/colors";
 import Constraints from "~/renderer/foundations/constraints";
 import EdgeFlags from "~/renderer/foundations/edge_flags";
 import EdgeInsets from "~/renderer/foundations/edge_insets";
-import { bindRefs } from "~/shared/react";
+import { bindRefs, useRandom } from "~/shared/react";
 
 export * from "~/renderer/components/browser/controller";
 
@@ -32,26 +34,11 @@ export default forwardRef(function Browser(
   { controller }: BrowserProps,
   ref: ForwardedRef<WebviewTag>
 ) {
-  return (
-    <Flex fill direction={FlexDirection.Column}>
-      <_Controls controller={controller} />
-      <Stack>
-        <_Container>
-          <webview
-            ref={bindRefs(ref, controller?.bind)}
-            style={{ width: "100%", height: "100%" }}
-            preload={managed.webview.preload}
-          />
-        </_Container>
-        <_Blank controller={controller} />
-      </Stack>
-    </Flex>
-  );
-});
+  const random = useRandom();
+  const browserId = `browser_${random}::browser`;
+  const blankId = `browser_${random}::blank`;
 
-function _Blank({ controller }: { controller: BrowserController }) {
-  const last = useRef(controller.url() === "");
-  const [isBlank, setIsBlank] = useState(last.current);
+  const [activeId, setActiveId] = useState(blankId);
 
   useEffect(() => {
     const wv = controller.raw;
@@ -59,8 +46,7 @@ function _Blank({ controller }: { controller: BrowserController }) {
 
     function handleDidNavigate() {
       const next = controller.url() === "";
-      last.current = next;
-      setIsBlank(next);
+      setActiveId(next ? blankId : browserId);
     }
 
     wv.addEventListener("did-navigate", handleDidNavigate);
@@ -73,7 +59,25 @@ function _Blank({ controller }: { controller: BrowserController }) {
   }, [controller]);
 
   return (
-    <Stack.Fill hidden={!isBlank}>
+    <Flex fill direction={FlexDirection.Column}>
+      <_Controls controller={controller} />
+      <KeyedStack activeKey={activeId}>
+        <_Container key={browserId}>
+          <webview
+            ref={bindRefs(ref, controller?.bind)}
+            style={{ width: "100%", height: "100%" }}
+            preload={managed.webview.preload}
+          />
+        </_Container>
+        <_Blank key={blankId} />
+      </KeyedStack>
+    </Flex>
+  );
+});
+
+function _Blank() {
+  return (
+    <Stack.Fill>
       <Card.Full>
         <Flex
           fill
@@ -124,7 +128,11 @@ function _Controls({ controller }: { controller: BrowserController }) {
   }, [controller]);
 
   return (
-    <Card padding={EdgeInsets.all(16)} border={EdgeFlags.bottom}>
+    <Card
+      padding={EdgeInsets.all(16)}
+      border={EdgeFlags.bottom}
+      borderColor={ElevationColor.T3}
+    >
       <Flex gap={8}>
         <Button
           padding={EdgeInsets.zero}
