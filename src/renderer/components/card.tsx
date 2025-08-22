@@ -45,7 +45,7 @@ const Card = forwardRef(function Card(
       $borderColor={borderColor}
       $margin={margin}
       $padding={padding}
-      $solid={solid || !managed.platform.isWindows}
+      $solid={solid || !managed.platform.isWindows11}
       {...props}
     >
       {children}
@@ -233,8 +233,9 @@ const _CardScroll = styled(_Card)<CardProps>`
 
   &::-webkit-scrollbar-thumb {
     background-color: ${(p) => p.theme.elevation.t2};
+    background-clip: content-box;
+    border: 6px solid transparent;
     border-radius: 10px;
-    box-shadow: inset 0 0 0 6px ${(p) => p.theme.background.e0};
     &:hover {
       background-color: ${(p) => p.theme.elevation.t3};
     }
