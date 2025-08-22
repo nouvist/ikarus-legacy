@@ -1,9 +1,7 @@
 import z from "zod";
 import { BrowserController } from "~/renderer/components/browser";
 import Fetcher from "~/renderer/components/chat/controller/fetcher";
-import {
-  ManagedTool
-} from "~/renderer/components/chat/controller/tools/fundamental";
+import { ManagedTool } from "~/renderer/components/chat/controller/tools/fundamental";
 import { inline } from "~/shared/core";
 
 export type TextInputTools = ReturnType<typeof createTextInputTools>;
@@ -125,6 +123,19 @@ export class SubmitBySelectorTool extends ManagedTool {
   execute({ selector }: z.infer<typeof this.input>) {
     return this._browser.js((selector) => {
       const input = document.querySelector(selector);
+
+      let cursor = input?.parentElement;
+      while (cursor && cursor.tagName !== "BODY") {
+        if (cursor.tagName !== "form") continue;
+        if ("submit" in cursor && typeof cursor.submit === "function") {
+          cursor.submit();
+        } else {
+          const event = new Event("submit", { bubbles: true });
+          cursor.dispatchEvent(event);
+        }
+        return "Form submitted by using its parent form tag element.";
+      }
+
       if (!input) return "Error: Element not found";
       const event = new KeyboardEvent("keydown", {
         bubbles: true,
@@ -135,7 +146,7 @@ export class SubmitBySelectorTool extends ManagedTool {
         keyCode: 13,
       });
       input.dispatchEvent(event);
-      return "Enter key pressed on the specified input.";
+      return "Form not found, Enter key press emulated on the specified input.";
     }, selector);
   }
 }

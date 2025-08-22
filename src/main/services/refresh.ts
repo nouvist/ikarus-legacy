@@ -28,12 +28,12 @@ export default class RefreshService {
   }
 
   enable() {
-    this._enabled = true;
-    this._window.webContents.on("before-input-event", this._handleInput);
+    this._enabled = false;
+    this._window.webContents.off("before-input-event", this._handleInput);
   }
 
   disable() {
-    this._enabled = false;
-    this._window.webContents.off("before-input-event", this._handleInput);
+    this._enabled = true;
+    this._window.webContents.on("before-input-event", this._handleInput);
   }
 }
