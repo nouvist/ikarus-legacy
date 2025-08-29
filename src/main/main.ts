@@ -1,9 +1,14 @@
-import { app, BrowserWindow, BrowserWindowConstructorOptions, nativeTheme } from "electron";
+import {
+  app,
+  BrowserWindow,
+  BrowserWindowConstructorOptions,
+  nativeTheme,
+} from "electron";
 import squirrel from "electron-squirrel-startup";
 import path from "node:path";
 import MainBridge from "~/main/bridge";
 import EnvService from "~/main/services/env";
-import RefreshService from "~/main/services/refresh";
+import KeyboardBehaviorService from "~/main/services/keyboard_behavior";
 import WindowService from "~/main/services/window";
 
 if (squirrel) app.quit();
@@ -27,7 +32,7 @@ app.on("second-instance", () => {
 //   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 // });
 
-function createWindow() {
+async function createWindow() {
   const isDebugMode = !!MAIN_WINDOW_VITE_DEV_SERVER_URL;
   const isProfileMode = ["true", "on", "1"].includes(
     (process.env["PROFILE"] ?? process.env["PROFILE_MODE"] ?? "false")
@@ -47,25 +52,26 @@ function createWindow() {
   );
 
   const bridge = new MainBridge(window);
-  new RefreshService(window, isDebugMode || isProfileMode);
-  new EnvService(bridge, isDebugMode, isProfileMode);
   new WindowService(window, bridge);
+  new EnvService(bridge, isDebugMode, isProfileMode);
+  new KeyboardBehaviorService(window, isDebugMode || isProfileMode);
 
-  setTimeout(() => {
-    window.show();
-  }, 5e3);
-  
   if (isProfileMode && !isDebugMode) {
     window.webContents.openDevTools({ mode: "detach" });
   }
 
   if (isDebugMode) {
-    window.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    await window.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
-    window.loadFile(
+    await window.loadFile(
       path.join(__dirname, "../renderer", `${MAIN_WINDOW_VITE_NAME}/index.html`)
     );
   }
+
+  window.webContents.setZoomLevel(0);
+  setTimeout(() => {
+    window.show();
+  }, 5e3);
 }
 
 function createOptions({

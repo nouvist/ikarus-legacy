@@ -21,14 +21,15 @@ const config: ForgeConfig = {
       if (path === "/tsconfig.json") return true;
       if (path === "/README.md") return true;
       
-      if (path.startsWith("/node_modules/")) {
-        for (const required of requiredsWithNamespaces()) {
-          if (path.startsWith(`/node_modules/${required}`)) {
-            return false;
-          }
-        }
-        return true;
-      }
+      if (path.startsWith("/node_modules/")) return false;
+      // if (path.startsWith("/node_modules/")) {
+      //   for (const required of requiredsWithNamespaces()) {
+      //     if (path.startsWith(`/node_modules/${required}`)) {
+      //       return false;
+      //     }
+      //   }
+      //   return true;
+      // }
 
       return false;
     },

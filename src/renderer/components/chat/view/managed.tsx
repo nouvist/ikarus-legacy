@@ -10,6 +10,7 @@ import Chat, {
   MessageRole,
   UserMessage,
 } from "~/renderer/components/chat";
+import { ToolsKey } from "~/renderer/components/chat/controller/tools";
 import Flex, {
   AlignItems,
   FlexDirection,
@@ -188,7 +189,8 @@ const _map = {
 
   "Csv.getMetadata": "Reading CSV details...",
   "Csv.getRow": "Fetching a row from the data...",
-} as Record<string, string>;
+  "Core.done": "Returning the conversation...",
+} satisfies Record<ToolsKey, string>;
 
 function _ChatAssistent({ chat }: _ChatProps<AssistantMessage>) {
   let content = useObservableWithValue(chat.subject);
@@ -242,7 +244,7 @@ function _ChatAssistent({ chat }: _ChatProps<AssistantMessage>) {
               header="Processing..."
               alwaysExpanded
             >
-              <Markdown>{_map[part.toolName]}</Markdown>
+              <Markdown>{_map[part.toolName as ToolsKey]}</Markdown>
             </Chat.Raw.Bubble.Assistent.Thinking>
           );
         })}

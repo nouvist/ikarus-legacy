@@ -1,3 +1,4 @@
+import { FlexibleSchema } from "@ai-sdk/provider-utils";
 import z from "zod";
 import { BrowserController } from "~/renderer/components/browser";
 import Fetcher from "~/renderer/components/chat/controller/fetcher";
@@ -14,6 +15,10 @@ import createTextInputTools from "~/renderer/components/chat/controller/tools/te
 import { CsvController } from "~/renderer/components/csv";
 
 export type Tools = ReturnType<typeof createTools>;
+export type ToolsKey = keyof Tools;
+export type ToolInput<Key extends ToolsKey> =
+  Tools[Key]["inputSchema"] extends FlexibleSchema<infer Type> ? Type : never;
+
 export default function createTools(
   browser: BrowserController,
   csv: CsvController,

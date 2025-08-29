@@ -1,6 +1,6 @@
 import { BrowserWindow } from "electron";
 
-export default class RefreshService {
+export default class KeyboardBehaviorService {
   protected _window: BrowserWindow;
   protected _enabled: boolean;
 
@@ -21,19 +21,24 @@ export default class RefreshService {
 
   protected _handleInput(event: Electron.Event, input: Electron.Input) {
     const disabledKeys = [
-      input.control && input.code === "KeyR",
+      // refresh
       input.code === "F5",
+      input.control && input.code === "KeyR",
+
+      // zoom
+      input.control && input.code === "Minus",
+      input.control && input.shift && input.code === "Equal",
     ];
     if (disabledKeys.some(Boolean)) event.preventDefault();
   }
 
   enable() {
-    this._enabled = false;
+    this._enabled = true;
     this._window.webContents.off("before-input-event", this._handleInput);
   }
 
   disable() {
-    this._enabled = true;
+    this._enabled = false;
     this._window.webContents.on("before-input-event", this._handleInput);
   }
 }
