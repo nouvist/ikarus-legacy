@@ -1,5 +1,8 @@
 # ISTN Agent
 
+> [!NOTE]
+> This project has been superseded by [Ikarus](https://github.com/nouvist/ikarus).
+
 ## Build
 
 This project relies heavily on Electron Forge and Vite for building and
@@ -14,10 +17,6 @@ To debug, develop, and build the application, the following tools are required:
 - **PNPM**: PNPM is the preferred package manager for this project, but you can
   substitute it with NPM, Yarn, Bun, or any NPM-compatible package managers
   if needed.
-
-> [!NOTE]
-> While Bun may work as a package manager, it does not currently work as a
-> runtime for this project (--bun is not supported).
 
 ### Development Build
 
